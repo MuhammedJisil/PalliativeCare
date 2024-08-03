@@ -268,8 +268,102 @@ app.put('/api/patients/:id', async (req, res) => {
   }
 });
 
+//Registration component(volunteer and caregiver) 
+
+app.post('/register', async (req, res) => {
+    const { userType, name, email, phone_number, address, availability, skills, experience, certifications, notes } = req.body;
+
+    try {
+        if (userType === 'volunteer') {
+            await pool.query(
+                'INSERT INTO volunteers (name, email, phone_number, address, availability, skills, notes) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [name, email, phone_number, address, availability, skills, notes]
+            );
+        } else if (userType === 'caregiver') {
+            await pool.query(
+                'INSERT INTO caregivers (name, email, phone_number, address, availability, experience, certifications, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+                [name, email, phone_number, address, availability, experience, certifications, notes]
+            );
+        }
+        res.status(201).json({ message: 'Registration successful' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// registration Patient
+
+// Endpoint to register a patient
+app.post('/api/patients', async (req, res) => {
+  const { 
+    patient_name, 
+    contact_name, 
+    contact_email, 
+    contact_phone_number, 
+    place, 
+    address, 
+    health_condition, 
+    care_details, 
+    notes 
+  } = req.body;
+
+  try {
+    await pool.query(
+      'INSERT INTO patients_register (patient_name, contact_name, contact_email, contact_phone_number, place, address, health_condition, care_details, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [patient_name, contact_name, contact_email, contact_phone_number, place, address, health_condition, care_details, notes]
+    );
+    res.status(201).json({ message: 'Patient registered successfully!' });
+  } catch (error) {
+    console.error('Error registering patient:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
+
+// Get all volunteers
+router.get('/volunteers', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM volunteers');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching volunteers:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get a single volunteer by ID
+router.get('/volunteers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM volunteers WHERE id = $1', [id]);
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ message: 'Volunteer not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching volunteer:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete a volunteer by ID
+router.delete('/volunteers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM volunteers WHERE id = $1', [id]);
+    if (result.rowCount > 0) {
+      res.status(200).json({ message: 'Volunteer deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'Volunteer not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting volunteer:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

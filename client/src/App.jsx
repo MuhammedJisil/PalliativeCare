@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './components/Home';
+import VolunteerCaregiverRegistration from './components/VolunteerCaregiverRegistration';
+import PatientRegistration from './components/PatientRegistration';
 import AdminLogin from './components/AdminLogin';
 import AdminPage from './components/AdminPage';
 import VolunteerList from './components/VolunteerList'; 
@@ -21,6 +23,8 @@ const App = () => {
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/volunteer-caregiver-registration" element={<VolunteerCaregiverRegistration />} />
+           <Route path="/patient-registration" element={<PatientRegistration />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminPage />} />
           <Route path="/admin/volunteers" element={<VolunteerList />} />
