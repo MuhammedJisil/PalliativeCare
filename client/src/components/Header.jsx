@@ -13,7 +13,7 @@ const Header = () => {
         </div>
         <nav className="space-x-4">
           <Link to="/" className="hover:underline">Home</Link>
-          <Link to="/donate" className="hover:underline">Donate</Link>
+          <Link to="/donate" className="bg-yellow-500 text-black px-4 py-2 rounded">Donate</Link>
           <Link to="/contact" className="hover:underline">Contact</Link>
           <Link to="/admin" className="hover:underline">Admin</Link>
         </nav>

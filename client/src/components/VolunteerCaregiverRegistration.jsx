@@ -32,8 +32,8 @@ const VolunteerCaregiverRegistration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = role === 'volunteer' ? 'http://localhost:5000/api/volunteers' : 'http://localhost:5000/api/caregivers';
-      await axios.post(url, formData);
+      const url = 'http://localhost:5000/api/register';
+      await axios.post(url, { ...formData, userType: role });
       alert('Registration Successful');
       navigate('/');
     } catch (error) {

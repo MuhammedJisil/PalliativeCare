@@ -27,7 +27,7 @@ const PatientRegistration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/patients', formData); // Updated URL
+      await axios.post('http://localhost:5000/api/patients-in-need', formData); // Updated URL
       alert('Patient registered successfully');
       navigate('/'); // Redirect to home page
     } catch (error) {

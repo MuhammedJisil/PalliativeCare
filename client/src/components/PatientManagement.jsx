@@ -96,6 +96,14 @@ const PatientManagement = () => {
           </tbody>
         </table>
       </div>
+      <div className="text-center mt-4">
+        <button
+          onClick={() => navigate('/admin/dashboard')}
+          className="bg-gray-500 text-white px-4 py-2 rounded-md"
+        >
+          Back to Dashboard
+        </button>
+      </div>
     </div>
   );
 };
