@@ -48,16 +48,6 @@ const AdminPage = () => {
             Enter
           </button>
         </div>
-        <div className="p-6 bg-purple-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Donations</h2>
-          <p className="mb-4">View and manage donations.</p>
-          <button
-            className="bg-purple-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/donations')}
-          >
-            Enter
-          </button>
-        </div>
       </div>
     </div>
   );

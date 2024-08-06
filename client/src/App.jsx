@@ -18,7 +18,6 @@ import AddPatient from './components/AddPatient';
 import ViewPatient from './components/ViewPatient';
 import UpdatePatient from './components/UpdatePatient';
 import Donate from './components/Donate';
-import DonationList from './components/DonationList';
 
 
 const App = () => {
@@ -29,7 +28,6 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/admin/donations" element={<DonationList />} />
           <Route path="/volunteer-caregiver-registration" element={<VolunteerCaregiverRegistration />} />
           <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
            <Route path="/patient-registration" element={<PatientRegistration />} />
