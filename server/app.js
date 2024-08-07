@@ -444,6 +444,44 @@ app.delete('/api/patients-in-need/:id', async (req, res) => {
 });
 
 
+// ToDoList Component
+
+// Get all todos
+app.get('/api/todos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM todos ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// Add a new todo
+app.post('/api/todos', async (req, res) => {
+  try {
+    const { description } = req.body;
+    const result = await pool.query(
+      'INSERT INTO todos (description) VALUES ($1) RETURNING *',
+      [description]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// Delete a todo
+app.delete('/api/todos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM todos WHERE id = $1', [id]);
+    res.json({ message: 'Todo deleted successfully' });
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

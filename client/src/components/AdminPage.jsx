@@ -48,9 +48,20 @@ const AdminPage = () => {
             Enter
           </button>
         </div>
+        <div className="p-6 bg-purple-100 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-2">To-Do List</h2>
+          <p className="mb-4">Manage tasks for palliative care volunteers and doctors.</p>
+          <button
+            className="bg-purple-500 text-white py-2 px-4 rounded"
+            onClick={() => navigate('/admin/todolist')}
+          >
+            Enter
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default AdminPage;
+

@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
-import Footer from './components/Footer';
 import Home from './components/Home';
 import VolunteerCaregiverRegistration from './components/VolunteerCaregiverRegistration';
 import PatientRegistration from './components/PatientRegistration';
@@ -18,6 +17,7 @@ import AddPatient from './components/AddPatient';
 import ViewPatient from './components/ViewPatient';
 import UpdatePatient from './components/UpdatePatient';
 import Donate from './components/Donate';
+import ToDoList from './components/ToDoList';
 
 
 const App = () => {
@@ -43,10 +43,10 @@ const App = () => {
           <Route path="/admin/patients/add" element={<AddPatient />} />
           <Route path="/admin/patients/view/:id" element={<ViewPatient />} />
           <Route path="/admin/patients/update/:id" element={<UpdatePatient />} />
+          <Route path="/admin/todolist" element={<ToDoList />} /> 
 
         </Routes>
       </main>
-      <Footer />
     </Router>
   );
 };

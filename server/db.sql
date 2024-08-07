@@ -105,3 +105,10 @@ CREATE TABLE patients_register (
     care_details TEXT,
     notes TEXT
 );
+
+-- Todo list table
+CREATE TABLE todos (
+  id SERIAL PRIMARY KEY,
+  description TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
