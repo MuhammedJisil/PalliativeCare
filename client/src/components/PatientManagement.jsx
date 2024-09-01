@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +28,6 @@ const PatientManagement = () => {
     navigate(`/admin/patients/update/${id}`);
   };
 
-  
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this patient?')) {
       try {
@@ -41,15 +41,28 @@ const PatientManagement = () => {
       }
     }
   };
-  
+
+  // Filter patients based on search term
+  const filteredPatients = patients.filter((patient) =>
+    patient.first_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <header className="mb-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Patient Management</h1>
-        <Link to="/admin/patients/add" className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-          Add
-        </Link>
+        <div className="flex space-x-4">
+          <input
+            type="text"
+            placeholder="Search by patient name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="py-2 px-4 border rounded-md"
+          />
+          <Link to="/admin/patients/add" className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+            Add
+          </Link>
+        </div>
       </header>
       <div className="bg-white shadow-md rounded-md p-4">
         <table className="w-full border-collapse">
@@ -60,8 +73,8 @@ const PatientManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {patients.length > 0 ? (
-              patients.map(patient => (
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
                 <tr key={patient.id}>
                   <td className="py-2 px-4 border-b">{patient.first_name}</td>
                   <td className="py-2 px-4 border-b">
@@ -109,4 +122,3 @@ const PatientManagement = () => {
 };
 
 export default PatientManagement;
-

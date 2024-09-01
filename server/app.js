@@ -144,6 +144,28 @@ app.get('/api/patients', async (req, res) => {
   }
 });
 
+// patient management search part
+app.get('/patients', async (req, res) => {
+  const { search } = req.query; // Capture the search query
+
+  try {
+    let query = 'SELECT * FROM patients';
+    const queryParams = [];
+
+    if (search) {
+      query += ' WHERE first_name ILIKE $1';
+      queryParams.push(`%${search}%`);
+    }
+
+    const result = await pool.query(query, queryParams);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // deleting patient
 app.delete('/api/patients/:id', async (req, res) => {
   const patientId = parseInt(req.params.id);
@@ -333,6 +355,22 @@ app.get('/api/volunteers', async (req, res) => {
   }
 });
 
+// Route to get all volunteers or filtered by search query
+app.get('/api/volunteers', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT * FROM volunteers';
+    if (search) {
+      query += ` WHERE LOWER(name) LIKE LOWER('%${search}%')`;
+    }
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching volunteers:', error);
+    res.status(500).send('Server error');
+  }
+});
+
 // select volunteer by id
 app.get('/api/volunteers/:id', async (req, res) => {
   const { id } = req.params;
@@ -370,6 +408,22 @@ app.get('/api/caregivers', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Route to get all volunteers or filtered by search query
+app.get('/api/caregivers', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT * FROM caregivers';
+    if (search) {
+      query += ` WHERE LOWER(name) LIKE LOWER('%${search}%')`;
+    }
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching caregivers:', error);
+    res.status(500).send('Server error');
   }
 });
 
@@ -412,6 +466,22 @@ app.get('/api/patients-in-need', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Route to get all patients in need or filtered by search query
+app.get('/api/patients-in-need', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT * FROM patients_register';
+    if (search) {
+      query += ` WHERE LOWER(patient_name) LIKE LOWER('%${search}%')`;
+    }
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).send('Server error');
   }
 });
 

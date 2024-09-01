@@ -4,20 +4,21 @@ import { useNavigate } from 'react-router-dom';
 
 const PatientsInNeed = () => {
   const [patients, setPatients] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/patients-in-need');
-        setPatients(response.data);
-      } catch (error) {
-        console.error('Error fetching patients:', error);
-      }
-    };
-
     fetchPatients();
   }, []);
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/patients-in-need');
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
 
   const handleView = (id) => {
     navigate(`/admin/patients-in-need/view/${id}`);
@@ -28,7 +29,7 @@ const PatientsInNeed = () => {
     if (confirmDelete) {
       try {
         await axios.delete(`http://localhost:5000/api/patients-in-need/${id}`);
-        setPatients(patients.filter(patient => patient.id !== id));
+        setPatients(patients.filter((patient) => patient.id !== id));
         alert('Patient deleted successfully');
       } catch (error) {
         console.error('Error deleting patient:', error);
@@ -37,11 +38,22 @@ const PatientsInNeed = () => {
     }
   };
 
+  const filteredPatients = patients.filter((patient) =>
+    patient.patient_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <h2 className="text-2xl font-bold mb-6 text-center">Patients in Need</h2>
+      <input
+        type="text"
+        placeholder="Search by patient name"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="mb-4 p-2 border rounded w-full"
+      />
       <div className="bg-white shadow-md rounded-md p-4">
-        {patients.length === 0 ? (
+        {filteredPatients.length === 0 ? (
           <div className="text-center text-gray-500">No patients found</div>
         ) : (
           <table className="min-w-full bg-white">
@@ -52,7 +64,7 @@ const PatientsInNeed = () => {
               </tr>
             </thead>
             <tbody>
-              {patients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <tr key={patient.id}>
                   <td className="py-2 px-4 border-b text-left">{patient.patient_name}</td>
                   <td className="py-2 px-4 border-b text-left">

@@ -4,20 +4,21 @@ import { useNavigate } from 'react-router-dom';
 
 const CaregiverList = () => {
   const [caregivers, setCaregivers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCaregivers = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/caregivers');
-        setCaregivers(response.data);
-      } catch (error) {
-        console.error('Error fetching caregivers:', error);
-      }
-    };
-
     fetchCaregivers();
   }, []);
+
+  const fetchCaregivers = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/caregivers');
+      setCaregivers(response.data);
+    } catch (error) {
+      console.error('Error fetching caregivers:', error);
+    }
+  };
 
   const handleView = (id) => {
     navigate(`/admin/caregivers/view/${id}`);
@@ -28,7 +29,7 @@ const CaregiverList = () => {
     if (confirmDelete) {
       try {
         await axios.delete(`http://localhost:5000/api/caregivers/${id}`);
-        setCaregivers(caregivers.filter(caregiver => caregiver.id !== id));
+        setCaregivers(caregivers.filter((caregiver) => caregiver.id !== id));
         alert('Caregiver deleted successfully');
       } catch (error) {
         console.error('Error deleting caregiver:', error);
@@ -37,11 +38,22 @@ const CaregiverList = () => {
     }
   };
 
+  const filteredCaregivers = caregivers.filter((caregiver) =>
+    caregiver.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <h2 className="text-2xl font-bold mb-6 text-center">Caregivers</h2>
+      <input
+        type="text"
+        placeholder="Search by caregiver name"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="mb-4 p-2 border rounded w-full"
+      />
       <div className="bg-white shadow-md rounded-md p-4">
-        {caregivers.length === 0 ? (
+        {filteredCaregivers.length === 0 ? (
           <div className="text-center text-gray-500">No caregivers found</div>
         ) : (
           <table className="min-w-full bg-white">
@@ -52,7 +64,7 @@ const CaregiverList = () => {
               </tr>
             </thead>
             <tbody>
-              {caregivers.map((caregiver) => (
+              {filteredCaregivers.map((caregiver) => (
                 <tr key={caregiver.id}>
                   <td className="py-2 px-4 border-b align-middle">{caregiver.name}</td>
                   <td className="py-2 px-4 border-b align-middle">
@@ -88,4 +100,5 @@ const CaregiverList = () => {
 };
 
 export default CaregiverList;
+
 

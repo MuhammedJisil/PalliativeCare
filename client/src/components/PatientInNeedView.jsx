@@ -44,7 +44,7 @@ const PatientInNeedView = () => {
         </div>
         <div className="text-center mt-4">
           <button
-            onClick={() => navigate('/admin/patients')}
+            onClick={() => navigate('/admin/patients-in-need')}
             className="bg-blue-500 text-white px-4 py-2 rounded-md"
           >
             Back
