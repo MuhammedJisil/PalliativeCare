@@ -112,3 +112,15 @@ CREATE TABLE todos (
   description TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+--schedule table
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    patient_name VARCHAR(255) NOT NULL, -- Patient's name
+    member_name VARCHAR(255) NOT NULL,  -- Member's name (doctor/volunteer)
+    visit_date DATE NOT NULL,
+    visit_time TIME NOT NULL,
+    visit_type VARCHAR(255) NOT NULL, -- Example: 'Doctor', 'Volunteer', etc.
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

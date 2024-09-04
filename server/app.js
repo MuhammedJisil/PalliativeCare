@@ -551,6 +551,119 @@ app.delete('/api/todos/:id', async (req, res) => {
   }
 });
 
+// schedule component
+
+// Get all schedules
+app.get('/api/schedules', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM schedules');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+// Add a new schedule
+app.post('/schedules', async (req, res) => {
+  const { patient_name, member_name, visit_date, visit_time, visit_type, notes } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO schedules (patient_name, member_name, visit_date, visit_time, visit_type, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [patient_name, member_name, visit_date, visit_time, visit_type, notes]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding schedule:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get schedule by ID
+app.get('/schedules/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM schedules WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// Update schedule by ID
+app.put('/schedules/:id', async (req, res) => {
+  const { id } = req.params;
+  const { patient_name, member_name, visit_date, visit_time, visit_type, notes } = req.body;
+
+  let query = 'UPDATE schedules SET ';
+  const queryParams = [];
+  let paramIndex = 1;
+
+  if (patient_name) {
+    query += `patient_name = $${paramIndex++}, `;
+    queryParams.push(patient_name);
+  }
+  if (member_name) {
+    query += `member_name = $${paramIndex++}, `;
+    queryParams.push(member_name);
+  }
+  if (visit_date) {
+    query += `visit_date = $${paramIndex++}, `;
+    queryParams.push(visit_date);
+  }
+  if (visit_time) {
+    query += `visit_time = $${paramIndex++}, `;
+    queryParams.push(visit_time);
+  }
+  if (visit_type) {
+    query += `visit_type = $${paramIndex++}, `;
+    queryParams.push(visit_type);
+  }
+  if (notes) {
+    query += `notes = $${paramIndex++}, `;
+    queryParams.push(notes);
+  }
+
+  query = query.slice(0, -2) + ` WHERE id = $${paramIndex} RETURNING *`;
+  queryParams.push(id);
+
+  try {
+    const result = await pool.query(query, queryParams);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// Delete a schedule
+app.delete('/api/schedules/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM schedules WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    res.json({ message: 'Schedule deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting schedule:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 
 app.listen(port, () => {

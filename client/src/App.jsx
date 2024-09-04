@@ -18,6 +18,10 @@ import ViewPatient from './components/ViewPatient';
 import UpdatePatient from './components/UpdatePatient';
 import Donate from './components/Donate';
 import ToDoList from './components/ToDoList';
+import ScheduleList from './components/ScheduleList';
+import AddSchedule from './components/AddSchedule';
+import UpdateSchedule from './components/UpdateSchedule';
+
 
 
 const App = () => {
@@ -44,6 +48,9 @@ const App = () => {
           <Route path="/admin/patients/view/:id" element={<ViewPatient />} />
           <Route path="/admin/patients/update/:id" element={<UpdatePatient />} />
           <Route path="/admin/todolist" element={<ToDoList />} /> 
+          <Route path="/admin/schedules" element={<ScheduleList />} />
+          <Route path="/admin/schedules/add" element={<AddSchedule />} />
+          <Route path="/admin/schedules/update/:id" element={<UpdateSchedule />} />
 
         </Routes>
       </main>

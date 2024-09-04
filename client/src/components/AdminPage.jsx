@@ -58,10 +58,19 @@ const AdminPage = () => {
             Enter
           </button>
         </div>
+        <div className="p-6 bg-teal-100 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-2">Schedule Visits</h2>
+          <p className="mb-4">Manage and schedule patient visits for palliative care members.</p>
+          <button
+            className="bg-teal-500 text-white py-2 px-4 rounded"
+            onClick={() => navigate('/admin/schedules')}
+          >
+            Enter
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default AdminPage;
-
