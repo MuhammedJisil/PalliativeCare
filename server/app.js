@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const cors = require('cors'); // Import cors
+const multer = require('multer');
 
 const app = express();
 const port = 5000;
@@ -17,6 +18,7 @@ const pool = new Pool({
 
 app.use(cors()); // Use cors middleware
 app.use(express.json());
+
 
 // Seed database with users
 async function seedUsers() {

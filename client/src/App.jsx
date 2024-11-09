@@ -51,7 +51,7 @@ const App = () => {
           <Route path="/admin/schedules" element={<ScheduleList />} />
           <Route path="/admin/schedules/add" element={<AddSchedule />} />
           <Route path="/admin/schedules/update/:id" element={<UpdateSchedule />} />
-
+          
         </Routes>
       </main>
     </Router>
