@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const cors = require('cors'); // Import cors
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = 5000;
@@ -18,6 +20,16 @@ const pool = new Pool({
 
 app.use(cors()); // Use cors middleware
 app.use(express.json());
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
 
 
 // Seed database with users
@@ -667,6 +679,33 @@ app.delete('/api/schedules/:id', async (req, res) => {
 });
 
 
+// donateconfig component
+app.get('/api/donation-config', async (req, res) => {
+  try {
+    const config = await pool.query('SELECT * FROM donation_config LIMIT 1');
+    res.json(config.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+app.post('/api/donation-config', upload.single('qrCodeImage'), async (req, res) => {
+  const { accountNumber, ifscCode, upiId } = req.body;
+  const qrCodeImagePath = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+  try {
+    await pool.query(
+      `UPDATE donation_config SET account_number = $1, ifsc_code = $2, upi_id = $3, qr_code_image_path = COALESCE($4, qr_code_image_path)`,
+      [accountNumber, ifscCode, upiId, qrCodeImagePath]
+    );
+    res.send('Configuration updated successfully!');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

@@ -1,72 +1,117 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, Gift } from 'lucide-react';
 
 const AdminPage = () => {
   const navigate = useNavigate();
 
+  const cards = [
+    {
+      title: "Volunteer",
+      description: "Manage and view registered volunteers",
+      icon: <Users className="h-8 w-8 text-teal-600" />,
+      path: '/admin/volunteers',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Caregiver",
+      description: "Manage and view registered caregivers",
+      icon: <Heart className="h-8 w-8 text-teal-600" />,
+      path: '/admin/caregivers',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Patients in Need",
+      description: "View details of patients who need caregivers",
+      icon: <Activity className="h-8 w-8 text-teal-600" />,
+      path: '/admin/patients-in-need',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Patient Management",
+      description: "Manage patient information",
+      icon: <UserCog className="h-8 w-8 text-teal-600" />,
+      path: '/admin/patient-management',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "To-Do List",
+      description: "Manage tasks for palliative care volunteers and doctors",
+      icon: <CheckSquare className="h-8 w-8 text-teal-600" />,
+      path: '/admin/todolist',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Schedule Visits",
+      description: "Manage and schedule patient visits for palliative care members",
+      icon: <Calendar className="h-8 w-8 text-teal-600" />,
+      path: '/admin/schedules',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Donation Configuration",
+      description: "Manage donation settings and payment details",
+      icon: <Gift className="h-8 w-8 text-teal-600" />,
+      path: '/admin/donate-config',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    }
+  ];
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-6 bg-blue-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Volunteer</h2>
-          <p className="mb-4">Manage and view registered volunteers.</p>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/volunteers')}
-          >
-            Enter
-          </button>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center space-x-2 mb-8">
+          <Heart className="h-8 w-8 text-teal-600" />
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Admin Dashboard
+          </h1>
         </div>
-        <div className="p-6 bg-green-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Caregiver</h2>
-          <p className="mb-4">Manage and view registered caregivers.</p>
-          <button
-            className="bg-green-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/caregivers')}
-          >
-            Enter
-          </button>
-        </div>
-        <div className="p-6 bg-yellow-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Patients in Need</h2>
-          <p className="mb-4">View details of patients who need caregivers.</p>
-          <button
-            className="bg-yellow-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/patients-in-need')}
-          >
-            Enter
-          </button>
-        </div>
-        <div className="p-6 bg-red-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Patient Management</h2>
-          <p className="mb-4">Manage patient information.</p>
-          <button
-            className="bg-red-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/patient-management')}
-          >
-            Enter
-          </button>
-        </div>
-        <div className="p-6 bg-purple-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">To-Do List</h2>
-          <p className="mb-4">Manage tasks for palliative care volunteers and doctors.</p>
-          <button
-            className="bg-purple-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/todolist')}
-          >
-            Enter
-          </button>
-        </div>
-        <div className="p-6 bg-teal-100 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-2">Schedule Visits</h2>
-          <p className="mb-4">Manage and schedule patient visits for palliative care members.</p>
-          <button
-            className="bg-teal-500 text-white py-2 px-4 rounded"
-            onClick={() => navigate('/admin/schedules')}
-          >
-            Enter
-          </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className={`${card.bgColor} ${card.hoverColor} rounded-lg shadow-md transition-all duration-200 hover:shadow-lg`}
+            >
+              <button
+                className="w-full p-6 text-left"
+                onClick={() => navigate(card.path)}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  {card.icon}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {card.title}
+                  </h2>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  {card.description}
+                </p>
+                <div className="inline-flex items-center text-teal-600 font-medium">
+                  Enter
+                  <svg
+                    className="ml-2 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 const UpdatePatient = () => {
   const { id } = useParams();
@@ -84,9 +85,7 @@ const UpdatePatient = () => {
         },
         medical_history: `${new Date().toISOString().split('T')[0]}: ${history}\n${patient.medical_history || ''}`,
       });
-      // Navigating to the patient management page
-     navigate('/admin/patient-management');
-
+      navigate('/admin/patient-management');
     } catch (error) {
       console.error('Error updating patient details:', error);
     }
@@ -94,13 +93,16 @@ const UpdatePatient = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-6">Update Patient Details</h2>
+      <header className="mb-6 flex items-center">
+        <Heart className="h-8 w-8 text-teal-600 mr-2" />
+        <h2 className="text-2xl font-bold">Update Patient Details</h2>
+      </header>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">First Name</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
@@ -109,7 +111,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Initial Treatment Date</label>
           <input
             type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={initialTreatmentDate}
             onChange={(e) => setInitialTreatmentDate(e.target.value)}
           />
@@ -118,7 +120,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
           <input
             type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={dob}
             onChange={(e) => setDob(e.target.value)}
           />
@@ -127,7 +129,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Age</label>
           <input
             type="number"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={age}
             onChange={(e) => setAge(e.target.value)}
           />
@@ -136,7 +138,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Gender</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
           />
@@ -145,7 +147,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Address</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
@@ -154,7 +156,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Phone Number</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
@@ -163,7 +165,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Doctor</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={doctor}
             onChange={(e) => setDoctor(e.target.value)}
           />
@@ -172,7 +174,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Caregiver</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={caregiver}
             onChange={(e) => setCaregiver(e.target.value)}
           />
@@ -181,7 +183,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Disease</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={disease}
             onChange={(e) => setDisease(e.target.value)}
           />
@@ -190,7 +192,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Medication</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={medication}
             onChange={(e) => setMedication(e.target.value)}
           />
@@ -198,7 +200,7 @@ const UpdatePatient = () => {
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Note</label>
           <textarea
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           ></textarea>
@@ -207,7 +209,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Note Date</label>
           <input
             type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={noteDate}
             onChange={(e) => setNoteDate(e.target.value)}
           />
@@ -216,7 +218,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Medical Proxy Name</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={proxyName}
             onChange={(e) => setProxyName(e.target.value)}
           />
@@ -225,7 +227,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Relation</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={relation}
             onChange={(e) => setRelation(e.target.value)}
           />
@@ -234,7 +236,7 @@ const UpdatePatient = () => {
           <label className="block text-sm font-medium text-gray-700">Medical Proxy Phone Number</label>
           <input
             type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={proxyPhoneNumber}
             onChange={(e) => setProxyPhoneNumber(e.target.value)}
           />
@@ -242,15 +244,20 @@ const UpdatePatient = () => {
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Medical History</label>
           <textarea
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             value={history}
             onChange={(e) => setHistory(e.target.value)}
           ></textarea>
         </div>
-        <button type="submit" className="mt-4 p-2 bg-blue-600 text-white rounded-md">
-         Update
+        <button type="submit" className="mt-4 p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium shadow-sm transition-colors">
+          Update
         </button>
       </form>
+      <div className="mt-6 text-center">
+        <Link to="/admin/patient-management" className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full font-medium shadow-sm transition-colors">
+          Back to Patient Management
+        </Link>
+      </div>
     </div>
   );
 };
