@@ -1,32 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Heart, 
+  ArrowLeft 
+} from 'lucide-react';
 
 const UpdatePatient = () => {
   const { id } = useParams();
   const [patient, setPatient] = useState(null);
-  const [firstName, setFirstName] = useState('');
-  const [initialTreatmentDate, setInitialTreatmentDate] = useState('');
-  const [dob, setDob] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
-  const [address, setAddress] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [doctor, setDoctor] = useState('');
-  const [caregiver, setCaregiver] = useState('');
-  const [disease, setDisease] = useState('');
-  const [medication, setMedication] = useState('');
-  const [note, setNote] = useState('');
-  const [noteDate, setNoteDate] = useState('');
-  const [proxyName, setProxyName] = useState('');
-  const [relation, setRelation] = useState('');
-  const [proxyPhoneNumber, setProxyPhoneNumber] = useState('');
-  const [history, setHistory] = useState('');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    initialTreatmentDate: '',
+    dob: '',
+    age: '',
+    gender: '',
+    address: '',
+    phoneNumber: '',
+    doctor: '',
+    caregiver: '',
+    disease: '',
+    medication: '',
+    note: '',
+    noteDate: '',
+    proxyName: '',
+    relation: '',
+    proxyPhoneNumber: '',
+    history: ''
+  });
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
     return dateString ? new Date(dateString).toISOString().split('T')[0] : '';
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   useEffect(() => {
@@ -34,24 +47,26 @@ const UpdatePatient = () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/patients/${id}`);
         const data = response.data;
+        setFormData({
+          firstName: data.first_name,
+          initialTreatmentDate: formatDate(data.initial_treatment_date),
+          dob: formatDate(data.dob),
+          age: data.age || '',
+          gender: data.gender || '',
+          address: data.address || '',
+          phoneNumber: data.phone_number || '',
+          doctor: data.doctor || '',
+          caregiver: data.caregiver || '',
+          disease: data.health_status?.disease || '',
+          medication: data.health_status?.medication || '',
+          note: data.health_status?.note || '',
+          noteDate: formatDate(data.health_status?.note_date),
+          proxyName: data.medical_proxy?.name || '',
+          relation: data.medical_proxy?.relation || '',
+          proxyPhoneNumber: data.medical_proxy?.phone_number || '',
+          history: data.medical_history || ''
+        });
         setPatient(data);
-        setFirstName(data.first_name);
-        setInitialTreatmentDate(formatDate(data.initial_treatment_date));
-        setDob(formatDate(data.dob));
-        setAge(data.age || '');
-        setGender(data.gender || '');
-        setAddress(data.address || '');
-        setPhoneNumber(data.phone_number || '');
-        setDoctor(data.doctor || '');
-        setCaregiver(data.caregiver || '');
-        setDisease(data.health_status?.disease || '');
-        setMedication(data.health_status?.medication || '');
-        setNote(data.health_status?.note || '');
-        setNoteDate(formatDate(data.health_status?.note_date));
-        setProxyName(data.medical_proxy?.name || '');
-        setRelation(data.medical_proxy?.relation || '');
-        setProxyPhoneNumber(data.medical_proxy?.phone_number || '');
-        setHistory(data.medical_history || '');
       } catch (error) {
         console.error('Error fetching patient details:', error);
       }
@@ -63,27 +78,27 @@ const UpdatePatient = () => {
     e.preventDefault();
     try {
       await axios.put(`http://localhost:5000/api/patients/${id}`, {
-        first_name: firstName,
-        initial_treatment_date: initialTreatmentDate || null,
-        dob: dob || null,
-        age: age || null,
-        gender: gender || null,
-        address: address || null,
-        phone_number: phoneNumber || null,
-        doctor: doctor || null,
-        caregiver: caregiver || null,
+        first_name: formData.firstName,
+        initial_treatment_date: formData.initialTreatmentDate || null,
+        dob: formData.dob || null,
+        age: formData.age || null,
+        gender: formData.gender || null,
+        address: formData.address || null,
+        phone_number: formData.phoneNumber || null,
+        doctor: formData.doctor || null,
+        caregiver: formData.caregiver || null,
         health_status: {
-          disease: disease || null,
-          medication: medication || null,
-          note: `${noteDate || new Date().toISOString().split('T')[0]}: ${note}\n${patient.health_status?.note || ''}`,
-          note_date: noteDate || new Date().toISOString().split('T')[0],
+          disease: formData.disease || null,
+          medication: formData.medication || null,
+          note: `${formData.noteDate || new Date().toISOString().split('T')[0]}: ${formData.note}\n${patient.health_status?.note || ''}`,
+          note_date: formData.noteDate || new Date().toISOString().split('T')[0],
         },
         medical_proxy: {
-          name: proxyName || null,
-          relation: relation || null,
-          phone_number: proxyPhoneNumber || null,
+          name: formData.proxyName || null,
+          relation: formData.relation || null,
+          phone_number: formData.proxyPhoneNumber || null,
         },
-        medical_history: `${new Date().toISOString().split('T')[0]}: ${history}\n${patient.medical_history || ''}`,
+        medical_history: `${new Date().toISOString().split('T')[0]}: ${formData.history}\n${patient.medical_history || ''}`,
       });
       navigate('/admin/patient-management');
     } catch (error) {
@@ -92,171 +107,235 @@ const UpdatePatient = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <header className="mb-6 flex items-center">
-        <Heart className="h-8 w-8 text-teal-600 mr-2" />
-        <h2 className="text-2xl font-bold">Update Patient Details</h2>
-      </header>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">First Name</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white shadow-md">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-2">
+              <Heart className="h-8 w-8 text-red-600" />
+              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
+                Update Patient Details
+              </h1>
+            </div>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Initial Treatment Date</label>
-          <input
-            type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={initialTreatmentDate}
-            onChange={(e) => setInitialTreatmentDate(e.target.value)}
-          />
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Personal Information</h2>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.dob}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Age</label>
+                  <input
+                    type="number"
+                    name="age"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Gender</label>
+                  <input
+                    type="text"
+                    name="gender"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Contact Information</h2>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Address</label>
+                  <input
+                    type="text"
+                    name="address"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Doctor</label>
+                  <input
+                    type="text"
+                    name="doctor"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.doctor}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Caregiver</label>
+                  <input
+                    type="text"
+                    name="caregiver"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.caregiver}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Information */}
+            <div className="mt-6 space-y-4">
+              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical Information</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Disease</label>
+                  <input
+                    type="text"
+                    name="disease"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.disease}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Medication</label>
+                  <input
+                    type="text"
+                    name="medication"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.medication}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Note</label>
+                  <textarea
+                    name="note"
+                    className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.note}
+                    onChange={handleInputChange}
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Note Date</label>
+                  <input
+                    type="date"
+                    name="noteDate"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.noteDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Proxy */}
+            <div className="mt-6 space-y-4">
+              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical Proxy</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Proxy Name</label>
+                  <input
+                    type="text"
+                    name="proxyName"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.proxyName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Relation</label>
+                  <input
+                    type="text"
+                    name="relation"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.relation}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Proxy Phone Number</label>
+                  <input
+                    type="text"
+                    name="proxyPhoneNumber"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={formData.proxyPhoneNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical History */}
+            <div className="mt-6 space-y-4">
+              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical History</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Additional History</label>
+                <textarea
+                  name="history"
+                  className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  value={formData.history}
+                  onChange={handleInputChange}
+                  rows="4"
+                ></textarea>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="mt-6 flex justify-between items-center">
+              <button
+                type="submit"
+                className="inline-flex items-center px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+              >
+                Update Patient
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/patient-management')}
+                className="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft size={16} className="mr-2" />
+                Back to Patient Management
+              </button>
+            </div>
+          </form>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
-          <input
-            type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Age</label>
-          <input
-            type="number"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Gender</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Address</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Doctor</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={doctor}
-            onChange={(e) => setDoctor(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Caregiver</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={caregiver}
-            onChange={(e) => setCaregiver(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Disease</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={disease}
-            onChange={(e) => setDisease(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Medication</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={medication}
-            onChange={(e) => setMedication(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Note</label>
-          <textarea
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          ></textarea>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Note Date</label>
-          <input
-            type="date"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={noteDate}
-            onChange={(e) => setNoteDate(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Medical Proxy Name</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={proxyName}
-            onChange={(e) => setProxyName(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Relation</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={relation}
-            onChange={(e) => setRelation(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Medical Proxy Phone Number</label>
-          <input
-            type="text"
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={proxyPhoneNumber}
-            onChange={(e) => setProxyPhoneNumber(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Medical History</label>
-          <textarea
-            className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-            value={history}
-            onChange={(e) => setHistory(e.target.value)}
-          ></textarea>
-        </div>
-        <button type="submit" className="mt-4 p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium shadow-sm transition-colors">
-          Update
-        </button>
-      </form>
-      <div className="mt-6 text-center">
-        <Link to="/admin/patient-management" className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full font-medium shadow-sm transition-colors">
-          Back to Patient Management
-        </Link>
       </div>
     </div>
   );

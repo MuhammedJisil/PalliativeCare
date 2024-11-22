@@ -42,7 +42,7 @@ const AdminPage = () => {
       title: "To-Do List",
       description: "Manage tasks for palliative care volunteers and doctors",
       icon: <CheckSquare className="h-8 w-8 text-teal-600" />,
-      path: '/admin/todolist',
+      path: '/admin/todos',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
     },

@@ -1,128 +1,182 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
-import { Heart, X} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Heart, 
+  Search, 
+  Eye, 
+  Trash2, 
+  ArrowLeft,
+  UserPlus,
+  RefreshCw
+} from 'lucide-react';
 
 const PatientManagement = () => {
- const [patients, setPatients] = useState([]);
- const [searchTerm, setSearchTerm] = useState('');
- const navigate = useNavigate();
+  const [patients, setPatients] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
- useEffect(() => {
-   fetchPatients();
- }, []);
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
- const fetchPatients = async () => {
-   try {
-     const response = await axios.get('http://localhost:5000/api/patients');
-     setPatients(response.data);
-   } catch (error) {
-     console.error('Error fetching patients:', error);
-   }
- };
+  const fetchPatients = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get('http://localhost:5000/api/patients');
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
- const handleView = (id) => {
-   navigate(`/admin/patients/view/${id}`);
- };
+  const handleView = (id) => {
+    navigate(`/admin/patients/view/${id}`);
+  };
 
- const handleUpdate = (id) => {
-   navigate(`/admin/patients/update/${id}`);
- };
+  const handleEdit = (id) => {
+    navigate(`/admin/patients/update/${id}`);
+  };
 
- const handleDelete = async (id) => {
-   if (window.confirm('Are you sure you want to delete this patient?')) {
-     try {
-       await axios.delete(`http://localhost:5000/api/patients/${id}`);
-       fetchPatients();
-     } catch (error) {
-       console.error('Error deleting patient:', error);
-       alert('Failed to delete patient');
-     }
-   }
- };
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this patient?');
+    if (confirmDelete) {
+      try {
+        await axios.delete(`http://localhost:5000/api/patients/${id}`);
+        setPatients(patients.filter((patient) => patient.id !== id));
+        alert('Patient deleted successfully');
+      } catch (error) {
+        console.error('Error deleting patient:', error);
+        alert('Failed to delete patient');
+      }
+    }
+  };
 
- const filteredPatients = patients.filter((patient) =>
-   patient.first_name.toLowerCase().includes(searchTerm.toLowerCase())
- );
+  const filteredPatients = patients.filter((patient) =>
+    patient.first_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
- return (
-   <div className="min-h-screen bg-gray-100 p-6">
-     <header className="mb-4 flex justify-between items-center">
-       <div className="flex items-center space-x-2">
-         <Heart className="h-8 w-8 text-teal-600" />
-         <h1 className="text-2xl font-bold">Patient Management</h1>
-       </div>
-       <div className="flex space-x-4">
-         <input
-           type="text"
-           placeholder="Search by patient name"
-           value={searchTerm}
-           onChange={(e) => setSearchTerm(e.target.value)}
-           className="py-2 px-4 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-         />
-         <Link
-           to="/admin/patients/add"
-           className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-full font-medium shadow-sm transition-colors"
-         >
-           Add Patient
-         </Link>
-       </div>
-     </header>
-     <div className="bg-white shadow-md rounded-md p-4">
-       <table className="w-full border-collapse">
-         <thead>
-           <tr>
-             <th className="py-2 px-4 border-b text-left">Patient Name</th>
-             <th className="py-2 px-4 border-b text-left">Actions</th>
-           </tr>
-         </thead>
-         <tbody>
-           {filteredPatients.length > 0 ? (
-             filteredPatients.map((patient) => (
-               <tr key={patient.id}>
-                 <td className="py-2 px-4 border-b">{patient.first_name}</td>
-                 <td className="py-2 px-4 border-b">
-                   <div className="flex space-x-4">
-                     <button
-                       onClick={() => handleView(patient.id)}
-                       className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-full font-medium shadow-sm transition-colors"
-                     >
-                       View
-                     </button>
-                     <button
-                       onClick={() => handleUpdate(patient.id)}
-                       className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-full font-medium shadow-sm transition-colors"
-                     >
-                       Update
-                     </button>
-                     <button
-                       onClick={() => handleDelete(patient.id)}
-                       className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-full font-medium shadow-sm transition-colors"
-                     >
-                       Delete
-                     </button>
-                   </div>
-                 </td>
-               </tr>
-             ))
-           ) : (
-             <tr>
-               <td colSpan="2" className="py-2 px-4 text-center">No patients available</td>
-             </tr>
-           )}
-         </tbody>
-       </table>
-     </div>
-     <div className="text-center mt-4">
-       <button
-         onClick={() => navigate('/admin/dashboard')}
-         className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-full font-medium shadow-sm transition-colors"
-       >
-         Back to Dashboard
-       </button>
-     </div>
-   </div>
- );
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white shadow-md">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-2">
+              <Heart className="h-8 w-8 text-teal-600" />
+              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
+                Patient Management
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/admin/patients/add')}
+                className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              >
+                <UserPlus size={18} />
+                <span>Add Patient</span>
+              </button>
+              <button
+                onClick={fetchPatients}
+                className="p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <RefreshCw size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Patients List */}
+        <div className="bg-white rounded-lg shadow-md">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-48">
+              <RefreshCw className="animate-spin text-teal-600" size={24} />
+            </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+              <Heart size={48} className="mb-4 text-gray-400" />
+              <p>No patients found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredPatients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {patient.first_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
+                          onClick={() => handleView(patient.id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors mr-2"
+                        >
+                          <Eye size={16} className="mr-1" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleEdit(patient.id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors mr-2"
+                        >
+                          <UserPlus size={16} className="mr-1" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(patient.id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 size={16} className="mr-1" />
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Back Button */}
+        <div className="mt-6">
+          <button
+            onClick={() => navigate('/admin/dashboard')}
+            className="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PatientManagement;
