@@ -530,40 +530,155 @@ app.delete('/api/patients-in-need/:id', async (req, res) => {
 
 // ToDoList Component
 
-// Get all todos
-app.get('/api/todos', async (req, res) => {
+app.get('/api/tasks', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM todos ORDER BY created_at DESC');
+    const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
-    console.error(err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Add a new todo
-app.post('/api/todos', async (req, res) => {
+// Create a new task
+app.post('/api/tasks', async (req, res) => {
+  const { 
+    title, 
+    description, 
+    category, 
+    priority, 
+    assignedTo, 
+    dueDate, 
+    dueTime 
+  } = req.body;
+
   try {
-    const { description } = req.body;
     const result = await pool.query(
-      'INSERT INTO todos (description) VALUES ($1) RETURNING *',
-      [description]
+      `INSERT INTO tasks 
+      (title, description, category, priority, assigned_to, due_date, due_time, status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      RETURNING *`, 
+      [
+        title, 
+        description, 
+        category, 
+        priority, 
+        assignedTo || null, 
+        dueDate || null, 
+        dueTime || null,
+        'pending'  // Explicitly set status
+      ]
     );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a task
+app.put('/api/tasks/:id', async (req, res) => {
+  const { id } = req.params;
+  const { 
+    title, 
+    description, 
+    category, 
+    priority, 
+    assignedTo, 
+    dueDate, 
+    dueTime,
+    status 
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE tasks 
+      SET 
+        title = COALESCE($1, title), 
+        description = COALESCE($2, description), 
+        category = COALESCE($3, category), 
+        priority = COALESCE($4, priority), 
+        assigned_to = COALESCE($5, assigned_to), 
+        due_date = COALESCE($6, due_date), 
+        due_time = COALESCE($7, due_time),
+        status = COALESCE($8, status)
+      WHERE id = $9 
+      RETURNING *`, 
+      [
+        title, 
+        description, 
+        category, 
+        priority, 
+        assignedTo, 
+        dueDate, 
+        dueTime, 
+        status, 
+        id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Delete a todo
-app.delete('/api/todos/:id', async (req, res) => {
+// Delete a task
+app.delete('/api/tasks/:id', async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM todos WHERE id = $1', [id]);
-    res.json({ message: 'Todo deleted successfully' });
+    const result = await pool.query(
+      "DELETE FROM tasks WHERE id = $1 RETURNING *", 
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully", task: result.rows[0] });
   } catch (err) {
-    console.error(err.message);
+    res.status(500).json({ error: err.message });
   }
 });
+
+// Toggle task status
+app.patch('/api/tasks/:id/status', async (req, res) => {
+  const { id } = req.params;
+  try {
+    console.log(`Attempting to toggle status for task ${id}`);
+    
+    const result = await pool.query(
+      `UPDATE tasks 
+       SET status = CASE 
+         WHEN status = 'pending' THEN 'completed'
+         WHEN status = 'completed' THEN 'pending'
+         ELSE 'pending'
+       END
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      console.error(`No task found with id ${id}`);
+      return res.status(404).json({ error: "Task not found" });
+    }
+    
+    console.log('Task status updated:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error toggling task status:', err);
+    res.status(500).json({ 
+      error: err.message,
+      details: err.details || 'Unknown error occurred'
+    });
+  }
+});
+
 
 // schedule component
 
@@ -675,35 +790,6 @@ app.delete('/api/schedules/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting schedule:', error);
     res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-
-// donateconfig component
-app.get('/api/donation-config', async (req, res) => {
-  try {
-    const config = await pool.query('SELECT * FROM donation_config LIMIT 1');
-    res.json(config.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
-});
-
-
-app.post('/api/donation-config', upload.single('qrCodeImage'), async (req, res) => {
-  const { accountNumber, ifscCode, upiId } = req.body;
-  const qrCodeImagePath = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-  try {
-    await pool.query(
-      `UPDATE donation_config SET account_number = $1, ifsc_code = $2, upi_id = $3, qr_code_image_path = COALESCE($4, qr_code_image_path)`,
-      [accountNumber, ifscCode, upiId, qrCodeImagePath]
-    );
-    res.send('Configuration updated successfully!');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
   }
 });
 

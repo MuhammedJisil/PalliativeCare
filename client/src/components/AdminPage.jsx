@@ -42,7 +42,7 @@ const AdminPage = () => {
       title: "To-Do List",
       description: "Manage tasks for palliative care volunteers and doctors",
       icon: <CheckSquare className="h-8 w-8 text-teal-600" />,
-      path: '/admin/todos',
+      path: '/admin/tasks',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
     },
@@ -51,14 +51,6 @@ const AdminPage = () => {
       description: "Manage and schedule patient visits for palliative care members",
       icon: <Calendar className="h-8 w-8 text-teal-600" />,
       path: '/admin/schedules',
-      bgColor: 'bg-white',
-      hoverColor: 'hover:bg-gray-50'
-    },
-    {
-      title: "Donation Configuration",
-      description: "Manage donation settings and payment details",
-      icon: <Gift className="h-8 w-8 text-teal-600" />,
-      path: '/admin/donate-config',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
     }

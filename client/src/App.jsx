@@ -22,7 +22,6 @@ import ScheduleList from './components/ScheduleList';
 import AddSchedule from './components/AddSchedule';
 import UpdateSchedule from './components/UpdateSchedule';
 import About from './components/About';
-import DonateConfig from './components/DonateConfig';
 
 
 
@@ -49,11 +48,10 @@ const App = () => {
           <Route path="/admin/patients/add" element={<AddPatient />} />
           <Route path="/admin/patients/view/:id" element={<ViewPatient />} />
           <Route path="/admin/patients/update/:id" element={<UpdatePatient />} />
-          <Route path="/admin/todos" element={<ToDoList />} /> 
+          <Route path="admin/tasks" element={<ToDoList />} /> 
           <Route path="/admin/schedules" element={<ScheduleList />} />
           <Route path="/admin/schedules/add" element={<AddSchedule />} />
           <Route path="/admin/schedules/update/:id" element={<UpdateSchedule />} />
-          <Route path='/admin/donate-config'element={<DonateConfig />} />
           <Route path="/about" element={<About />} />
 
           
