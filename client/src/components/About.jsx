@@ -46,10 +46,10 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="relative bg-blue-600 text-white py-20">
+      <div className="relative bg-teal-600 text-white py-20">
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="/api/placeholder/1920/600"
+            src="./palli2.png"
             alt="About Us Banner"
             className="w-full h-full object-cover opacity-20"
           />

@@ -10,13 +10,287 @@ import {
   ArrowLeft,
   Loader2,
   RefreshCw,
-  Heart
+  Heart,
+  X,
+  CheckCircle
 } from 'lucide-react';
+
+const UpdatePatientModal = ({ 
+  isOpen, 
+  onClose, 
+  patientId, 
+  initialData,
+  onPatientUpdated 
+}) => {
+  const [formData, setFormData] = useState({
+    patient_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone_number: '',
+    place: '',
+    address: '',
+    health_condition: '',
+    care_details: '',
+    notes: ''
+  });
+
+  // Populate form data when modal opens or initial data changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        patient_name: initialData.patient_name || '',
+        contact_name: initialData.contact_name || '',
+        contact_email: initialData.contact_email || '',
+        contact_phone_number: initialData.contact_phone_number || '',
+        place: initialData.place || '',
+        address: initialData.address || '',
+        health_condition: initialData.health_condition || '',
+        care_details: initialData.care_details || '',
+        notes: initialData.notes || ''
+      });
+    }
+  }, [initialData]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const url = `http://localhost:5000/api/patients-in-need/${patientId}`;
+      const response = await axios.put(url, formData);
+      
+      // Pass only the patient object, not the entire response
+      onPatientUpdated(response.data.patient);
+      onClose();
+      
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      alert('Failed to update patient. Please try again.');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
+        <div 
+          className="fixed inset-0 transition-opacity" 
+          aria-hidden="true"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        {/* Modal container */}
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            {/* Close button */}
+            <button 
+              onClick={onClose} 
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Modal Header */}
+            <div className="sm:flex sm:items-start mb-6">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                <Heart className="h-6 w-6 text-teal-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Update Patient Profile
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Edit details for this patient
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Patient Name Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <User className="h-5 w-5 text-teal-600" />
+                  <span>Patient Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="patient_name"
+                  value={formData.patient_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Contact Name Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <User className="h-5 w-5 text-teal-600" />
+                  <span>Contact Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="contact_name"
+                  value={formData.contact_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Contact Email Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Mail className="h-5 w-5 text-teal-600" />
+                  <span>Contact Email</span>
+                </label>
+                <input
+                  type="email"
+                  name="contact_email"
+                  value={formData.contact_email}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Contact Phone Number Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Phone className="h-5 w-5 text-teal-600" />
+                  <span>Contact Phone Number</span>
+                </label>
+                <input
+                  type="tel"
+                  name="contact_phone_number"
+                  value={formData.contact_phone_number}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Place Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <MapPin className="h-5 w-5 text-teal-600" />
+                  <span>Place</span>
+                </label>
+                <input
+                  type="text"
+                  name="place"
+                  value={formData.place}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Address Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <MapPin className="h-5 w-5 text-teal-600" />
+                  <span>Address</span>
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {/* Health Condition Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Heart className="h-5 w-5 text-teal-600" />
+                  <span>Health Condition</span>
+                </label>
+                <textarea
+                  name="health_condition"
+                  value={formData.health_condition}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {/* Care Details Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  <span>Care Details</span>
+                </label>
+                <textarea
+                  name="care_details"
+                  value={formData.care_details}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {/* Notes Input */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  <span>Additional Notes</span>
+                </label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="submit"
+                  className="w-full inline-flex justify-center rounded-full border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Update Patient
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-3 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// patient in need view component
 
 const PatientInNeedView = () => {
   const { id } = useParams();
   const [patient, setPatient] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +307,13 @@ const PatientInNeedView = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  const handleUpdatePatient = (updatedPatient) => {
+    setSuccess('patient updated successfully!');
+    console.log('Updated Patient Full Object:', JSON.stringify(updatedPatient, null, 2));
+    console.log('Updated Patient Keys:', Object.keys(updatedPatient));
+    setPatient(updatedPatient);
+    setIsUpdateModalOpen(false);
   };
 
   if (isLoading) {
@@ -128,6 +409,40 @@ const PatientInNeedView = () => {
             </div>
           </div>
 
+           {/* alert content */}
+         {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
           {/* Patient Details */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
@@ -183,7 +498,7 @@ const PatientInNeedView = () => {
 
           <div className="flex space-x-4">
             <button
-              onClick={() => navigate(`/admin/patients-in-need/edit/${id}`)}
+              onClick={() => setIsUpdateModalOpen(true)}
               className="inline-flex items-center px-6 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
             >
               Edit Profile
@@ -191,6 +506,13 @@ const PatientInNeedView = () => {
           </div>
         </div>
       </div>
+      <UpdatePatientModal
+      isOpen={isUpdateModalOpen}
+      onClose={() => setIsUpdateModalOpen(false)}
+      patientId={id}
+      initialData={patient}
+      onPatientUpdated={handleUpdatePatient}
+    />
     </div>
   );
 };

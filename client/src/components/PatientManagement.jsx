@@ -8,13 +8,17 @@ import {
   Trash2, 
   ArrowLeft,
   UserPlus,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +51,7 @@ const PatientManagement = () => {
       try {
         await axios.delete(`http://localhost:5000/api/patients/${id}`);
         setPatients(patients.filter((patient) => patient.id !== id));
-        alert('Patient deleted successfully');
+        setSuccess('patient deleted successfully!');
       } catch (error) {
         console.error('Error deleting patient:', error);
         alert('Failed to delete patient');
@@ -73,13 +77,16 @@ const PatientManagement = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/admin/patients/add')}
-                className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
-              >
-                <UserPlus size={18} />
-                <span>Add Patient</span>
-              </button>
+              {/* Add Caregiver Button for Large Screens */}
+              <div className="hidden sm:block">
+                            <button 
+                                 onClick={() => navigate('/admin/patients/add')}
+                               className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+                            >
+                                <UserPlus size={16} className="mr-2" />
+                                Add Patient
+                            </button>
+                        </div>
               <button
                 onClick={fetchPatients}
                 className="p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -106,6 +113,51 @@ const PatientManagement = () => {
             />
           </div>
         </div>
+
+        
+           {/* alert content */}
+           {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+ {/* Add patient Button for Mobile */}
+ <div className="sm:hidden fixed bottom-4 right-4 z-50">
+                    <button 
+                         onClick={() => navigate('/admin/patients/add')}
+                        className="bg-teal-600 text-white p-3 rounded-full shadow-lg hover:bg-teal-700 transition-colors"
+                    >
+                        <UserPlus size={24} />
+                    </button>
+                </div>
 
         {/* Patients List */}
         <div className="bg-white rounded-lg shadow-md">

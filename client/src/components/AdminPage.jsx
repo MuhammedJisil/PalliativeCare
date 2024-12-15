@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, Gift } from 'lucide-react';
+import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, HeartPulse } from 'lucide-react';
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -53,7 +53,15 @@ const AdminPage = () => {
       path: '/admin/schedules',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
-    }
+    },
+    {
+      title: "Emergency Fund Patient Management",
+      description: "Track and support patients requiring emergency financial assistance",
+      icon: <HeartPulse className="h-8 w-8 text-teal-600" />,
+      path: '/admin/emergency-fund-management',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+  }
   ];
 
   return (

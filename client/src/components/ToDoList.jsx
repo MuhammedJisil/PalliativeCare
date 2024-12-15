@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  CheckCircle, Circle, AlertCircle, Clock, Users, 
-  ChevronDown, ChevronUp, Plus, Trash2, Edit2, ArrowLeft
+  CheckCircle, Circle, AlertCircle, Clock, Users,  Plus, Trash2, Edit2, ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -215,8 +214,9 @@ const Tasks = () => {
               </h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <button
+             {/* Add task Button for Large Screens */}
+                        <div className="hidden sm:block">
+                        <button
                 onClick={() => {
                   setEditingTask(null);
                   setFormData({
@@ -235,7 +235,7 @@ const Tasks = () => {
                 <Plus size={18} />
                 <span>Add Task</span>
               </button>
-            </div>
+              </div>
           </div>
         </div>
       </div>
@@ -300,6 +300,27 @@ const Tasks = () => {
     </div>
   </div>
 )}
+{/* Add task Button for Mobile */}
+<div className="sm:hidden fixed bottom-4 right-4 z-50">
+<button
+                onClick={() => {
+                  setEditingTask(null);
+                  setFormData({
+                    title: '',
+                    description: '',
+                    category: 'medical',
+                    priority: 'medium',
+                    assignedTo: '',
+                    dueDate: '',
+                    dueTime: ''
+                  });
+                  setIsModalOpen(true);
+                }}
+                className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              >
+                <Plus size={18} />
+              </button>
+                </div>
 
         {/* Tasks List */}
         <div className="bg-white rounded-lg shadow-md">

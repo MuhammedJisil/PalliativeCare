@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 const cors = require('cors'); // Import cors
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 const app = express();
 const port = 5000;
@@ -20,16 +20,18 @@ const pool = new Pool({
 
 app.use(cors()); // Use cors middleware
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
+// Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
-  },
+  }
 });
-
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 
 
 // Seed database with users
@@ -413,6 +415,115 @@ app.delete('/api/volunteers/:id', async (req, res) => {
   }
 });
 
+// Route to add a new volunteer
+app.post('/api/volunteers', async (req, res) => {
+  try {
+    const { 
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability, 
+      skills, 
+      notes 
+    } = req.body;
+
+    // Input validation
+    if (!name || !email || !phone_number || !address) {
+      return res.status(400).json({ 
+        error: 'Name, email, phone number, and address are required' 
+      });
+    }
+
+    // SQL query to insert new volunteer
+    const query = `
+      INSERT INTO volunteers 
+      (name, email, phone_number, address, availability, skills, notes) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      RETURNING *
+    `;
+
+    const values = [
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability || null, 
+      skills || null, 
+      notes || null
+    ];
+
+    // Execute the query
+    const result = await pool.query(query, values);
+
+    // Return the newly created volunteer
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding volunteer:', error);
+
+    // Handle unique constraint violations (e.g., duplicate email)
+    if (error.code === '23505') {
+      return res.status(409).json({ 
+        error: 'A volunteer with this email already exists' 
+      });
+    }
+
+    // Generic error handler
+    res.status(500).json({ 
+      error: 'An error occurred while adding the volunteer' 
+    });
+  }
+});
+
+// update a volunteer
+app.put('/api/volunteers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability, 
+      skills, 
+      notes 
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE volunteers 
+       SET 
+         name = $1, 
+         email = $2, 
+         phone_number = $3, 
+         address = $4, 
+         availability = $5, 
+         skills = $6, 
+         notes = $7 
+       WHERE id = $8 
+       RETURNING *`,
+      [
+        name, 
+        email, 
+        phone_number, 
+        address, 
+        availability || null, 
+        skills || null, 
+        notes || null, 
+        id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Volunteer not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating volunteer:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
 // Endpoint to get all caregivers
 app.get('/api/caregivers', async (req, res) => {
@@ -456,6 +567,113 @@ app.get('/api/caregivers/:id', async (req, res) => {
   }
 });
 
+// POST route to add a new caregiver
+app.post('/api/caregivers', async (req, res) => {
+  const { 
+    name, 
+    email, 
+    phone_number, 
+    address, 
+    availability, 
+    experience, 
+    certifications, 
+    notes 
+  } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO caregivers (
+        name, 
+        email, 
+        phone_number, 
+        address, 
+        availability, 
+        experience, 
+        certifications, 
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
+    `;
+
+    const values = [
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability, 
+      experience, 
+      certifications, 
+      notes
+    ];
+
+    const result = await pool.query(query, values);
+
+    res.status(201).json({ 
+      message: 'Caregiver added successfully', 
+      id: result.rows[0].id 
+    });
+  } catch (error) {
+    console.error('Error adding caregiver:', error);
+    res.status(500).json({ message: 'Failed to add caregiver', error: error.message });
+  }
+});
+
+// UPDATE caregiver
+app.put('/api/caregivers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability, 
+      experience, 
+      certifications, 
+      notes 
+    } = req.body;
+
+    const query = `
+      UPDATE caregivers 
+      SET 
+        name = $1, 
+        email = $2, 
+        phone_number = $3, 
+        address = $4, 
+        availability = $5, 
+        experience = $6, 
+        certifications = $7, 
+        notes = $8 
+      WHERE id = $9 
+      RETURNING *
+    `;
+
+    const values = [
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability, 
+      experience, 
+      certifications, 
+      notes,
+      id
+    ];
+
+    const { rows } = await pool.query(query, values);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Caregiver not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error updating caregiver:', error);
+    res.status(500).json({ error: 'Failed to update caregiver' });
+  }
+});
+
+
 // Endpoint to delete a caregiver by ID
 app.delete('/api/caregivers/:id', async (req, res) => {
   const { id } = req.params;
@@ -482,6 +700,67 @@ app.get('/api/patients-in-need', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// update patient in need
+app.put('/api/patients-in-need/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    patient_name,
+    contact_name,
+    contact_email,
+    contact_phone_number,
+    place,
+    address,
+    health_condition,
+    care_details,
+    notes,
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE patients_register
+      SET 
+        patient_name = $1,
+        contact_name = $2,
+        contact_email = $3,
+        contact_phone_number = $4,
+        place = $5,
+        address = $6,
+        health_condition = $7,
+        care_details = $8,
+        notes = $9
+      WHERE id = $10
+      RETURNING *;
+      `,
+      [
+        patient_name,
+        contact_name,
+        contact_email,
+        contact_phone_number,
+        place,
+        address,
+        health_condition,
+        care_details,
+        notes,
+        id,
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    res.json({
+      message: 'Patient details updated successfully',
+      patient: result.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while updating the patient details' });
+  }
+});
+
 
 // Route to get all patients in need or filtered by search query
 app.get('/api/patients-in-need', async (req, res) => {
@@ -513,6 +792,8 @@ app.get('/api/patients-in-need/:id', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
 
 
 // Delete a patient by ID
@@ -792,6 +1073,180 @@ app.delete('/api/schedules/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+// emergency fund component 
+
+// Route to fetch all emergency_fund
+app.get('/api/emergency-fund', async (req, res) => {
+  try {
+      const result = await pool.query('SELECT * FROM emergency_fund');
+      res.status(200).json(result.rows); // Send rows as JSON response
+  } catch (error) {
+      console.error('Error fetching emergency_fund:', error);
+      res.status(500).json({ error: 'Failed to fetch emergency_fund' });
+  }
+});
+
+
+// Function to delete existing file
+const deleteExistingFile = async (filePath) => {
+  if (filePath) {
+    try {
+      const fullPath = path.join(process.cwd(), filePath);
+      await fs.unlink(fullPath); // Promise-based unlink
+      console.log(`Successfully deleted file: ${fullPath}`);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.warn(`File not found, skipping: ${filePath}`);
+      } else {
+        console.error('Error deleting file:', err);
+      }
+    }
+  }
+};
+
+
+// Route to add/update emergency_fund (only one emergency_fund at a time)
+app.post('/api/emergency-fund', upload.fields([
+  { name: 'photo', maxCount: 1 }, 
+  { name: 'qr_code', maxCount: 1 }
+]), async (req, res) => {
+  const { name, details, account_number, ifsc_code, upi_id } = req.body;
+  const photo_url = req.files['photo'] ? req.files['photo'][0].path : null;
+  const qr_code_url = req.files['qr_code'] ? req.files['qr_code'][0].path : null;
+
+  const client = await pool.connect();
+
+  try {
+    // Find existing emergency_fund to delete old files
+    const existingEmergencyFund = await client.query('SELECT * FROM emergency_fund LIMIT 1');
+    
+    if (existingEmergencyFund.rows.length > 0) {
+      // Delete old photo if new photo is uploaded
+      if (photo_url) {
+        await deleteExistingFile(existingEmergencyFund.rows[0].photo_url);
+      }
+      
+      // Delete old QR code if new QR code is uploaded
+      if (qr_code_url) {
+        await deleteExistingFile(existingEmergencyFund.rows[0].qr_code_url);
+      }
+
+      // Delete all existing emergency_fund
+      await client.query('DELETE FROM emergency_fund');
+    }
+
+    // Insert new emergency_fund
+    const query = `
+      INSERT INTO emergency_fund 
+      (photo_url, name, details, account_number, ifsc_code, upi_id, qr_code_url) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      RETURNING *
+    `;
+    const values = [
+      photo_url, 
+      name, 
+      details, 
+      account_number, 
+      ifsc_code, 
+      upi_id, 
+      qr_code_url
+    ];
+
+    const result = await client.query(query, values);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'An error occurred while adding the emergency_fund' });
+  } finally {
+    client.release();
+  }
+});
+
+// Route to update emergency_fund (similar file deletion logic)
+app.put('/api/emergency-fund/:id', upload.fields([
+  { name: 'photo', maxCount: 1 }, 
+  { name: 'qr_code', maxCount: 1 }
+]), async (req, res) => {
+  const { id } = req.params;
+  const { name, details, account_number, ifsc_code, upi_id, existing_photo, existing_qr_code } = req.body;
+  const photo_url = req.files['photo'] ? req.files['photo'][0].path : existing_photo;
+  const qr_code_url = req.files['qr_code'] ? req.files['qr_code'][0].path : existing_qr_code;
+
+  try {
+    // Find existing emergency_fund to delete old files
+    const existingEmergencyFund = await pool.query('SELECT * FROM emergency_fund WHERE id = $1', [id]);
+    
+    if (existingEmergencyFund.rows.length > 0) {
+      // Delete old photo if new photo is uploaded
+      if (req.files['photo']) {
+        await deleteExistingFile(existingEmergencyFund.rows[0].photo_url);
+      }
+      
+      // Delete old QR code if new QR code is uploaded
+      if (req.files['qr_code']) {
+        await deleteExistingFile(existingEmergencyFund.rows[0].qr_code_url);
+      }
+    }
+
+    const query = `
+      UPDATE emergency_fund 
+      SET 
+        photo_url = $2, 
+        name = $3, 
+        details = $4, 
+        account_number = $5, 
+        ifsc_code = $6, 
+        upi_id = $7, 
+        qr_code_url = $8
+      WHERE id = $1 
+      RETURNING *
+    `;
+    const values = [
+      id, 
+      photo_url, 
+      name, 
+      details, 
+      account_number, 
+      ifsc_code, 
+      upi_id, 
+      qr_code_url
+    ];
+
+    const result = await pool.query(query, values);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'An error occurred while updating the emergency_fund' });
+  }
+});
+
+// Route to delete emergency_fund
+app.delete('/api/emergency-fund/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find emergency_fund to delete associated files
+    const emergencyFund = await pool.query('SELECT * FROM emergency_fund WHERE id = $1', [id]);
+    
+    if (emergencyFund.rows.length > 0) {
+      // Delete photo file
+      await deleteExistingFile(emergencyFund.rows[0].photo_url);
+      
+      // Delete QR code file
+      await deleteExistingFile(emergencyFund.rows[0].qr_code_url);
+    }
+
+    // Delete emergency_fund from database
+    await pool.query('DELETE FROM emergency_fund WHERE id = $1', [id]);
+    res.json({ message: 'Emergency fund deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'An error occurred while deleting the emergency fund' });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

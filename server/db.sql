@@ -92,7 +92,7 @@ CREATE TABLE caregivers (
     notes TEXT
 );
 
--- Create Patients Table
+-- Create Patients in need  Table
 CREATE TABLE patients_register (
     id SERIAL PRIMARY KEY,
     patient_name VARCHAR(255) NOT NULL,
@@ -131,3 +131,17 @@ CREATE TABLE schedules (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- emergency fund table
+CREATE TABLE emergency_fund (
+    id SERIAL PRIMARY KEY,
+    photo_url TEXT,
+    name VARCHAR(100) NOT NULL,
+    details TEXT,
+    account_number VARCHAR(20),
+    ifsc_code VARCHAR(11),
+    upi_id VARCHAR(50),
+    qr_code_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

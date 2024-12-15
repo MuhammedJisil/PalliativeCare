@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Heart, User, PlusCircle, Edit, Trash2, 
-  FileText, ClipboardList, Eye, X
+  Heart, PlusCircle, Edit, Trash2, 
+  ArrowLeft, ClipboardList, Eye, X
 } from 'lucide-react';
 
-
+// schedule view component
 const Modal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
 
@@ -53,9 +53,7 @@ const ScheduleList = () => {
     navigate(`/admin/schedules/update/${id}`);
   };
 
-  const handleBack = () => {
-    navigate('/admin/dashboard');
-  };
+  
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this schedule?');
@@ -122,34 +120,35 @@ const ScheduleList = () => {
                 Schedule Management
               </h1>
             </div>
-            <button
-              onClick={() => navigate('/admin/schedules/add')}
-              className="flex items-center px-5 py-2.5 bg-teal-600 text-white rounded-full 
-              hover:bg-teal-700 transition-all duration-300 
-              transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
-            >
-              <PlusCircle className="mr-2" size={20} />
-              Add New Schedule
-            </button>
+            {/* Add volunteer Button for large screens */}
+              <div className="hidden sm:block">
+                            <button 
+                             onClick={() => navigate('/admin/schedules/add')}
+                              className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+                            >
+                                <PlusCircle size={16} className="mr-2" />
+                                Add Schedule
+                            </button>
+                            </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-lg shadow-md">
           {schedules.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
               <ClipboardList className="mx-auto h-16 w-16 text-teal-300 mb-4" />
               <p className="text-xl">No schedules found</p>
             </div>
           ) : (
-            <table className="min-w-full">
-              <thead className="bg-teal-50 border-b-2 border-teal-200">
+            <table className="w-full">
+                <thead className="bg-gray-50">
                 <tr>
-                  <th className="py-4 px-4 text-left text-sm font-semibold text-teal-800 uppercase tracking-wider">
+                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
                     Patient
                   </th>
-                  <th className="py-4 px-4 text-left text-sm font-semibold text-teal-800 uppercase tracking-wider">
+                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
                     Actions
                   </th>
                 </tr>
@@ -158,9 +157,9 @@ const ScheduleList = () => {
                 {schedules.map((schedule) => (
                   <tr 
                     key={schedule.id} 
-                    className="hover:bg-teal-50 transition-colors group"
+                    className="hover:bg-gray-50"
                   >
-                    <td className="py-4 px-4 border-b font-medium text-gray-800">
+                    <td className="py-4 px-4 whitespace-nowrap text-gray-700">
                       {schedule.patient_name}
                     </td>
                     <td className="py-4 px-4 border-b">
@@ -195,15 +194,23 @@ const ScheduleList = () => {
           )}
         </div>
 
-        <div className="mt-8 text-center">
+        {/* Add schedule Button for Mobile */}
+        <div className="sm:hidden fixed bottom-4 right-4 z-50">
+                    <button 
+                      onClick={() => navigate('/admin/schedules/add')}
+                      className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+                    >
+                        <PlusCircle size={24} />
+                    </button>
+                </div>
+
+        {/* Back Button */}
+        <div className="mt-6">
           <button
-            onClick={handleBack}
-            className="flex items-center justify-center mx-auto px-6 py-2.5 
-            bg-teal-600 text-white rounded-full 
-            hover:bg-teal-700 transition-all duration-300 
-            transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+            onClick={() => navigate('/admin/dashboard')}
+            className="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
           >
-            <User className="mr-2" size={18} />
+            <ArrowLeft size={16} className="mr-2" />
             Back to Dashboard
           </button>
         </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Users, Heart, Info } from 'lucide-react';
 import Registration from './Registration';
 import Footer from './Footer'
+import EmergencyFundCard from './EmergencyFundCard';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -135,6 +136,7 @@ const Home = () => {
 
       {/* Patient Section Ref */}
       <div ref={patientRef} />
+      <EmergencyFundCard/>
       <Footer/>
     </div>
   );

@@ -22,6 +22,9 @@ import ScheduleList from './components/ScheduleList';
 import AddSchedule from './components/AddSchedule';
 import UpdateSchedule from './components/UpdateSchedule';
 import About from './components/About';
+import EmergencyFundCard from './components/EmergencyFundCard';
+import EmergencyFundManager from './components/EmergencyFundManager';
+
 
 
 
@@ -53,6 +56,8 @@ const App = () => {
           <Route path="/admin/schedules/add" element={<AddSchedule />} />
           <Route path="/admin/schedules/update/:id" element={<UpdateSchedule />} />
           <Route path="/about" element={<About />} />
+          <Route path="/emergency-fund" element={<EmergencyFundCard />} />
+          <Route path="/admin/emergency-fund-management" element={<EmergencyFundManager />} />
 
           
         </Routes>

@@ -8,13 +8,255 @@ import {
   Trash2, 
   ArrowLeft,
   UserPlus,
-  RefreshCw
+  RefreshCw,
+  Heart, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  Book, 
+  X,
+  CheckCircle
 } from 'lucide-react';
+
+// AddCaregiverModal Component
+const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone_number: '',
+    address: '',
+    availability: '',
+    experience: '',
+    certifications: '',
+    notes: ''
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const url = 'http://localhost:5000/api/caregivers';
+      const response = await axios.post(url, formData);
+      
+      // Clear form after successful submission
+      setFormData({
+        name: '',
+        email: '',
+        phone_number: '',
+        address: '',
+        availability: '',
+        experience: '',
+        certifications: '',
+        notes: ''
+      });
+
+      // Notify parent component and close modal
+      onCaregiverAdded(response.data);
+      onClose();
+    
+    } catch (error) {
+      console.error('Error adding caregiver:', error);
+      alert('Failed to add caregiver. Please try again.');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
+        <div 
+          className="fixed inset-0 transition-opacity" 
+          aria-hidden="true"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        {/* Modal container */}
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            {/* Close button */}
+            <button 
+              onClick={onClose} 
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Modal Header */}
+            <div className="sm:flex sm:items-start mb-6">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                <Heart className="h-6 w-6 text-teal-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Add New Caregiver
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Fill out the details for a new caregiver
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <User className="h-5 w-5 text-teal-600" />
+                  <span>Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Mail className="h-5 w-5 text-teal-600" />
+                  <span>Email</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Phone className="h-5 w-5 text-teal-600" />
+                  <span>Phone Number</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <MapPin className="h-5 w-5 text-teal-600" />
+                  <span>Address</span>
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Calendar className="h-5 w-5 text-teal-600" />
+                  <span>Availability</span>
+                </label>
+                <textarea
+                  name="availability"
+                  value={formData.availability}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Book className="h-5 w-5 text-teal-600" />
+                  <span>Experience</span>
+                </label>
+                <textarea
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Book className="h-5 w-5 text-teal-600" />
+                  <span>Certifications</span>
+                </label>
+                <textarea
+                  name="certifications"
+                  value={formData.certifications}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <User className="h-5 w-5 text-teal-600" />
+                  <span>Additional Notes</span>
+                </label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="submit"
+                  className="w-full inline-flex justify-center rounded-full border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Add Caregiver
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-3 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CaregiverList = () => {
   const [caregivers, setCaregivers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +285,7 @@ const CaregiverList = () => {
       try {
         await axios.delete(`http://localhost:5000/api/caregivers/${id}`);
         setCaregivers(caregivers.filter((caregiver) => caregiver.id !== id));
-        alert('Caregiver deleted successfully');
+        setSuccess('caregiver deleted successfully!');
       } catch (error) {
         console.error('Error deleting caregiver:', error);
         alert('Failed to delete caregiver');
@@ -51,9 +293,16 @@ const CaregiverList = () => {
     }
   };
 
-  const filteredCaregivers = caregivers.filter((caregiver) =>
-    caregiver.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleAddCaregiver = (newCaregiver) => {
+    setSuccess('caregiver added successfully!');
+    // Add the new caregiver to the list
+    setCaregivers([...caregivers, newCaregiver]);
+  };
+
+const filteredCaregivers = caregivers.filter((caregiver) =>
+  caregiver.name && caregiver.name.toLowerCase().includes(searchQuery.toLowerCase())
+);
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,13 +318,16 @@ const CaregiverList = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/volunteer-caregiver-registration')}
-                className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
-              >
-                <UserPlus size={18} />
-                <span>Add Caregiver</span>
-              </button>
+              {/* Add Caregiver Button for Large Screens */}
+              <div className="hidden sm:block">
+                            <button 
+                                 onClick={() => setIsAddModalOpen(true)}
+                               className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+                            >
+                                <UserPlus size={16} className="mr-2" />
+                                Add Caregiver
+                            </button>
+                        </div>
               <button
                 onClick={fetchCaregivers}
                 className="p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -153,6 +405,52 @@ const CaregiverList = () => {
           )}
         </div>
 
+         {/* alert content */}
+         {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
+        {/* Add Caregiver Button for Mobile */}
+        <div className="sm:hidden fixed bottom-4 right-4 z-50">
+                    <button 
+                          onClick={() => setIsAddModalOpen(true)}
+                        className="bg-teal-600 text-white p-3 rounded-full shadow-lg hover:bg-teal-700 transition-colors"
+                    >
+                        <UserPlus size={24} />
+                    </button>
+                </div>
+
+
         {/* Back Button */}
         <div className="mt-6">
           <button
@@ -164,6 +462,13 @@ const CaregiverList = () => {
           </button>
         </div>
       </div>
+      {isAddModalOpen && (
+        <AddCaregiverModal 
+          isOpen={isAddModalOpen} 
+          onClose={() => setIsAddModalOpen(false)}
+          onCaregiverAdded={handleAddCaregiver}
+        />
+      )}
     </div>
   );
 };

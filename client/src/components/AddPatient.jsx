@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Calendar, Phone, User, Stethoscope, Clipboard, FileText, Heart, UserCheck, LayoutList } from 'lucide-react';
+import { UserPlus,  User, Stethoscope,  UserCheck, LayoutList, ArrowLeft, CheckCircle } from 'lucide-react';
 
 const AddPatient = () => {
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     initialTreatmentDate: '',
@@ -60,7 +62,11 @@ const AddPatient = () => {
         },
         medical_history: formData.history || null
       });
+      setSuccess('Patient added successfully!');
+      //  Navigate after a short delay to allow user to see the success message
+    setTimeout(() => {
       navigate('/admin/patient-management');
+    }, 1000); // 1 second delay
     } catch (error) {
       console.error('Error adding patient:', error);
     }
@@ -73,6 +79,40 @@ const AddPatient = () => {
           <UserPlus className="h-10 w-10 text-teal-600" />
           <h1 className="text-3xl font-bold text-gray-800">Add New Patient</h1>
         </div>
+
+         {/* alert content */}
+         {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information Section */}
@@ -310,15 +350,22 @@ const AddPatient = () => {
           </div>
           
           {/* Submit Button */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="flex items-center space-x-2 bg-teal-600 text-white px-6 py-3 rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md"
-            >
-              <Heart size={20} />
-              <span>Add Patient</span>
-            </button>
-          </div>
+          <div className="mt-6 flex justify-between items-center">
+              <button
+                type="submit"
+                className="inline-flex items-center px-6 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors"
+              >
+                Add 
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/patient-management')}
+                className="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft size={16} className="mr-2" />
+                Back to list
+              </button>
+            </div>
         </form>
       </div>
     </div>
