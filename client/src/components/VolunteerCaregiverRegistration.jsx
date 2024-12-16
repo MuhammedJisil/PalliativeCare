@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Heart, User, Mail, Phone, MapPin, Calendar, Book, Award, FileText } from 'lucide-react';
+import { Heart, User, Mail, Phone, MapPin, Calendar, Book, Award, FileText, CheckCircle } from 'lucide-react';
 
 const VolunteerCaregiverRegistration = () => {
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
   const [role, setRole] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -35,8 +37,11 @@ const VolunteerCaregiverRegistration = () => {
     try {
       const url = 'http://localhost:5000/api/register';
       await axios.post(url, { ...formData, userType: role });
-      alert('Registration Successful');
+      setSuccess('Registration Successful');
+      //  Navigate after a short delay to allow user to see the success message
+    setTimeout(() => {
       navigate('/');
+    }, 1000); // 1 second delay
     } catch (error) {
       console.error(error);
       alert('Registration failed. Please try again.');
@@ -228,6 +233,41 @@ const VolunteerCaregiverRegistration = () => {
           </div>
         </div>
       </div>
+
+       {/* alert content */}
+       {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

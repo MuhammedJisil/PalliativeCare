@@ -19,8 +19,6 @@ import UpdatePatient from './components/UpdatePatient';
 import Donate from './components/Donate';
 import ToDoList from './components/ToDoList';
 import ScheduleList from './components/ScheduleList';
-import AddSchedule from './components/AddSchedule';
-import UpdateSchedule from './components/UpdateSchedule';
 import About from './components/About';
 import EmergencyFundCard from './components/EmergencyFundCard';
 import EmergencyFundManager from './components/EmergencyFundManager';
@@ -53,8 +51,6 @@ const App = () => {
           <Route path="/admin/patients/update/:id" element={<UpdatePatient />} />
           <Route path="admin/tasks" element={<ToDoList />} /> 
           <Route path="/admin/schedules" element={<ScheduleList />} />
-          <Route path="/admin/schedules/add" element={<AddSchedule />} />
-          <Route path="/admin/schedules/update/:id" element={<UpdateSchedule />} />
           <Route path="/about" element={<About />} />
           <Route path="/emergency-fund" element={<EmergencyFundCard />} />
           <Route path="/admin/emergency-fund-management" element={<EmergencyFundManager />} />

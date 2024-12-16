@@ -977,7 +977,7 @@ app.get('/api/schedules', async (req, res) => {
 
 
 // Add a new schedule
-app.post('/schedules', async (req, res) => {
+app.post('/api/schedules', async (req, res) => {
   const { patient_name, member_name, visit_date, visit_time, visit_type, notes } = req.body;
   try {
     const result = await pool.query(
@@ -1008,7 +1008,7 @@ app.get('/schedules/:id', async (req, res) => {
 
 
 // Update schedule by ID
-app.put('/schedules/:id', async (req, res) => {
+app.put('/api/schedules/:id', async (req, res) => {
   const { id } = req.params;
   const { patient_name, member_name, visit_date, visit_time, visit_type, notes } = req.body;
 

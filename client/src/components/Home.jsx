@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Users, Heart, Info } from 'lucide-react';
+import { ChevronDown, Users, HeartHandshake, Info } from 'lucide-react';
 import Registration from './Registration';
 import Footer from './Footer'
 import EmergencyFundCard from './EmergencyFundCard';
@@ -53,7 +53,7 @@ const Home = () => {
               onClick={scrollToPatient}
               className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition duration-300"
             >
-              <Heart size={20} />
+              <HeartHandshake size={20} />
               <span>Patient Registration</span>
             </button>
             

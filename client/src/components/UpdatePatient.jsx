@@ -178,7 +178,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="firstName"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.firstName}
                     onChange={handleInputChange}
                   />
@@ -188,7 +188,7 @@ const UpdatePatient = () => {
                   <input
                     type="date"
                     name="dob"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.dob}
                     onChange={handleInputChange}
                   />
@@ -198,7 +198,7 @@ const UpdatePatient = () => {
                   <input
                     type="number"
                     name="age"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.age}
                     onChange={handleInputChange}
                   />
@@ -208,7 +208,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="gender"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.gender}
                     onChange={handleInputChange}
                   />
@@ -223,7 +223,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="address"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.address}
                     onChange={handleInputChange}
                   />
@@ -233,7 +233,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="phoneNumber"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                   />
@@ -243,7 +243,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="doctor"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.doctor}
                     onChange={handleInputChange}
                   />
@@ -253,7 +253,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="caregiver"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.caregiver}
                     onChange={handleInputChange}
                   />
@@ -270,7 +270,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="disease"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.disease}
                     onChange={handleInputChange}
                   />
@@ -280,7 +280,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="medication"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.medication}
                     onChange={handleInputChange}
                   />
@@ -289,7 +289,7 @@ const UpdatePatient = () => {
                   <label className="block text-sm font-medium text-gray-700">Note</label>
                   <textarea
                     name="note"
-                    className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.note}
                     onChange={handleInputChange}
                     rows="3"
@@ -300,7 +300,7 @@ const UpdatePatient = () => {
                   <input
                     type="date"
                     name="noteDate"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.noteDate}
                     onChange={handleInputChange}
                   />
@@ -317,7 +317,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="proxyName"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.proxyName}
                     onChange={handleInputChange}
                   />
@@ -327,7 +327,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="relation"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.relation}
                     onChange={handleInputChange}
                   />
@@ -337,7 +337,7 @@ const UpdatePatient = () => {
                   <input
                     type="text"
                     name="proxyPhoneNumber"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={formData.proxyPhoneNumber}
                     onChange={handleInputChange}
                   />
@@ -352,7 +352,7 @@ const UpdatePatient = () => {
                 <label className="block text-sm font-medium text-gray-700">Additional History</label>
                 <textarea
                   name="history"
-                  className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   value={formData.history}
                   onChange={handleInputChange}
                   rows="4"
