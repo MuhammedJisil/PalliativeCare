@@ -100,7 +100,7 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <img 
-                src="/api/placeholder/400/300" 
+                src="./palli1.png" 
                 alt="Medical Care" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -109,7 +109,7 @@ const Home = () => {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <img 
-                src="/api/placeholder/400/300" 
+                src="./palli2.png" 
                 alt="Emotional Support" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -118,7 +118,7 @@ const Home = () => {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <img 
-                src="/api/placeholder/400/300" 
+                src="./palli3.png" 
                 alt="Home Care" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />

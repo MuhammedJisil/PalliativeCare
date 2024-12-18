@@ -5,8 +5,9 @@ import {
   Heart, PlusCircle, Edit, Trash2, 
   ArrowLeft, ClipboardList, Eye, X, 
   User, CalendarDays, Clock, FileText, 
-  AlertCircle, CheckCircle, UserPlus, Save
+  AlertCircle, CheckCircle, UserPlus
 } from 'lucide-react';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title }) => {
@@ -742,6 +743,7 @@ const ScheduleList = () => {
         onClose={handleCloseModal}
         onAdd={handleAddSchedule}
       />
+      <ScrollToBottomButton/>
     </div>
   );
 };

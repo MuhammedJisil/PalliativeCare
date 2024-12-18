@@ -16,6 +16,24 @@ const EmergencyFundCard = () => {
    const [error, setError] = useState(null);
    const [copiedField, setCopiedField] = useState(null);
 
+   const scrollbarStyles = `
+   .custom-scrollbar::-webkit-scrollbar {
+     width: 8px;
+   }
+   .custom-scrollbar::-webkit-scrollbar-track {
+     background: rgba(13, 148, 136, 0.1);
+     border-radius: 10px;
+   }
+   .custom-scrollbar::-webkit-scrollbar-thumb {
+     background: linear-gradient(135deg, #0d9488, #0f766e);
+     border-radius: 10px;
+     transition: all 0.3s ease;
+   }
+   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+     background: linear-gradient(135deg, #0f766e, #0d9488);
+   }
+ `;
+
    useEffect(() => {
      const fetchLatestPatient = async () => {
        try {
@@ -226,24 +244,8 @@ const EmergencyFundCard = () => {
          </div>
        )}
 
-       {/* Custom Scrollbar Styles */}
-       <style jsx global>{`
-         .custom-scrollbar::-webkit-scrollbar {
-           width: 8px;
-         }
-         .custom-scrollbar::-webkit-scrollbar-track {
-           background: rgba(13, 148, 136, 0.1);
-           border-radius: 10px;
-         }
-         .custom-scrollbar::-webkit-scrollbar-thumb {
-           background: linear-gradient(135deg, #0d9488, #0f766e);
-           border-radius: 10px;
-           transition: all 0.3s ease;
-         }
-         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-           background: linear-gradient(135deg, #0f766e, #0d9488);
-         }
-       `}</style>
+      {/* Inline Styles for Scrollbar */}
+      <style>{scrollbarStyles}</style>
      </>
    );
 };

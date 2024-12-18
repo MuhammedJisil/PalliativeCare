@@ -19,6 +19,7 @@ import {
   X,
   CheckCircle
 } from 'lucide-react';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 // AddVolunteerModal Component
 const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
@@ -453,6 +454,7 @@ const VolunteerList = () => {
         onVolunteerAdded={handleAddVolunteer}
       />
     )}
+     <ScrollToBottomButton />
   </div>
 );
 };

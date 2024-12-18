@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
@@ -227,6 +228,7 @@ const PatientManagement = () => {
           </button>
         </div>
       </div>
+      <ScrollToBottomButton/>
     </div>
   );
 };

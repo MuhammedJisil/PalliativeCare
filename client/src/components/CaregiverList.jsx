@@ -19,6 +19,7 @@ import {
   X,
   CheckCircle
 } from 'lucide-react';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 // AddCaregiverModal Component
 const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
@@ -469,6 +470,7 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
           onCaregiverAdded={handleAddCaregiver}
         />
       )}
+      <ScrollToBottomButton/>
     </div>
   );
 };

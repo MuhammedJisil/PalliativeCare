@@ -31,7 +31,7 @@ const PatientRegistration = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:5000/api/patients-in-need', formData);
-      setSuccess('Patient registered successfully');
+      setSuccess('Patient registered successfully!');
      //  Navigate after a short delay to allow user to see the success message
     setTimeout(() => {
       navigate('/');

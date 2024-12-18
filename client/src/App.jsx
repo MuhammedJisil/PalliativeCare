@@ -20,7 +20,6 @@ import Donate from './components/Donate';
 import ToDoList from './components/ToDoList';
 import ScheduleList from './components/ScheduleList';
 import About from './components/About';
-import EmergencyFundCard from './components/EmergencyFundCard';
 import EmergencyFundManager from './components/EmergencyFundManager';
 
 
@@ -52,7 +51,6 @@ const App = () => {
           <Route path="admin/tasks" element={<ToDoList />} /> 
           <Route path="/admin/schedules" element={<ScheduleList />} />
           <Route path="/about" element={<About />} />
-          <Route path="/emergency-fund" element={<EmergencyFundCard />} />
           <Route path="/admin/emergency-fund-management" element={<EmergencyFundManager />} />
 
           

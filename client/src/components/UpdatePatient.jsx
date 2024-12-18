@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Heart, 
-  ArrowLeft,
-  CheckCircle
+  UserPlus, 
+  User, 
+  Stethoscope, 
+  UserCheck, 
+  LayoutList, 
+  ArrowLeft, 
+  CheckCircle,
+  AlertCircle 
 } from 'lucide-react';
 
 const UpdatePatient = () => {
@@ -115,250 +120,279 @@ const UpdatePatient = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white shadow-md">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-teal-600" />
-              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Update Patient Details
-              </h1>
+    <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
+      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-4xl border border-gray-100">
+        <div className="flex items-center mb-6 space-x-4">
+          <UserPlus className="h-10 w-10 text-teal-600" />
+          <h1 className="text-3xl font-bold text-gray-800">Update Patient Details</h1>
+        </div>
+
+        {/* Alert Content */}
+        {(error || success) && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/10"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+            }}
+          >
+            <div 
+              className="fixed top-4 right-4 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <div>
+                    <p className="font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center mb-4 space-x-2">
+              <User className="h-6 w-6 text-teal-600" />
+              <h2 className="text-xl font-semibold text-gray-700">Personal Information</h2>
+            </div>
+            
             <div className="grid md:grid-cols-2 gap-4">
-
-              {/* alert content */}
-           {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
-  >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
-
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Personal Information</h2>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
-                  <input
-                    type="date"
-                    name="dob"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.dob}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Gender</label>
-                  <input
-                    type="text"
-                    name="gender"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Contact Information</h2>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                  <input
-                    type="text"
-                    name="phoneNumber"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Doctor</label>
-                  <input
-                    type="text"
-                    name="doctor"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.doctor}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Caregiver</label>
-                  <input
-                    type="text"
-                    name="caregiver"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.caregiver}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Medical Information */}
-            <div className="mt-6 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical Information</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Disease</label>
-                  <input
-                    type="text"
-                    name="disease"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.disease}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Medication</label>
-                  <input
-                    type="text"
-                    name="medication"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.medication}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Note</label>
-                  <textarea
-                    name="note"
-                    className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.note}
-                    onChange={handleInputChange}
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Note Date</label>
-                  <input
-                    type="date"
-                    name="noteDate"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.noteDate}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Medical Proxy */}
-            <div className="mt-6 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical Proxy</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Proxy Name</label>
-                  <input
-                    type="text"
-                    name="proxyName"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.proxyName}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Relation</label>
-                  <input
-                    type="text"
-                    name="relation"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.relation}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Proxy Phone Number</label>
-                  <input
-                    type="text"
-                    name="proxyPhoneNumber"
-                    className="mt-1 block w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    value={formData.proxyPhoneNumber}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Medical History */}
-            <div className="mt-6 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical History</h2>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Additional History</label>
-                <textarea
-                  name="history"
-                  className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={formData.history}
+                <label className="block text-gray-600 font-medium mb-2">First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleInputChange}
-                  rows="4"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Date of Birth</label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Age</label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Gender</label>
+                <div className="flex space-x-4 mt-2">
+                  {['Male', 'Female', 'Other'].map(gender => (
+                    <label key={gender} className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={gender}
+                        checked={formData.gender === gender}
+                        onChange={handleInputChange}
+                        className="form-radio text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="ml-2">{gender}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-gray-600 font-medium mb-2">Address</label>
+              <textarea
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              ></textarea>
+            </div>
+          </div>
+          
+          {/* Medical Information Section */}
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center mb-4 space-x-2">
+              <Stethoscope className="h-6 w-6 text-teal-600" />
+              <h2 className="text-xl font-semibold text-gray-700">Medical Information</h2>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Disease</label>
+                <input
+                  type="text"
+                  name="disease"
+                  value={formData.disease}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Medication</label>
+                <textarea
+                  name="medication"
+                  value={formData.medication}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                 ></textarea>
               </div>
             </div>
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Initial Treatment Date</label>
+                <input
+                  type="date"
+                  name="initialTreatmentDate"
+                  value={formData.initialTreatmentDate}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Doctor</label>
+                <input
+                  type="text"
+                  name="doctor"
+                  value={formData.doctor}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Caregiver</label>
+                <input
+                  type="text"
+                  name="caregiver"
+                  value={formData.caregiver}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-600 font-medium mb-2">Note Date</label>
+                <input
+                  type="date"
+                  name="noteDate"
+                  value={formData.noteDate}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-gray-600 font-medium mb-2">Additional Notes</label>
+              <textarea
+                name="note"
+                value={formData.note}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              ></textarea>
+            </div>
+          </div>
+          
+           {/* Medical Proxy Section */}
+                     <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                       <div className="flex items-center mb-4 space-x-2">
+                         <UserCheck className="h-6 w-6 text-teal-600" />
+                         <h2 className="text-xl font-semibold text-gray-700">Medical Proxy</h2>
+                       </div>
+                       
+                       <div className="grid md:grid-cols-2 gap-4">
+                         <div>
+                           <label className="block text-gray-600 font-medium mb-2">Proxy Name</label>
+                           <input
+                             type="text"
+                             name="proxyName"
+                             value={formData.proxyName}
+                             onChange={handleInputChange}
+                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                           />
+                         </div>
+                         
+                         <div>
+                           <label className="block text-gray-600 font-medium mb-2">Relation</label>
+                           <input
+                             type="text"
+                             name="relation"
+                             value={formData.relation}
+                             onChange={handleInputChange}
+                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                           />
+                         </div>
+                       </div>
+                       
+                       <div className="mt-4">
+                         <label className="block text-gray-600 font-medium mb-2">Proxy Phone Number</label>
+                         <input
+                           type="tel"
+                           name="proxyPhoneNumber"
+                           value={formData.proxyPhoneNumber}
+                           onChange={handleInputChange}
+                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                         />
+                       </div>
+                     </div>
+           {/* Medical History */}
+<div className="mt-6 space-y-4">
+  <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Medical History</h2>
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Additional History</label>
+    <textarea
+      name="history"
+      className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+      value={formData.history}
+      onChange={handleInputChange}
+      rows="4"
+    ></textarea>
+  </div>
+</div>
             
             {/* Action Buttons */}
             <div className="mt-6 flex justify-between items-center">
@@ -380,7 +414,6 @@ const UpdatePatient = () => {
           </form>
         </div>
       </div>
-    </div>
   );
 };
 

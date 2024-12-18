@@ -19,6 +19,7 @@ import {
   CheckCircle
 
 } from 'lucide-react';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
   const [formData, setFormData] = useState({
@@ -493,6 +494,7 @@ const PatientsInNeed = () => {
           onPatientAdded={handleAddPatient}
         />
       )}
+      <ScrollToBottomButton/>
     </div>
   );
 };

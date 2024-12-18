@@ -3,6 +3,7 @@ import {
   CheckCircle, Circle, AlertCircle, Clock, Users,  Plus, Trash2, Edit2, ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 const taskService = {
   async getTasks() {
@@ -526,6 +527,7 @@ const Tasks = () => {
           </button>
         </div>
       </div>
+      <ScrollToBottomButton/>
     </div>
   );
 };
