@@ -17,7 +17,8 @@ import {
   Calendar, 
   Book, 
   X,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 
@@ -48,7 +49,7 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
         ...formData, 
         userType: 'volunteer' 
       });
-      
+  
       // Clear form after successful submission
       setFormData({
         name: '',
@@ -59,16 +60,24 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
         skills: '',
         notes: ''
       });
-
+  
       // Notify parent component and close modal
       onVolunteerAdded(response.data);
       onClose();
       
     } catch (error) {
       console.error('Error adding volunteer:', error);
-      alert('Failed to add volunteer. Please try again.');
+  
+      // Handle duplicate entry error
+      if (error.response && error.response.status === 409) {
+        alert('A volunteer with this name, email, and phone number already exists.');
+      } else {
+        // Generic error handling
+        alert('Failed to add volunteer. Please try again.');
+      }
     }
   };
+  
 
   if (!isOpen) return null;
 
@@ -213,6 +222,7 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
                   rows="3"
                 ></textarea>
               </div>
+
 
               {/* Modal Footer */}
               <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Heart, User, Mail, Phone, MapPin, Home, CheckCircle, Stethoscope, Activity, ClipboardList } from 'lucide-react';
+import { Heart, User, Mail, Phone, MapPin, Home, AlertCircle, CheckCircle, Stethoscope, Activity, ClipboardList } from 'lucide-react';
 
 const PatientRegistration = () => {
   const [success, setSuccess] = useState(null);
@@ -30,17 +30,23 @@ const PatientRegistration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/patients-in-need', formData);
-      setSuccess('Patient registered successfully!');
-     //  Navigate after a short delay to allow user to see the success message
-    setTimeout(() => {
-      navigate('/');
-    }, 1000); // 1 second delay
+      const response = await axios.post('http://localhost:5000/api/patients-in-need', formData);
+
+      if (response.status === 201) {
+        setSuccess('Patient registered successfully!');
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
+      }
     } catch (error) {
-      console.error('Error registering patient:', error);
-      alert('Registration failed. Please try again.');
+      if (error.response && error.response.status === 409) {
+        setError('Patient already exists. Please check the details.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

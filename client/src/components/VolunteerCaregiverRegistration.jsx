@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Heart, User, Mail, Phone, MapPin, Calendar, Book, Award, FileText, CheckCircle } from 'lucide-react';
+import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle } from 'lucide-react';
 
 const VolunteerCaregiverRegistration = () => {
   const [success, setSuccess] = useState(null);
@@ -38,15 +38,29 @@ const VolunteerCaregiverRegistration = () => {
       const url = 'http://localhost:5000/api/register';
       await axios.post(url, { ...formData, userType: role });
       setSuccess('Registration Successful');
-      //  Navigate after a short delay to allow user to see the success message
-    setTimeout(() => {
-      navigate('/');
-    }, 1000); // 1 second delay
+      
+      // Navigate after a short delay to allow the user to see the success message
+      setTimeout(() => {
+        navigate('/');
+      }, 1000); // 1-second delay
     } catch (error) {
       console.error(error);
-      alert('Registration failed. Please try again.');
+  
+      // Check for a specific error response from the server
+      if (error.response) {
+        if (error.response.status === 409) {
+          setError('A user with the same details already exists. Please try again.');
+        } else if (error.response.status === 400) {
+          setError('Required fields are missing. Please fill out all fields.');
+        } else {
+          setError('Registration failed. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

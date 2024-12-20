@@ -308,29 +308,76 @@ app.put('/api/patients/:id', async (req, res) => {
 
 //Registration component(volunteer and caregiver) 
 
+// Registration component (volunteer and caregiver)
 app.post('/api/register', async (req, res) => {
-  const { userType, name, email, phone_number, address, availability, skills, experience, certifications, notes } = req.body;
+  const { 
+    userType, 
+    name, 
+    email, 
+    phone_number, 
+    address, 
+    availability, 
+    skills, 
+    experience, 
+    certifications, 
+    notes 
+  } = req.body;
 
   try {
+    if (!name || !email || !phone_number) {
+      return res.status(400).json({ 
+        error: 'Name, email, and phone number are required' 
+      });
+    }
+
+    // Check for duplicate entries in the respective tables
+    let existingEntry;
+
+    if (userType === 'volunteer') {
+      existingEntry = await pool.query(
+        'SELECT 1 FROM volunteers WHERE name = $1 AND email = $2 AND phone_number = $3',
+        [name.trim(), email.trim(), phone_number.trim()]
+      );
+    } else if (userType === 'caregiver') {
+      existingEntry = await pool.query(
+        'SELECT 1 FROM caregivers WHERE name = $1 AND email = $2 AND phone_number = $3',
+        [name.trim(), email.trim(), phone_number.trim()]
+      );
+    }
+
+    if (existingEntry && existingEntry.rows.length > 0) {
+      return res.status(409).json({ 
+        error: `A ${userType} with the same details already exists` 
+      });
+    }
+
+    // Insert into the appropriate table
     if (userType === 'volunteer') {
       await pool.query(
         'INSERT INTO volunteers (name, email, phone_number, address, availability, skills, notes) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [name, email, phone_number, address, availability, skills, notes]
+        [name.trim(), email.trim(), phone_number.trim(), address, availability, skills, notes]
       );
     } else if (userType === 'caregiver') {
       await pool.query(
         'INSERT INTO caregivers (name, email, phone_number, address, availability, experience, certifications, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-        [name, email, phone_number, address, availability, experience, certifications, notes]
+        [name.trim(), email.trim(), phone_number.trim(), address, availability, experience, certifications, notes]
       );
     }
+
     res.status(201).json({ message: 'Registration successful' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error during registration:', err);
+
+    // Generic error response
+    res.status(500).json({ 
+      error: 'Server error' 
+    });
   }
 });
 
+
 // registration Patient
+
 
 // Endpoint to register a patient in need
 app.post('/api/patients-in-need', async (req, res) => {
@@ -347,6 +394,17 @@ app.post('/api/patients-in-need', async (req, res) => {
   } = req.body;
 
   try {
+    // Check if the patient already exists
+    const existingPatient = await pool.query(
+      'SELECT * FROM patients_register WHERE patient_name = $1 AND contact_name = $2 AND contact_email = $3 AND contact_phone_number = $4',
+      [patient_name, contact_name, contact_email, contact_phone_number]
+    );
+
+    if (existingPatient.rows.length > 0) {
+      return res.status(409).json({ message: 'Patient with the same details already exists!' });
+    }
+
+    // Insert new patient if no duplicate exists
     await pool.query(
       'INSERT INTO patients_register (patient_name, contact_name, contact_email, contact_phone_number, place, address, health_condition, care_details, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [patient_name, contact_name, contact_email, contact_phone_number, place, address, health_condition, care_details, notes]
@@ -357,6 +415,7 @@ app.post('/api/patients-in-need', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 
@@ -435,6 +494,21 @@ app.post('/api/volunteers', async (req, res) => {
       });
     }
 
+    // SQL query to check if the volunteer already exists
+    const checkQuery = `
+      SELECT * 
+      FROM volunteers 
+      WHERE name = $1 AND email = $2 AND phone_number = $3
+    `;
+    const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
+
+    if (checkResult.rows.length > 0) {
+      // Volunteer already exists
+      return res.status(409).json({ 
+        error: 'A volunteer with this name, email, and phone number already exists' 
+      });
+    }
+
     // SQL query to insert new volunteer
     const query = `
       INSERT INTO volunteers 
@@ -442,7 +516,6 @@ app.post('/api/volunteers', async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7) 
       RETURNING *
     `;
-
     const values = [
       name, 
       email, 
