@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Users, 
   Search, 
@@ -334,9 +334,11 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <Users className="h-8 w-8 text-teal-600" />
+              <Link to="/admin/dashboard" className="text-gray-800">
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
                 Caregiver Management
               </h1>
+            </Link>
             </div>
             
             <div className="flex items-center space-x-4">

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Heart, Phone, Home, X, User } from 'lucide-react';
+import { Menu, Heart, Home, X, User } from 'lucide-react';
 import Contact from './Contact';
 
 const Header = () => {

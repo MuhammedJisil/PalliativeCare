@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Heart, 
   Search, 
@@ -363,9 +363,11 @@ const PatientsInNeed = () => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <Heart className="h-8 w-8 text-red-600" />
+              <Link to="/admin/dashboard" className="text-gray-800">
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
                 Patients in Need
               </h1>
+              </Link>
             </div>
             
             <div className="flex items-center space-x-4">

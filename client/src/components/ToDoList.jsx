@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, Circle, AlertCircle, Clock, Users,  Plus, Trash2, Edit2, ArrowLeft
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
 
 const taskService = {
@@ -210,9 +210,11 @@ const Tasks = () => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <Users className="h-8 w-8 text-teal-600" />
+              <Link to="/admin/dashboard" className="text-gray-800">
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
                 Task Management
               </h1>
+              </Link>
             </div>
             
              {/* Add task Button for Large Screens */}
