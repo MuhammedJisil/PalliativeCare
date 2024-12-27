@@ -145,3 +145,25 @@ CREATE TABLE emergency_fund (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- table changes 
+
+-- patient table 
+
+ALTER TABLE patients
+ALTER COLUMN first_name TYPE VARCHAR(30),
+ALTER COLUMN doctor TYPE VARCHAR(30),
+ALTER COLUMN caregiver TYPE VARCHAR(30),
+ALTER COLUMN gender TYPE VARCHAR(8);
+
+ALTER TABLE patients
+ALTER COLUMN phone_number TYPE NUMERIC(10, 0) USING phone_number::NUMERIC;
+
+
+-- medical proxy table 
+
+ALTER TABLE medical_proxies
+ALTER COLUMN name TYPE VARCHAR(30),
+ALTER COLUMN relation TYPE VARCHAR(10),
+ALTER COLUMN phone_number TYPE NUMERIC(10, 0) 
+USING phone_number::NUMERIC(10, 0);

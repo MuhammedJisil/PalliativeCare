@@ -126,6 +126,7 @@ const UpdateCaregiverModal = ({
                   <span>Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="name"
                   value={formData.name}
@@ -158,10 +159,25 @@ const UpdateCaregiverModal = ({
                   <span>Phone Number</span>
                 </label>
                 <input
+                   placeholder="Enter 10 digit number"
+                   maxLength="10"
+                   pattern="[0-9]*"
+                   inputMode="numeric"
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -375,13 +391,13 @@ const CaregiverView = () => {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="text-gray-800">{caregiver.address}</p>
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                  <div className="w-full">
+                    <p className="text-sm text-gray-500">Address</p>
+                    <p className="text-gray-800 break-words">{caregiver.address}</p>
+                  </div>
                 </div>
-              </div>
             </div>
           </div>
          
@@ -423,45 +439,45 @@ const CaregiverView = () => {
 
           {/* Caregiver Details */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
-              <Star className="mr-2 text-teal-600" size={20} />
-              Caregiver Details
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Clock className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Availability</p>
-                  <p className="text-gray-800">{caregiver.availability}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Briefcase className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Experience</p>
-                  <p className="text-gray-800">{caregiver.experience}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Award className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Certifications</p>
-                  <p className="text-gray-800">{caregiver.certifications}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Additional Notes</p>
-                  <p className="text-gray-800">{caregiver.notes}</p>
-                </div>
-              </div>
-            </div>
+      <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+        <Star className="mr-2 text-teal-600" size={20} />
+        Caregiver Details
+      </h2>
+      
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <Clock className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Availability</p>
+            <p className="text-gray-800 break-words">{caregiver.availability}</p>
           </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <Briefcase className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Experience</p>
+            <p className="text-gray-800 break-words">{caregiver.experience}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <Award className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Certifications</p>
+            <p className="text-gray-800 break-words">{caregiver.certifications}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <FileText className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Additional Notes</p>
+            <p className="text-gray-800 break-words">{caregiver.notes}</p>
+          </div>
+        </div>
+      </div>
+    </div>
         </div>
 
         {/* Action Buttons */}

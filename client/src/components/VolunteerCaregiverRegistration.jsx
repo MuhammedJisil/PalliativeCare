@@ -104,6 +104,7 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Name</span>
                   </label>
                   <input
+                    maxLength="30"
                     type="text"
                     name="name"
                     value={formData.name}
@@ -134,10 +135,24 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Phone Number</span>
                   </label>
                   <input
+                   maxLength="10"
+                   pattern="[0-9]*"
+                   inputMode="numeric"
                     type="tel"
                     name="phone_number"
                     value={formData.phone_number}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                      if (value.length <= 10) { // Limit to 10 digits
+                        handleChange({
+                          ...e,
+                          target: {
+                            name: 'phone_number',
+                            value: value
+                          }
+                        });
+                      }
+                    }}
                     required
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />

@@ -67,8 +67,16 @@ const AddPatient = () => {
     setTimeout(() => {
       navigate('/admin/patient-management');
     }, 1000); // 1 second delay
-    } catch (error) {
+    }  catch (error) {
       console.error('Error adding patient:', error);
+  
+      // Handle duplicate entry error
+      if (error.response && error.response.status === 409) {
+        alert('This patient already exist.');
+      } else {
+        // Generic error handling
+        alert('Failed to add patient. Please try again.');
+      }
     }
   };
 
@@ -124,8 +132,9 @@ const AddPatient = () => {
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-600 font-medium mb-2">First Name</label>
+                <label className="block text-gray-600 font-medium mb-2">Full Name</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
@@ -179,15 +188,31 @@ const AddPatient = () => {
               </div>
               
               <div>
-                <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
+  <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
+  <input
+    type="tel"
+    name="phoneNumber"
+    value={formData.phoneNumber}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+      if (value.length <= 10) { // Limit to 10 digits
+        handleChange({
+          ...e,
+          target: {
+            name: 'phoneNumber',
+            value: value
+          }
+        });
+      }
+    }}
+    placeholder="Enter 10 digit number"
+    maxLength="10"
+    pattern="[0-9]*"
+    inputMode="numeric"
+    required
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+  />
+</div>
             </div>
             
             <div className="mt-4">
@@ -246,6 +271,7 @@ const AddPatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Doctor</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="doctor"
                   value={formData.doctor}
@@ -259,6 +285,7 @@ const AddPatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Caregiver</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="caregiver"
                   value={formData.caregiver}
@@ -301,6 +328,7 @@ const AddPatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Proxy Name</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="proxyName"
                   value={formData.proxyName}
@@ -312,6 +340,7 @@ const AddPatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Relation</label>
                 <input
+                  maxLength="10"
                   type="text"
                   name="relation"
                   value={formData.relation}
@@ -322,15 +351,30 @@ const AddPatient = () => {
             </div>
             
             <div className="mt-4">
-              <label className="block text-gray-600 font-medium mb-2">Proxy Phone Number</label>
-              <input
-                type="tel"
-                name="proxyPhoneNumber"
-                value={formData.proxyPhoneNumber}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
+  <label className="block text-gray-600 font-medium mb-2">Proxy Phone Number</label>
+  <input
+    type="tel"
+    name="proxyPhoneNumber"
+    value={formData.proxyPhoneNumber}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+      if (value.length <= 10) { // Limit to 10 digits
+        handleChange({
+          ...e,
+          target: {
+            name: 'proxyPhoneNumber',
+            value: value
+          }
+        });
+      }
+    }}
+    placeholder="Enter 10 digit number"
+    maxLength="10"
+    pattern="[0-9]*"
+    inputMode="numeric"
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+  />
+</div>
           </div>
           
           {/* Medical History Section */}

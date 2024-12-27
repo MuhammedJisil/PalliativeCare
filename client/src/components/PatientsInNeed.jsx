@@ -66,10 +66,18 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
 
     } catch (error) {
       console.error('Error adding patient:', error);
-      alert('Failed to add patient. Please try again.');
+  
+      // Handle duplicate entry error
+      if (error.response && error.response.status === 409) {
+        alert('This patient already exist.');
+      } else {
+        // Generic error handling
+        alert('Failed to add patient. Please try again.');
+      }
     }
   };
 
+  
   if (!isOpen) return null;
 
   return (
@@ -119,6 +127,7 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
                   <span>Patient Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="patient_name"
                   value={formData.patient_name}
@@ -165,10 +174,25 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
                   <span>Contact Phone Number</span>
                 </label>
                 <input
+                  placeholder="Enter 10 digit number"
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   type="tel"
                   name="contact_phone_number"
                   value={formData.contact_phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'contact_phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />

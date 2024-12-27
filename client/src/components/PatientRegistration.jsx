@@ -66,6 +66,7 @@ const PatientRegistration = () => {
                   <span>Patient Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="patient_name"
                   value={formData.patient_name}
@@ -109,10 +110,24 @@ const PatientRegistration = () => {
                   <span>Contact Phone Number</span>
                 </label>
                 <input
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   type="tel"
                   name="contact_phone_number"
                   value={formData.contact_phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'contact_phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />

@@ -246,6 +246,7 @@ const EmergencyFundManager = () => {
                                     <input
                                         type="text"
                                         name="name"
+                                        maxLength="30"
                                         value={formData.name}
                                         onChange={handleChange}
                                         placeholder="Patient Name"
@@ -259,9 +260,11 @@ const EmergencyFundManager = () => {
                                         placeholder="Details"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                                         rows="3"
+                                        required
                                     />
                                     <input
                                         type="text"
+                                        maxLength="20"
                                         name="account_number"
                                         value={formData.account_number}
                                         onChange={handleChange}
@@ -271,14 +274,20 @@ const EmergencyFundManager = () => {
                                     <input
                                         type="text"
                                         name="ifsc_code"
+                                        maxLength="11"
                                         value={formData.ifsc_code}
-                                        onChange={handleChange}
+                                        onChange={(e) => {
+                                            // Remove spaces from the input value
+                                            const newValue = e.target.value.replace(/\s/g, '');
+                                            handleChange({ target: { name: 'ifsc_code', value: newValue } });
+                                        }}
                                         placeholder="IFSC Code"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     />
                                     <input
                                         type="text"
                                         name="upi_id"
+                                        maxLength="50"
                                         value={formData.upi_id}
                                         onChange={handleChange}
                                         placeholder="UPI ID"

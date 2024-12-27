@@ -14,25 +14,22 @@ const Modal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4 relative">
-        <div className="flex justify-between items-center p-4 border-b">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-2xl relative flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 shrink-0">
           <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-gray-500 hover:text-teal-600 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="p-4">
-          {children}
-        </div>
+        <div className="p-6 overflow-y-auto flex-grow">{children}</div>
       </div>
     </div>
   );
 };
-
 // add schedule component
 const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -271,7 +268,11 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
         patient_name: schedule.patient_name,
         member_name: schedule.member_name,
         visit_date: schedule.visit_date ? 
-        new Date(schedule.visit_date).toISOString().split('T')[0] : '', 
+        new Date(schedule.visit_date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long', 
+          day: 'numeric'
+        }) : '',
         visit_time: schedule.visit_time,
         visit_type: schedule.visit_type,
         notes: schedule.notes || ''
@@ -545,36 +546,65 @@ const ScheduleList = () => {
     setSchedules(prevSchedules => [...prevSchedules, newSchedule]);
   };
   const ScheduleDetails = ({ schedule }) => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">Patient Name</p>
-          <p className="text-base text-gray-900">{schedule.patient_name}</p>
+    <div className="space-y-6 bg-white rounded-lg shadow-md p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <User className="w-5 h-5 text-teal-600 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Patient Name</p>
+            <p className="text-gray-800 break-words">{schedule.patient_name}</p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">Member Name</p>
-          <p className="text-base text-gray-900">{schedule.member_name}</p>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <User className="w-5 h-5 text-teal-600 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Member Name</p>
+            <p className="text-gray-800 break-words">{schedule.member_name}</p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">Visit Date</p>
-          <p className="text-base text-gray-900">{schedule.visit_date}</p>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <CalendarDays className="w-5 h-5 text-teal-600 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Visit Date</p>
+            <p className="text-gray-800 break-words">
+  {new Date(schedule.visit_date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })}
+</p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">Visit Time</p>
-          <p className="text-base text-gray-900">{schedule.visit_time}</p>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <Clock className="w-5 h-5 text-teal-600 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Visit Time</p>
+            <p className="text-gray-800 break-words">{schedule.visit_time}</p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">Visit Type</p>
-          <span className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-semibold">
-            {schedule.visit_type}
-          </span>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <ClipboardList className="w-5 h-5 text-teal-600 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Visit Type</p>
+            <span className="inline-block px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-semibold">
+              {schedule.visit_type}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-500">Notes</p>
-        <p className="text-base text-gray-900 bg-gray-50 p-4 rounded-lg">
-          {schedule.notes || 'No additional notes available'}
-        </p>
+
+      <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+        <FileText className="w-5 h-5 text-teal-600 mt-1" />
+        <div className="w-full">
+          <p className="text-sm text-gray-500">Notes</p>
+          <p className="text-gray-800 break-words bg-gray-50 p-4 rounded-lg">
+            {schedule.notes || 'No additional notes available'}
+          </p>
+        </div>
       </div>
     </div>
   );

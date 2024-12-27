@@ -125,6 +125,7 @@ const UpdateVolunteerModal = ({
                   <span>Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="name"
                   value={formData.name}
@@ -157,10 +158,25 @@ const UpdateVolunteerModal = ({
                   <span>Phone Number</span>
                 </label>
                 <input
+                  placeholder="Enter 10 digit number"
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -359,13 +375,13 @@ const VolunteerView = () => {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="text-gray-800">{volunteer.address}</p>
-                </div>
-              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+    <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+    <div className="w-full">
+      <p className="text-sm text-gray-500">Address</p>
+      <p className="text-gray-800 break-words">{volunteer.address}</p>
+    </div>
+  </div>
             </div>
           </div>
 
@@ -403,40 +419,40 @@ const VolunteerView = () => {
   </div>
 )}
 
-          {/* Volunteer Details */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
-              <Star className="mr-2 text-teal-600" size={20} />
-              Volunteer Details
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Clock className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Availability</p>
-                  <p className="text-gray-800">{volunteer.availability}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Award className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Skills</p>
-                  <p className="text-gray-800">{volunteer.skills}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Additional Notes</p>
-                  <p className="text-gray-800">{volunteer.notes}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+{/* Volunteer Details */}
+<div className="bg-white rounded-lg shadow-md p-6">
+    <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+      <Star className="mr-2 text-teal-600" size={20} />
+      Volunteer Details
+    </h2>
+    
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+        <Clock className="w-5 h-5 text-gray-400 mt-1" />
+        <div className="w-full">
+          <p className="text-sm text-gray-500">Availability</p>
+          <p className="text-gray-800 break-words">{volunteer.availability}</p>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+        <Award className="w-5 h-5 text-gray-400 mt-1" />
+        <div className="w-full">
+          <p className="text-sm text-gray-500">Skills</p>
+          <p className="text-gray-800 break-words">{volunteer.skills}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+        <FileText className="w-5 h-5 text-gray-400 mt-1" />
+        <div className="w-full">
+          <p className="text-sm text-gray-500">Additional Notes</p>
+          <p className="text-gray-800 break-words">{volunteer.notes}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-between items-center">

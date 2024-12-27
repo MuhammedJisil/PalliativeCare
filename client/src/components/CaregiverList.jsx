@@ -58,16 +58,21 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
         certifications: '',
         notes: ''
       });
-
+  
       // Notify parent component and close modal
       onCaregiverAdded(response.data);
       onClose();
     
     } catch (error) {
-      console.error('Error adding caregiver:', error);
-      alert('Failed to add caregiver. Please try again.');
+      if (error.response && error.response.status === 409) {
+        alert('A Caregiver with this name, email, and phone number already exists.');
+      } else {
+        console.error('Error adding caregiver:', error);
+        alert('Failed to add caregiver. Please try again.');
+      }
     }
   };
+  
 
   if (!isOpen) return null;
 
@@ -117,6 +122,7 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
                   <span>Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="name"
                   value={formData.name}
@@ -147,10 +153,25 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
                   <span>Phone Number</span>
                 </label>
                 <input
+                  placeholder="Enter 10 digit number"
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />

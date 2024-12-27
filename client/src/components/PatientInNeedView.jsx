@@ -139,6 +139,7 @@ const UpdatePatientModal = ({
                   <span>Contact Name</span>
                 </label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="contact_name"
                   value={formData.contact_name}
@@ -171,10 +172,25 @@ const UpdatePatientModal = ({
                   <span>Contact Phone Number</span>
                 </label>
                 <input
+                 placeholder="Enter 10 digit number"
+                 maxLength="10"
+                 pattern="[0-9]*"
+                 inputMode="numeric"
                   type="tel"
                   name="contact_phone_number"
                   value={formData.contact_phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Limit to 10 digits
+                      handleChange({
+                        ...e,
+                        target: {
+                          name: 'contact_phone_number',
+                          value: value
+                        }
+                      });
+                    }
+                  }}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -399,11 +415,11 @@ const PatientInNeedView = () => {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
                 <MapPin className="w-5 h-5 text-gray-400 mt-1" />
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
-                  <p className="text-gray-800">{patient.address}</p>
+                  <p className="text-gray-800 break-words">{patient.address}</p>
                 </div>
               </div>
             </div>
@@ -442,48 +458,47 @@ const PatientInNeedView = () => {
     </div>
   </div>
 )}
-
-          {/* Patient Details */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
-              <Heart className="mr-2 text-teal-600" size={20} />
-              Patient Details
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Place</p>
-                  <p className="text-gray-800">{patient.place}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Heart className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Health Condition</p>
-                  <p className="text-gray-800">{patient.health_condition}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Care Details</p>
-                  <p className="text-gray-800">{patient.care_details}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Additional Notes</p>
-                  <p className="text-gray-800">{patient.notes}</p>
-                </div>
-              </div>
-            </div>
+{/* patient details*/}
+<div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+        <Heart className="mr-2 text-teal-600" size={20} />
+        Patient Details
+      </h2>
+      
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Place</p>
+            <p className="text-gray-800 break-words">{patient.place}</p>
           </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <Heart className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Health Condition</p>
+            <p className="text-gray-800 break-words">{patient.health_condition}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <FileText className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Care Details</p>
+            <p className="text-gray-800 break-words">{patient.care_details}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+          <FileText className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="w-full">
+            <p className="text-sm text-gray-500">Additional Notes</p>
+            <p className="text-gray-800 break-words">{patient.notes}</p>
+          </div>
+        </div>
+      </div>
+    </div>
         </div>
 
         {/* Action Buttons */}

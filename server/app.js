@@ -108,6 +108,27 @@ app.post('/api/patients', async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // Check if the patient information already exists (case-insensitive)
+    const checkPatientQuery = `
+      SELECT * 
+      FROM patients 
+      WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1)) 
+        AND phone_number = $2 
+        AND LOWER(TRIM(address)) = LOWER(TRIM($3)) 
+        AND dob = $4 
+        AND gender = $5 
+        AND age = $6
+    `;
+    const checkResult = await client.query(checkPatientQuery, [first_name, phone_number, address, dob, gender, age]);
+
+    if (checkResult.rows.length > 0) {
+      // Rollback the transaction before returning an error
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        message: 'A patient with this personal information (name, DOB, gender, age, address, phone number) already exists'
+      });
+    }
+
     const insertPatientQuery = `
       INSERT INTO patients (first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
@@ -253,11 +274,41 @@ app.put('/api/patients/:id', async (req, res) => {
   const { first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver, health_status, medical_proxy, medical_history } = req.body;
 
   try {
-    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
-    if (patientResult.rows.length === 0) {
-      return res.status(404).json({ message: 'Patient not found' });
-    }
-
+     // Check if the patient exists
+     const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+     if (patientResult.rows.length === 0) {
+       return res.status(404).json({ message: 'Patient not found' });
+     }
+ 
+     // Check for duplicate details (excluding the current patient's ID)
+     const duplicateCheckQuery = `
+       SELECT * 
+       FROM patients 
+       WHERE LOWER(first_name) = LOWER($1) 
+         AND phone_number = $2 
+         AND LOWER(address) = LOWER($3) 
+         AND dob = $4 
+         AND gender = $5 
+         AND age = $6 
+         AND id != $7
+     `;
+     const duplicateResult = await pool.query(duplicateCheckQuery, [
+       first_name,
+       phone_number,
+       address,
+       dob,
+       gender,
+       age,
+       id,
+     ]);
+ 
+     if (duplicateResult.rows.length > 0) {
+       return res.status(409).json({
+         message:
+           'A patient with this personal information (name, DOB, gender, age, address, phone number) already exists',
+       });
+     }
+ 
     await pool.query(
       `UPDATE patients SET first_name = $1, initial_treatment_date = $2, dob = $3, age = $4, gender = $5, address = $6, phone_number = $7, doctor = $8, caregiver = $9 WHERE id = $10`,
       [first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver, id]
@@ -306,7 +357,7 @@ app.put('/api/patients/:id', async (req, res) => {
   }
 });
 
-//Registration component(volunteer and caregiver) 
+
 
 // Registration component (volunteer and caregiver)
 app.post('/api/register', async (req, res) => {
@@ -330,17 +381,17 @@ app.post('/api/register', async (req, res) => {
       });
     }
 
-    // Check for duplicate entries in the respective tables
+    // Check for duplicate entries in the respective table
     let existingEntry;
 
     if (userType === 'volunteer') {
       existingEntry = await pool.query(
-        'SELECT 1 FROM volunteers WHERE name = $1 AND email = $2 AND phone_number = $3',
+        'SELECT 1 FROM volunteers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
         [name.trim(), email.trim(), phone_number.trim()]
       );
     } else if (userType === 'caregiver') {
       existingEntry = await pool.query(
-        'SELECT 1 FROM caregivers WHERE name = $1 AND email = $2 AND phone_number = $3',
+        'SELECT 1 FROM caregivers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
         [name.trim(), email.trim(), phone_number.trim()]
       );
     }
@@ -396,7 +447,7 @@ app.post('/api/patients-in-need', async (req, res) => {
   try {
     // Check if the patient already exists
     const existingPatient = await pool.query(
-      'SELECT * FROM patients_register WHERE patient_name = $1 AND contact_name = $2 AND contact_email = $3 AND contact_phone_number = $4',
+      'SELECT * FROM patients_register WHERE LOWER(TRIM(patient_name)) = LOWER(TRIM($1)) AND  LOWER(TRIM(contact_name)) = LOWER(TRIM($2)) AND TRIM(contact_email) = TRIM($3) AND contact_phone_number = $4',
       [patient_name, contact_name, contact_email, contact_phone_number]
     );
 
@@ -498,7 +549,7 @@ app.post('/api/volunteers', async (req, res) => {
     const checkQuery = `
       SELECT * 
       FROM volunteers 
-      WHERE name = $1 AND email = $2 AND phone_number = $3
+      WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3
     `;
     const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
 
@@ -625,6 +676,8 @@ app.get('/api/caregivers', async (req, res) => {
   }
 });
 
+
+
 // Endpoint to get a single caregiver by ID
 app.get('/api/caregivers/:id', async (req, res) => {
   const { id } = req.params;
@@ -640,35 +693,10 @@ app.get('/api/caregivers/:id', async (req, res) => {
   }
 });
 
-// POST route to add a new caregiver
+// Route to add a new caregiver
 app.post('/api/caregivers', async (req, res) => {
-  const { 
-    name, 
-    email, 
-    phone_number, 
-    address, 
-    availability, 
-    experience, 
-    certifications, 
-    notes 
-  } = req.body;
-
   try {
-    const query = `
-      INSERT INTO caregivers (
-        name, 
-        email, 
-        phone_number, 
-        address, 
-        availability, 
-        experience, 
-        certifications, 
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id
-    `;
-
-    const values = [
+    const { 
       name, 
       email, 
       phone_number, 
@@ -676,18 +704,68 @@ app.post('/api/caregivers', async (req, res) => {
       availability, 
       experience, 
       certifications, 
-      notes
+      notes 
+    } = req.body;
+
+    // Input validation
+    if (!name || !email || !phone_number || !address) {
+      return res.status(400).json({ 
+        error: 'Name, email, phone number, and address are required' 
+      });
+    }
+
+    // SQL query to check if the caregiver already exists
+    const checkQuery = `
+      SELECT * 
+      FROM caregivers 
+      WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3
+    `;
+    const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
+
+    if (checkResult.rows.length > 0) {
+      // Caregiver already exists
+      return res.status(409).json({ 
+        error: 'A caregiver with this name, email, and phone number already exists' 
+      });
+    }
+
+    // SQL query to insert new caregiver
+    const query = `
+      INSERT INTO caregivers 
+      (name, email, phone_number, address, availability, experience, certifications, notes) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      RETURNING *
+    `;
+    const values = [
+      name, 
+      email, 
+      phone_number, 
+      address, 
+      availability || null, 
+      experience || null, 
+      certifications || null, 
+      notes || null
     ];
 
+    // Execute the query
     const result = await pool.query(query, values);
 
-    res.status(201).json({ 
-      message: 'Caregiver added successfully', 
-      id: result.rows[0].id 
-    });
+    // Return the newly created caregiver
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding caregiver:', error);
-    res.status(500).json({ message: 'Failed to add caregiver', error: error.message });
+
+    // Handle unique constraint violations (e.g., duplicate email)
+    if (error.code === '23505') {
+      return res.status(409).json({ 
+        error: 'A caregiver with this email already exists' 
+      });
+    }
+
+    // Generic error handler
+    res.status(500).json({ 
+      error: 'An error occurred while adding the caregiver' 
+    });
   }
 });
 

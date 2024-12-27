@@ -5,8 +5,7 @@ import {
   UserPlus, 
   User, 
   Stethoscope, 
-  UserCheck, 
-  LayoutList, 
+  UserCheck,  
   ArrowLeft, 
   CheckCircle,
   AlertCircle 
@@ -171,8 +170,9 @@ const UpdatePatient = () => {
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-600 font-medium mb-2">First Name</label>
+                <label className="block text-gray-600 font-medium mb-2">Full Name</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
@@ -226,17 +226,28 @@ const UpdatePatient = () => {
               </div>
               
               <div>
-                <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
-            </div>
-            
+  <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
+  <input
+    type="tel"
+    name="phoneNumber"
+    value={formData.phoneNumber || ''}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      if (value.length <= 10) {
+        setFormData(prevData => ({
+          ...prevData,
+          phoneNumber: value
+        }));
+      }
+    }}
+    placeholder="Enter 10 digit number"
+    maxLength="10"
+    pattern="[0-9]*"
+    inputMode="numeric"
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+  />
+</div>
+</div>
             <div className="mt-4">
               <label className="block text-gray-600 font-medium mb-2">Address</label>
               <textarea
@@ -293,6 +304,7 @@ const UpdatePatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Doctor</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="doctor"
                   value={formData.doctor}
@@ -306,6 +318,7 @@ const UpdatePatient = () => {
               <div>
                 <label className="block text-gray-600 font-medium mb-2">Caregiver</label>
                 <input
+                  maxLength="30"
                   type="text"
                   name="caregiver"
                   value={formData.caregiver}
@@ -348,6 +361,7 @@ const UpdatePatient = () => {
                          <div>
                            <label className="block text-gray-600 font-medium mb-2">Proxy Name</label>
                            <input
+                             maxLength="30"
                              type="text"
                              name="proxyName"
                              value={formData.proxyName}
@@ -359,6 +373,7 @@ const UpdatePatient = () => {
                          <div>
                            <label className="block text-gray-600 font-medium mb-2">Relation</label>
                            <input
+                             maxLength="10"
                              type="text"
                              name="relation"
                              value={formData.relation}
@@ -369,15 +384,29 @@ const UpdatePatient = () => {
                        </div>
                        
                        <div className="mt-4">
-                         <label className="block text-gray-600 font-medium mb-2">Proxy Phone Number</label>
-                         <input
-                           type="tel"
-                           name="proxyPhoneNumber"
-                           value={formData.proxyPhoneNumber}
-                           onChange={handleInputChange}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                         />
-                       </div>
+  <label className="block text-gray-600 font-medium mb-2">Proxy Phone Number</label>
+  <input
+    type="tel"
+    name="proxyPhoneNumber"
+    value={formData.proxyPhoneNumber || ''}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      if (value.length <= 10) {
+        handleInputChange({
+          target: {
+            name: 'proxyPhoneNumber',
+            value: value
+          }
+        });
+      }
+    }}
+    placeholder="Enter 10 digit number"
+    maxLength="10"
+    pattern="[0-9]*"
+    inputMode="numeric"
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+  />
+</div>
                      </div>
            {/* Medical History */}
 <div className="mt-6 space-y-4">
