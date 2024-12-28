@@ -16,10 +16,11 @@ import {
   MapPin,
   ActivityIcon,
   FileText,
-  CheckCircle
-
+  CheckCircle,
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ErrorNotification from './ErrorNotification';
+import ConfirmDialog from './ConfrmDialog';
 
 const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
   const [formData, setFormData] = useState({
@@ -33,6 +34,8 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
     care_details: '',
     notes: ''
   });
+
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,10 +72,10 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
   
       // Handle duplicate entry error
       if (error.response && error.response.status === 409) {
-        alert('This patient already exist.');
+        setError('This patient already exist.');
       } else {
         // Generic error handling
-        alert('Failed to add patient. Please try again.');
+        setError('Failed to add patient. Please try again.');
       }
     }
   };
@@ -296,6 +299,8 @@ const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
           </div>
         </div>
       </div>
+       {/* Error component */}
+      <ErrorNotification error={error} onClose={() => setError(null)} />
     </div>
   );
 };
@@ -310,6 +315,8 @@ const PatientsInNeed = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     fetchPatients();
@@ -331,19 +338,23 @@ const PatientsInNeed = () => {
     navigate(`/admin/patients-in-need/view/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this patient?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://localhost:5000/api/patients-in-need/${id}`);
-        setPatients(patients.filter((patient) => patient.id !== id));
-        setSuccess('patient deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting patient:', error);
-        alert('Failed to delete patient');
-      }
-    }
-  };
+ 
+const handleDelete = async (id) => {
+  setDeleteId(id);
+  setShowConfirm(true);
+ };
+ 
+ const confirmDelete = async () => {
+  try {
+    await axios.delete(`http://localhost:5000/api/patients-in-need/${deleteId}`);
+    setPatients(patients.filter((patient) => patient.id !== deleteId));
+    setSuccess('patient deleted successfully!');
+  } catch (error) {
+    console.error('Error deleting patient:', error);
+    setError('Failed to delete patient');
+  }
+  setShowConfirm(false);
+ };
 
   const filteredPatients = patients.filter((patient) =>
     patient.patient_name && patient.patient_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -520,6 +531,13 @@ const PatientsInNeed = () => {
           onPatientAdded={handleAddPatient}
         />
       )}
+      <ConfirmDialog
+ isOpen={showConfirm}
+ title="Delete Patient"
+ message="Are you sure you want to delete this patient?"
+ onConfirm={confirmDelete} 
+ onCancel={() => setShowConfirm(false)}
+/>
       <ScrollToBottomButton/>
     </div>
   );

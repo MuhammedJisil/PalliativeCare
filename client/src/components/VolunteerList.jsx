@@ -21,6 +21,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ErrorNotification from './ErrorNotification';
+import ConfirmDialog from './ConfrmDialog';
 
 // AddVolunteerModal Component
 const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
@@ -40,6 +42,8 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
       [e.target.name]: e.target.value
     });
   };
+
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,10 +74,10 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
   
       // Handle duplicate entry error
       if (error.response && error.response.status === 409) {
-        alert('A volunteer with this name, email, and phone number already exists.');
+        setError('volunteer already exists.');
       } else {
         // Generic error handling
-        alert('Failed to add volunteer. Please try again.');
+        setError('Failed to add volunteer. Please try again.');
       }
     }
   };
@@ -260,6 +264,8 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
           </div>
         </div>
       </div>
+       {/* Error component */}
+       <ErrorNotification error={error} onClose={() => setError(null)} />
     </div>
   );
 };
@@ -273,6 +279,8 @@ const VolunteerList = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     fetchVolunteers();
@@ -294,19 +302,24 @@ const VolunteerList = () => {
     navigate(`/admin/volunteers/view/${id}`);
   };
 
+
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this volunteer?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://localhost:5000/api/volunteers/${id}`);
-        setVolunteers(volunteers.filter((volunteer) => volunteer.id !== id));
-        setSuccess('volunteer deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting volunteer:', error);
-        alert('Failed to delete volunteer');
-      }
+    setDeleteId(id);
+    setShowConfirm(true);
+   };
+   
+   const confirmDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/volunteers/${deleteId}`);
+      setVolunteers(volunteers.filter((volunteer) => volunteer.id !== deleteId));
+      setSuccess('volunteer deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting volunteer:', error);
+      setError('Failed to delete volunteer');
     }
-  };
+    setShowConfirm(false);
+   };
+
 
   const handleAddVolunteer = (newVolunteer) => {
     setSuccess('volunteer added successfully!');
@@ -482,6 +495,13 @@ const VolunteerList = () => {
         onVolunteerAdded={handleAddVolunteer}
       />
     )}
+    <ConfirmDialog
+  isOpen={showConfirm}
+  title="Delete Volunteer"
+  message="Are you sure you want to delete this Volunteer?"
+  onConfirm={confirmDelete}
+  onCancel={() => setShowConfirm(false)}
+/>
      <ScrollToBottomButton />
   </div>
 );

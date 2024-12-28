@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ConfirmDialog from './ConfrmDialog'
 
 const taskService = {
   async getTasks() {
@@ -75,6 +76,8 @@ const Tasks = () => {
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState('priority');
   const navigate = useNavigate();
+  const [showTaskConfirm, setShowTaskConfirm] = useState(false);
+  const [deleteTaskId, setDeleteTaskId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -159,14 +162,21 @@ const Tasks = () => {
   };
 
   const deleteTask = async (taskId) => {
+    setDeleteTaskId(taskId);
+    setShowTaskConfirm(true);
+   };
+   
+   const confirmTaskDelete = async () => {
     try {
+      await taskService.deleteTask(deleteTaskId);
+      setTasks(tasks.filter(task => task.id !== deleteTaskId));
       setSuccess('Task deleted successfully!');
-      await taskService.deleteTask(taskId);
-      setTasks(tasks.filter(task => task.id !== taskId));
     } catch (error) {
       setError(error.message);
     }
-  };
+    setShowTaskConfirm(false);
+   };
+   
 
   const startEditTask = (task) => {
     setEditingTask(task);
@@ -529,6 +539,13 @@ const Tasks = () => {
           </button>
         </div>
       </div>
+      <ConfirmDialog
+ isOpen={showTaskConfirm}
+ title="Delete Task"
+ message="Are you sure you want to delete this task?"
+ onConfirm={confirmTaskDelete}
+ onCancel={() => setShowTaskConfirm(false)}
+/>
       <ScrollToBottomButton/>
     </div>
   );

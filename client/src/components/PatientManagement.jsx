@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ConfirmDialog from './ConfrmDialog'
 
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
@@ -21,6 +22,8 @@ const PatientManagement = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     fetchPatients();
@@ -46,19 +49,24 @@ const PatientManagement = () => {
     navigate(`/admin/patients/update/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this patient?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://localhost:5000/api/patients/${id}`);
-        setPatients(patients.filter((patient) => patient.id !== id));
-        setSuccess('patient deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting patient:', error);
-        alert('Failed to delete patient');
-      }
-    }
-  };
+  
+const handleDelete = async (id) => {
+  setDeleteId(id);
+  setShowConfirm(true);
+ };
+ 
+ const confirmDelete = async () => {
+  try {
+    await axios.delete(`http://localhost:5000/api/patients/${deleteId}`);
+    setPatients(patients.filter((patient) => patient.id !== deleteId));
+    setSuccess('patient deleted successfully!');
+  } catch (error) {
+    console.error('Error deleting patient:', error);
+    setError('Failed to delete patient');
+  }
+  setShowConfirm(false);
+ };
+ 
 
   const filteredPatients = patients.filter((patient) =>
     patient.first_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -230,6 +238,14 @@ const PatientManagement = () => {
           </button>
         </div>
       </div>
+      <ConfirmDialog
+ isOpen={showConfirm}
+ title="Delete Patient"
+ message="Are you sure you want to delete this patient?"
+ onConfirm={confirmDelete}
+ onCancel={() => setShowConfirm(false)}
+/>
+
       <ScrollToBottomButton/>
     </div>
   );

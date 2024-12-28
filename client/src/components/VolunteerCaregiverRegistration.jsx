@@ -23,6 +23,17 @@ const VolunteerCaregiverRegistration = () => {
 
   const handleRoleChange = (e) => {
     setRole(e.target.value);
+    setFormData({
+      name: '',
+      email: '', 
+      phone_number: '',
+      address: '',
+      availability: '',
+      skills: '',
+      experience: '',
+      certifications: '',
+      notes: ''
+    });
   };
 
   const handleChange = (e) => {

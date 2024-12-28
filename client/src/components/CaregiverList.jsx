@@ -20,6 +20,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ErrorNotification from './ErrorNotification';
+import ConfirmDialog from './ConfrmDialog';
 
 // AddCaregiverModal Component
 const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
@@ -40,6 +42,8 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
       [e.target.name]: e.target.value
     });
   };
+
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,10 +69,10 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
     
     } catch (error) {
       if (error.response && error.response.status === 409) {
-        alert('A Caregiver with this name, email, and phone number already exists.');
+        setError('Caregiver already exists.');
       } else {
         console.error('Error adding caregiver:', error);
-        alert('Failed to add caregiver. Please try again.');
+        setError('Failed to add caregiver. Please try again.');
       }
     }
   };
@@ -268,9 +272,13 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
           </div>
         </div>
       </div>
+       {/* Error component */}
+       <ErrorNotification error={error} onClose={() => setError(null)} />
     </div>
   );
 };
+
+// caregiver list component
 
 const CaregiverList = () => {
   const [caregivers, setCaregivers] = useState([]);
@@ -280,6 +288,8 @@ const CaregiverList = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     fetchCaregivers();
@@ -302,18 +312,22 @@ const CaregiverList = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this caregiver?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://localhost:5000/api/caregivers/${id}`);
-        setCaregivers(caregivers.filter((caregiver) => caregiver.id !== id));
-        setSuccess('caregiver deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting caregiver:', error);
-        alert('Failed to delete caregiver');
-      }
-    }
+    setDeleteId(id);
+    setShowConfirm(true);
   };
+  
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/caregivers/${deleteId}`);
+      setCaregivers(caregivers.filter((caregiver) => caregiver.id !== deleteId));
+      setSuccess('caregiver deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting caregiver:', error);
+      setError('Failed to delete caregiver');
+    }
+    setShowConfirm(false);
+  };
+
 
   const handleAddCaregiver = (newCaregiver) => {
     setSuccess('caregiver added successfully!');
@@ -493,6 +507,13 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
           onCaregiverAdded={handleAddCaregiver}
         />
       )}
+      <ConfirmDialog
+  isOpen={showConfirm}
+  title="Delete Caregiver"
+  message="Are you sure you want to delete this caregiver?"
+  onConfirm={confirmDelete}
+  onCancel={() => setShowConfirm(false)}
+/>
       <ScrollToBottomButton/>
     </div>
   );

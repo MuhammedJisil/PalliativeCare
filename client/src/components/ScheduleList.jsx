@@ -8,6 +8,7 @@ import {
   AlertCircle, CheckCircle, UserPlus
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import ConfirmDialog from './ConfrmDialog';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title }) => {
@@ -488,6 +489,8 @@ const ScheduleList = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -502,18 +505,21 @@ const ScheduleList = () => {
     fetchSchedules();
   }, []);
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this schedule?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://localhost:5000/api/schedules/${id}`);
-        setSchedules(schedules.filter(schedule => schedule.id !== id));
-        setSuccess('schedule deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting schedule:', error);
-        alert('Failed to delete schedule');
-      }
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/schedules/${deleteId}`);
+      setSchedules(schedules.filter((schedule) => schedule.id !== deleteId));
+      setSuccess('Schedule deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      setError('Failed to delete schedule');
     }
+    setShowConfirm(false);
   };
 
   const handleView = (schedule) => {
@@ -774,6 +780,14 @@ const ScheduleList = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onAdd={handleAddSchedule}
+      />
+      {/* Confirm Dialog Component */}
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Delete Schedule"
+        message="Are you sure you want to delete this schedule?"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirm(false)}
       />
       <ScrollToBottomButton/>
     </div>

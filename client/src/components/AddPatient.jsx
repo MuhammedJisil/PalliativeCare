@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus,  User, Stethoscope,  UserCheck, LayoutList, ArrowLeft, CheckCircle } from 'lucide-react';
+import { UserPlus,  User, Stethoscope,  UserCheck, LayoutList, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 const AddPatient = () => {
   const [success, setSuccess] = useState(null);
@@ -72,10 +72,10 @@ const AddPatient = () => {
   
       // Handle duplicate entry error
       if (error.response && error.response.status === 409) {
-        alert('This patient already exist.');
+        setError('A patient with same personal information already exist.');
       } else {
         // Generic error handling
-        alert('Failed to add patient. Please try again.');
+        setError('Failed to add patient. Please try again.');
       }
     }
   };

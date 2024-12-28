@@ -7,12 +7,19 @@ import {
   Trash2, 
   ArrowLeft,
   UserPlus,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
+import ConfirmDialog from './ConfrmDialog'
 
 const EmergencyFundManager = () => {
     const [patients, setPatients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+     const [success, setSuccess] = useState(null);
+      const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         id: null,
@@ -50,48 +57,55 @@ const EmergencyFundManager = () => {
         }
     };
 
-    // Handle form submission for adding or updating
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+   // Handle form submission for adding or updating     
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Show confirmation dialog only for adding new patient
+    if (!isEditing) {
+        setShowConfirm(true);
+        return;
+    }
+    
+    // If editing, proceed with submission directly
+    await submitForm();
+};
+
+// Separate function to handle the actual form submission
+const submitForm = async () => {
+    try {
+        const data = new FormData();
+        Object.keys(formData).forEach((key) => {
+            data.append(key, formData[key]);
+        });
         
-        // Confirmation alert for adding a new patient
-        if (!isEditing) {
-            const confirmAdd = window.confirm('Adding a new patient will remove the previous patient. Are you sure you want to continue?');
-            if (!confirmAdd) return;
+        if (isEditing) {
+            await axios.post("http://localhost:5000/api/emergency-fund", data);
+            setSuccess("Patient updated successfully");
+        } else {
+            await axios.post("http://localhost:5000/api/emergency-fund", data);
+            setSuccess("Patient added successfully");
         }
+        
+        setFormData({
+            id: null,
+            photo: "",
+            name: "",
+            details: "",
+            account_number: "",
+            ifsc_code: "",
+            upi_id: "",
+            qr_code: "",
+        });
+        setIsEditing(false);
+        setIsModalOpen(false);
+        fetchPatients();
+    } catch (error) {
+        console.error("Error saving patient:", error);
+        setError("Failed to save patient");
+    }
+};
 
-        try {
-            const data = new FormData();
-            Object.keys(formData).forEach((key) => {
-                data.append(key, formData[key]);
-            });
-
-            if (isEditing) {
-                await axios.post("http://localhost:5000/api/emergency-fund", data);
-                alert("Patient updated successfully");
-            } else {
-                await axios.post("http://localhost:5000/api/emergency-fund", data);
-                alert("Patient added successfully");
-            }
-
-            setFormData({
-                id: null,
-                photo: "",
-                name: "",
-                details: "",
-                account_number: "",
-                ifsc_code: "",
-                upi_id: "",
-                qr_code: "",
-            });
-            setIsEditing(false);
-            setIsModalOpen(false);
-            fetchPatients();
-        } catch (error) {
-            console.error("Error saving patient:", error);
-            alert("Failed to save patient");
-        }
-    };
 
     // Edit a patient
     const handleEdit = (patient) => {
@@ -101,19 +115,22 @@ const EmergencyFundManager = () => {
     };
 
     // Delete a patient
-    const handleDelete = async (id) => {
-        const confirmDelete = window.confirm('Are you sure you want to delete this patient?');
-        if (confirmDelete) {
-            try {
-                await axios.delete(`http://localhost:5000/api/emergency-fund/${id}`);
-                alert("Patient deleted successfully");
-                fetchPatients();
-            } catch (error) {
-                console.error("Error deleting patient:", error);
-                alert("Failed to delete patient");
-            }
+    const handleDelete = (id) => {
+        setDeleteId(id);
+        setShowConfirm(true);
+      };
+    
+      const confirmDelete = async () => {
+        try {
+          await axios.delete(`http://localhost:5000/api/emergency-fund/${deleteId}`);
+          setPatients(patients.filter((patient) => patient.id !== deleteId));
+          setSuccess('Patient deleted successfully!');
+        } catch (error) {
+          console.error('Error deleting patient:', error);
+          setError('Failed to delete patient');
         }
-    };
+        setShowConfirm(false);
+      };
 
     // Reset form and open modal for adding new patient
     const handleAddNew = () => {
@@ -217,6 +234,42 @@ const EmergencyFundManager = () => {
                         </div>
                     )}
                 </div>
+                
+                
+               {/* alert content */}
+               {(error || success) && (
+  <div 
+    className="fixed inset-0 z-40 bg-black/10"
+    onClick={() => {
+      setError(null);
+      setSuccess(null);
+    }}
+  >
+    <div 
+      className="fixed top-4 right-4 z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <div>
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <div>
+            <p className="font-medium">{success}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
                 {/* Add Patient Button for Mobile */}
                 <div className="sm:hidden fixed bottom-4 right-4 z-50">
@@ -336,6 +389,24 @@ const EmergencyFundManager = () => {
                     </button>
                 </div>
             </div>
+            {/* Confirm Dialog Component */}
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Delete Patient"
+        message="Are you sure you want to delete this patient?"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
+      <ConfirmDialog
+    isOpen={showConfirm}
+    title="Add New Patient"
+    message="Adding a new patient will remove the previous patient. Are you sure you want to continue?"
+    onConfirm={async () => {
+        setShowConfirm(false);
+        await submitForm();
+    }}
+    onCancel={() => setShowConfirm(false)}
+/>
         </div>
     );
 };
