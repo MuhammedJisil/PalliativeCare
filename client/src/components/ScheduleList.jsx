@@ -334,10 +334,10 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Update Schedule
+                  Edit Schedule
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Update the details of an existing schedule
+                  Edit the details of an existing schedule
                 </p>
               </div>
             </div>
@@ -678,65 +678,93 @@ const ScheduleList = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md">
-          {schedules.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              <ClipboardList className="mx-auto h-16 w-16 text-teal-300 mb-4" />
-              <p className="text-xl">No schedules found</p>
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
-                    Patient
-                  </th>
-                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {schedules.map((schedule) => (
-                  <tr 
-                    key={schedule.id} 
-                    className="hover:bg-gray-50"
-                  >
-                    <td className="py-4 px-4 whitespace-nowrap text-gray-700">
-                      {schedule.patient_name}
-                    </td>
-                    <td className="py-4 px-4 border-b">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleView(schedule)}
-                          className="text-blue-500 hover:text-blue-700 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateOpen(schedule)}
-                          className="text-yellow-500 hover:text-yellow-700 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(schedule.id)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+      <div className="bg-white rounded-lg shadow-md">
+  {schedules.length === 0 ? (
+    <div className="text-center text-gray-500 py-12">
+      <ClipboardList className="mx-auto h-16 w-16 text-teal-300 mb-4" />
+      <p className="text-xl">No schedules found</p>
+    </div>
+  ) : (
+    <table className="w-full">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
+            Patient
+          </th>
+          <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {schedules.map((schedule) => (
+          <tr
+            key={schedule.id}
+            className="hover:bg-gray-50"
+          >
+            <td className="py-4 px-4 whitespace-nowrap text-gray-700">
+              {schedule.patient_name}
+            </td>
+            <td className="py-4 px-4 border-b">
+              <div className="flex space-x-2">
+                {/* View Button */}
+                <button
+                  onClick={() => handleView(schedule)}
+                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  title="View Details"
+                >
+                  <Eye size={20} className="mr-2" />
+                  <span>View</span>
+                </button>
+                <button
+                  onClick={() => handleView(schedule)}
+                  className="md:hidden text-blue-500 hover:text-blue-700 transition-colors"
+                  title="View Details"
+                >
+                  <Eye size={20} />
+                </button>
 
+                {/* Edit Button */}
+                <button
+                  onClick={() => handleUpdateOpen(schedule)}
+                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
+                  title="Edit"
+                >
+                  <Edit size={20} className="mr-2" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => handleUpdateOpen(schedule)}
+                  className="md:hidden text-yellow-500 hover:text-yellow-700 transition-colors"
+                  title="Edit"
+                >
+                  <Edit size={20} />
+                </button>
+
+                {/* Delete Button */}
+                <button
+                  onClick={() => handleDelete(schedule.id)}
+                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={20} className="mr-2" />
+                  <span>Delete</span>
+                </button>
+                <button
+                  onClick={() => handleDelete(schedule.id)}
+                  className="md:hidden text-red-500 hover:text-red-700 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
         {/* Add schedule Button for Mobile */}
         <div className="sm:hidden fixed bottom-4 right-4 z-50">
           <button 

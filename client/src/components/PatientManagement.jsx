@@ -4,7 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { 
   Heart, 
   Search, 
-  Eye, 
+  Eye,
+  Edit, 
   Trash2, 
   ArrowLeft,
   UserPlus,
@@ -171,62 +172,89 @@ const handleDelete = async (id) => {
                 </div>
 
         {/* Patients List */}
-        <div className="bg-white rounded-lg shadow-md">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <RefreshCw className="animate-spin text-teal-600" size={24} />
-            </div>
-          ) : filteredPatients.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
-              <Heart size={48} className="mb-4 text-gray-400" />
-              <p>No patients found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredPatients.map((patient) => (
-                    <tr key={patient.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {patient.first_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button
-                          onClick={() => handleView(patient.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors mr-2"
-                        >
-                          <Eye size={16} className="mr-1" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleEdit(patient.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors mr-2"
-                        >
-                          <UserPlus size={16} className="mr-1" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(patient.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                        >
-                          <Trash2 size={16} className="mr-1" />
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+<div className="bg-white rounded-lg shadow-md">
+  {isLoading ? (
+    <div className="flex justify-center items-center h-48">
+      <RefreshCw className="animate-spin text-teal-600" size={24} />
+    </div>
+  ) : filteredPatients.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+      <Heart size={48} className="mb-4 text-gray-400" />
+      <p>No patients found</p>
+    </div>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
+            <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {filteredPatients.map((patient) => (
+            <tr key={patient.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                {patient.first_name}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                <div className="flex justify-end space-x-2">
+                  {/* View Button - Desktop */}
+                  <button
+                    onClick={() => handleView(patient.id)}
+                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                  >
+                    <Eye size={16} className="mr-1.5" />
+                    <span>View</span>
+                  </button>
+                  {/* View Button - Mobile */}
+                  <button
+                    onClick={() => handleView(patient.id)}
+                    className="md:hidden inline-flex items-center p-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                  >
+                    <Eye size={16} />
+                  </button>
 
+                  {/* Edit Button - Desktop */}
+                  <button
+                    onClick={() => handleEdit(patient.id)}
+                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors"
+                  >
+                    <Edit size={16} className="mr-1.5" />
+                    <span>Edit</span>
+                  </button>
+                  {/* Edit Button - Mobile */}
+                  <button
+                    onClick={() => handleEdit(patient.id)}
+                    className="md:hidden inline-flex items-center p-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors"
+                  >
+                    <Edit size={16} />
+                  </button>
+
+                  {/* Delete Button - Desktop */}
+                  <button
+                    onClick={() => handleDelete(patient.id)}
+                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={16} className="mr-1.5" />
+                    <span>Delete</span>
+                  </button>
+                  {/* Delete Button - Mobile */}
+                  <button
+                    onClick={() => handleDelete(patient.id)}
+                    className="md:hidden inline-flex items-center p-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
         {/* Back Button */}
         <div className="mt-6">
           <button

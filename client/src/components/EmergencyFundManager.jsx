@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Users, 
-  Edit2, 
+  Edit, 
   Trash2, 
   ArrowLeft,
   UserPlus,
@@ -16,7 +16,8 @@ import ConfirmDialog from './ConfrmDialog'
 const EmergencyFundManager = () => {
     const [patients, setPatients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [showConfirm, setShowConfirm] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showAddConfirm, setShowAddConfirm] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
      const [success, setSuccess] = useState(null);
       const [error, setError] = useState(null);
@@ -63,7 +64,7 @@ const handleSubmit = async (e) => {
     
     // Show confirmation dialog only for adding new patient
     if (!isEditing) {
-        setShowConfirm(true);
+        setShowAddConfirm(true);
         return;
     }
     
@@ -117,7 +118,7 @@ const submitForm = async () => {
     // Delete a patient
     const handleDelete = (id) => {
         setDeleteId(id);
-        setShowConfirm(true);
+        setShowDeleteConfirm(true);
       };
     
       const confirmDelete = async () => {
@@ -129,7 +130,7 @@ const submitForm = async () => {
           console.error('Error deleting patient:', error);
           setError('Failed to delete patient');
         }
-        setShowConfirm(false);
+        setShowDeleteConfirm(false);
       };
 
     // Reset form and open modal for adding new patient
@@ -211,20 +212,36 @@ const submitForm = async () => {
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-right">
                                                 <div className="flex justify-end space-x-2">
-                                                    <button
-                                                        onClick={() => handleEdit(patient)}
-                                                        className="inline-flex items-center px-2 py-1 text-xs bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
-                                                    >
-                                                        <Edit2 size={12} className="mr-1" />
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(patient.id)}
-                                                        className="inline-flex items-center px-2 py-1 text-xs bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                                                    >
-                                                        <Trash2 size={12} className="mr-1" />
-                                                        Delete
-                                                    </button>
+                                                     {/* Edit Button - Desktop */}
+                                                                      <button
+                                                                        onClick={() => handleEdit(patient)}
+                                                                        className="hidden md:inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                                                                      >
+                                                                        <Edit size={15} className="mr-1.5" />
+                                                                        <span>Edit</span>
+                                                                      </button>
+                                                                      {/* Edit Button - Mobile */}
+                                                                      <button
+                                                                        onClick={() => handleEdit(patient)}
+                                                                        className="md:hidden inline-flex items-center p-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                                                                      >
+                                                                        <Edit size={17} />
+                                                                      </button>
+                                                     {/* Delete Button - Desktop */}
+                                                                      <button
+                                                                        onClick={() => handleDelete(patient.id)}
+                                                                        className="hidden md:inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                                                                      >
+                                                                        <Trash2 size={15} className="mr-1.5" />
+                                                                        <span>Delete</span>
+                                                                      </button>
+                                                                      {/* Delete Button - Mobile */}
+                                                                      <button
+                                                                        onClick={() => handleDelete(patient.id)}
+                                                                        className="md:hidden inline-flex items-center p-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                                                                      >
+                                                                        <Trash2 size={17} />
+                                                                      </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -390,22 +407,22 @@ const submitForm = async () => {
                 </div>
             </div>
             {/* Confirm Dialog Component */}
-      <ConfirmDialog
-        isOpen={showConfirm}
-        title="Delete Patient"
-        message="Are you sure you want to delete this patient?"
-        onConfirm={confirmDelete}
-        onCancel={() => setShowConfirm(false)}
-      />
-      <ConfirmDialog
-    isOpen={showConfirm}
-    title="Add New Patient"
-    message="Adding a new patient will remove the previous patient. Are you sure you want to continue?"
-    onConfirm={async () => {
-        setShowConfirm(false);
-        await submitForm();
-    }}
-    onCancel={() => setShowConfirm(false)}
+            <ConfirmDialog
+  isOpen={showDeleteConfirm}
+  title="Delete Patient"
+  message="Are you sure you want to delete this patient?"
+  onConfirm={confirmDelete}
+  onCancel={() => setShowDeleteConfirm(false)}
+/>
+<ConfirmDialog
+  isOpen={showAddConfirm}
+  title="Add New Patient"
+  message="Adding a new patient will remove the previous patient. Are you sure you want to continue?"
+  onConfirm={async () => {
+    setShowAddConfirm(false);
+    await submitForm();
+  }}
+  onCancel={() => setShowAddConfirm(false)}
 />
         </div>
     );

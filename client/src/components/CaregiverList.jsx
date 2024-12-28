@@ -393,56 +393,74 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
           </div>
         </div>
 
-        {/* Caregivers List */}
-        <div className="bg-white rounded-lg shadow-md">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <RefreshCw className="animate-spin text-teal-600" size={24} />
-            </div>
-          ) : filteredCaregivers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
-              <Users size={48} className="mb-4 text-gray-400" />
-              <p>No caregivers found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredCaregivers.map((caregiver) => (
-                    <tr key={caregiver.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {caregiver.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button
-                          onClick={() => handleView(caregiver.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors mr-2"
-                        >
-                          <Eye size={16} className="mr-1" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleDelete(caregiver.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                        >
-                          <Trash2 size={16} className="mr-1" />
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+       {/* caregivers List */}
+<div className="bg-white rounded-lg shadow-md">
+  {isLoading ? (
+    <div className="flex justify-center items-center h-48">
+      <RefreshCw className="animate-spin text-teal-600" size={24} />
+    </div>
+  ) : filteredCaregivers.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+      <Users size={48} className="mb-4 text-gray-400" />
+      <p>No caregivers found</p>
+    </div>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
+            <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {filteredCaregivers.map((caregiver) => (
+            <tr key={caregiver.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                {caregiver.name}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                <div className="flex justify-end space-x-2">
+                  {/* View Button - Desktop */}
+                  <button
+                    onClick={() => handleView(caregiver.id)}
+                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                  >
+                    <Eye size={20} className="mr-1.5" />
+                    <span>View</span>
+                  </button>
+                  {/* View Button - Mobile */}
+                  <button
+                    onClick={() => handleView(caregiver.id)}
+                    className="md:hidden inline-flex items-center p-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                  >
+                    <Eye size={20} />
+                  </button>
 
+                  {/* Delete Button - Desktop */}
+                  <button
+                    onClick={() => handleDelete(caregiver.id)}
+                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={20} className="mr-1.5" />
+                    <span>Delete</span>
+                  </button>
+                  {/* Delete Button - Mobile */}
+                  <button
+                    onClick={() => handleDelete(caregiver.id)}
+                    className="md:hidden inline-flex items-center p-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
          {/* alert content */}
          {(error || success) && (
   <div 

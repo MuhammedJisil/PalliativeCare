@@ -109,7 +109,7 @@ const UpdateCaregiverModal = ({
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Update Caregiver
+                  Edit Caregiver
                 </h3>
                 <p className="text-sm text-gray-500">
                   Edit details for this caregiver

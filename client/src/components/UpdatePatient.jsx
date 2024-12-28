@@ -123,7 +123,7 @@ const UpdatePatient = () => {
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-4xl border border-gray-100">
         <div className="flex items-center mb-6 space-x-4">
           <UserPlus className="h-10 w-10 text-teal-600" />
-          <h1 className="text-3xl font-bold text-gray-800">Update Patient Details</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Edit Patient Details</h1>
         </div>
 
         {/* Alert Content */}
