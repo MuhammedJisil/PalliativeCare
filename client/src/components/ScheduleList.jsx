@@ -5,17 +5,49 @@ import {
   Heart, PlusCircle, Edit, Trash2, 
   ArrowLeft, ClipboardList, Eye, X, 
   User, CalendarDays, Clock, FileText, 
-  AlertCircle, CheckCircle, UserPlus
+  AlertCircle, CheckCircle, UserPlus, ListFilter, Calendar
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title }) => {
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .modal-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .modal-scrollbar::-webkit-scrollbar-track {
+        background: rgba(13, 148, 136, 0.1);
+        border-radius: 10px;
+      }
+      .modal-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+      }
+      .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #0f766e, #0d9488);
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+       {/* Background Overlay with Blur */}
+       <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div className="bg-white rounded-lg w-full max-w-2xl relative flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-4 border-b border-gray-200 shrink-0">
           <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
@@ -26,11 +58,14 @@ const Modal = ({ isOpen, onClose, children, title }) => {
             <X size={20} />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto flex-grow">{children}</div>
+        <div className="p-6 overflow-y-auto flex-grow modal-scrollbar">
+          {children}
+        </div>
       </div>
     </div>
   );
 };
+
 // add schedule component
 const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -265,15 +300,14 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
 
   useEffect(() => {
     if (schedule) {
+      // Convert the date to yyyy-MM-dd format for the date input
+      const formattedDate = schedule.visit_date ? 
+        new Date(schedule.visit_date).toISOString().split('T')[0] : '';
+
       setFormData({
         patient_name: schedule.patient_name,
         member_name: schedule.member_name,
-        visit_date: schedule.visit_date ? 
-        new Date(schedule.visit_date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long', 
-          day: 'numeric'
-        }) : '',
+        visit_date: formattedDate, // Use the formatted date
         visit_time: schedule.visit_time,
         visit_type: schedule.visit_type,
         notes: schedule.notes || ''
@@ -281,6 +315,7 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
     }
   }, [schedule]);
 
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
@@ -491,6 +526,7 @@ const ScheduleList = () => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [sortType, setSortType] = useState('all');
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -504,7 +540,120 @@ const ScheduleList = () => {
 
     fetchSchedules();
   }, []);
+ // Helper function to check if two dates are the same day
+ const isSameDay = (date1, date2) => {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
 
+// New sorting function with improved date handling
+const getSortedSchedules = () => {
+  const currentDate = new Date();
+  const oneWeekFromNow = new Date();
+  oneWeekFromNow.setDate(currentDate.getDate() + 7);
+
+  // Strip time component from dates for accurate day comparison
+  const startOfToday = new Date(currentDate.setHours(0, 0, 0, 0));
+  const endOfWeek = new Date(oneWeekFromNow.setHours(23, 59, 59, 999));
+
+  // Create a copy of schedules to avoid mutation
+  let sortedSchedules = [...schedules];
+
+  try {
+    switch (sortType) {
+      case 'today':
+        sortedSchedules = sortedSchedules.filter(schedule => {
+          const scheduleDate = new Date(schedule.visit_date);
+          return isSameDay(scheduleDate, currentDate);
+        });
+        break;
+
+        case 'week':
+          sortedSchedules = sortedSchedules.filter(schedule => {
+            const scheduleDate = new Date(schedule.visit_date);
+            // Set schedule date to start of its day for proper comparison
+            scheduleDate.setHours(0, 0, 0, 0);
+            return scheduleDate >= startOfToday && scheduleDate <= endOfWeek;
+          });
+          break;
+  
+
+      default:
+        // 'all' case - no filtering needed
+        break;
+    }
+
+    // Sort by date and time
+    return sortedSchedules.sort((a, b) => {
+      const dateA = new Date(`${a.visit_date} ${a.visit_time}`);
+      const dateB = new Date(`${b.visit_date} ${b.visit_time}`);
+      return dateA - dateB;
+    });
+  } catch (error) {
+    console.error('Sorting error:', error);
+    return schedules; // Return unsorted schedules if there's an error
+  }
+};
+
+// Modified header component to show current filter
+const FilterHeader = () => {
+  const getFilterText = () => {
+    switch (sortType) {
+      case 'today':
+        return `Today's Schedule (${new Date().toLocaleDateString()})`;
+      case 'week':
+        return 'This Week\'s Schedule';
+      default:
+        return 'All Schedules';
+    }
+  };
+
+  return (
+    <div className="mb-6 bg-white rounded-lg shadow-md p-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+        <h2 className="text-lg font-medium text-gray-700">{getFilterText()}</h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setSortType('today')}
+            className={`px-4 py-2 rounded-full transition-colors ${
+              sortType === 'today'
+                ? 'bg-teal-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <CalendarDays className="w-4 h-4 inline-block mr-2" />
+            Today
+          </button>
+          <button
+            onClick={() => setSortType('week')}
+            className={`px-4 py-2 rounded-full transition-colors ${
+              sortType === 'week'
+                ? 'bg-teal-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Calendar className="w-4 h-4 inline-block mr-2" />
+            This Week
+          </button>
+          <button
+            onClick={() => setSortType('all')}
+            className={`px-4 py-2 rounded-full transition-colors ${
+              sortType === 'all'
+                ? 'bg-teal-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <ListFilter className="w-4 h-4 inline-block mr-2" />
+            All
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   const handleDelete = (id) => {
     setDeleteId(id);
     setShowConfirm(true);
@@ -617,56 +766,23 @@ const ScheduleList = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50">
+      {/* Existing header */}
       <header className="bg-white shadow-md sticky top-0 z-10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <Heart className="h-8 w-8 text-teal-600" />
               <Link to="/admin/dashboard" className="text-gray-800">
-              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Schedule Management
-              </h1>
-            </Link>
+                <h1 className="text-xl font-semibold tracking-tight text-gray-800">
+                  Schedule Management
+                </h1>
+              </Link>
             </div>
-
-               {/* alert content */}
-               {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
-  >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
 
             {/* Add schedule Button for large screens */}
             <div className="hidden sm:block">
               <button 
-                 onClick={handleOpenModal}
+                onClick={handleOpenModal}
                 className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
               >
                 <PlusCircle size={16} className="mr-2" />
@@ -678,93 +794,135 @@ const ScheduleList = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-md">
-  {schedules.length === 0 ? (
-    <div className="text-center text-gray-500 py-12">
-      <ClipboardList className="mx-auto h-16 w-16 text-teal-300 mb-4" />
-      <p className="text-xl">No schedules found</p>
-    </div>
-  ) : (
-    <table className="w-full">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
-            Patient
-          </th>
-          <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {schedules.map((schedule) => (
-          <tr
-            key={schedule.id}
-            className="hover:bg-gray-50"
+        {/* Filter Header */}
+        <FilterHeader />
+
+  {/* Schedule Table */}
+  <div className="bg-white rounded-lg shadow-md">
+          {getSortedSchedules().length === 0 ? (
+            <div className="text-center text-gray-500 py-12">
+              <ClipboardList className="mx-auto h-16 w-16 text-teal-300 mb-4" />
+              <p className="text-xl">No schedules found</p>
+              {sortType !== 'all' && (
+                <p className="text-sm mt-2">
+                  No schedules found for the selected time period
+                </p>
+              )}
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
+                    Patient
+                  </th>
+                  <th className="py-4 px-4 text-left text-sm font-medium text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {getSortedSchedules().map((schedule) => (
+                  <tr key={schedule.id} className="hover:bg-gray-50">
+                    <td className="py-4 px-4 whitespace-nowrap text-gray-700">
+                      {schedule.patient_name}
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex space-x-2">
+                        {/* View Button */}
+                        <button
+                          onClick={() => handleView(schedule)}
+                          className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={20} className="mr-2" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => handleView(schedule)}
+                          className="md:hidden text-blue-500 hover:text-blue-700 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={20} />
+                        </button>
+
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => handleUpdateOpen(schedule)}
+                          className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={20} className="mr-2" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleUpdateOpen(schedule)}
+                          className="md:hidden text-yellow-500 hover:text-yellow-700 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={20} />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => handleDelete(schedule.id)}
+                          className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={20} className="mr-2" />
+                          <span>Delete</span>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(schedule.id)}
+                          className="md:hidden text-red-500 hover:text-red-700 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        
+                      {/* alert content */}
+                      {(error || success) && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/10"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+            }}
           >
-            <td className="py-4 px-4 whitespace-nowrap text-gray-700">
-              {schedule.patient_name}
-            </td>
-            <td className="py-4 px-4 border-b">
-              <div className="flex space-x-2">
-                {/* View Button */}
-                <button
-                  onClick={() => handleView(schedule)}
-                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                  title="View Details"
-                >
-                  <Eye size={20} className="mr-2" />
-                  <span>View</span>
-                </button>
-                <button
-                  onClick={() => handleView(schedule)}
-                  className="md:hidden text-blue-500 hover:text-blue-700 transition-colors"
-                  title="View Details"
-                >
-                  <Eye size={20} />
-                </button>
+            <div 
+              className="fixed top-4 right-4 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <div>
+                    <p className="font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-                {/* Edit Button */}
-                <button
-                  onClick={() => handleUpdateOpen(schedule)}
-                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
-                  title="Edit"
-                >
-                  <Edit size={20} className="mr-2" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => handleUpdateOpen(schedule)}
-                  className="md:hidden text-yellow-500 hover:text-yellow-700 transition-colors"
-                  title="Edit"
-                >
-                  <Edit size={20} />
-                </button>
-
-                {/* Delete Button */}
-                <button
-                  onClick={() => handleDelete(schedule.id)}
-                  className="hidden md:inline-flex items-center px-3 py-1.5 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={20} className="mr-2" />
-                  <span>Delete</span>
-                </button>
-                <button
-                  onClick={() => handleDelete(schedule.id)}
-                  className="md:hidden text-red-500 hover:text-red-700 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
         {/* Add schedule Button for Mobile */}
         <div className="sm:hidden fixed bottom-4 right-4 z-50">
           <button 

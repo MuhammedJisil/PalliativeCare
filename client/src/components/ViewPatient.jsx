@@ -13,26 +13,62 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-// Modal Component for Detailed View
 const DetailModal = ({ isOpen, onClose, title, children }) => {
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .detail-modal-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .detail-modal-scrollbar::-webkit-scrollbar-track {
+        background: rgba(13, 148, 136, 0.1);
+        border-radius: 10px;
+      }
+      .detail-modal-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+      }
+      .detail-modal-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #0f766e, #0d9488);
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Background Overlay with Blur */}
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Container */}
+      <div 
+        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 border-b">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-teal-600 transition-colors duration-200"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6">
+        {/* Modal Content with Custom Scrollbar */}
+        <div className="p-6 overflow-y-auto detail-modal-scrollbar flex-1">
           {children}
         </div>
       </div>
