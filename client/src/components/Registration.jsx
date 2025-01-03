@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, HeartHandshake, Users } from 'lucide-react';
+import { UserPlus, HeartHandshake, Users, Stethoscope } from 'lucide-react';
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Registration = () => {
             Make a Difference in Someone's Life
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div className="bg-teal-50 p-6 rounded-lg">
               <div className="flex items-center justify-center mb-4">
                 <Users className="w-12 h-12 text-teal-600" />
@@ -39,6 +39,16 @@ const Registration = () => {
               <h3 className="text-xl font-semibold text-center mb-4 text-teal-800">Caregiver</h3>
               <p className="text-gray-600 text-center mb-6">
                 Become a professional caregiver and provide essential care services. Your expertise and compassion can make a crucial difference in patients' quality of life.
+              </p>
+            </div>
+
+            <div className="bg-teal-50 p-6 rounded-lg">
+              <div className="flex items-center justify-center mb-4">
+                <Stethoscope className="w-12 h-12 text-teal-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-center mb-4 text-teal-800">Medical Professional</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Join our network of healthcare providers. Leverage your medical expertise to provide specialized care and support to patients in need of professional medical attention.
               </p>
             </div>
           </div>

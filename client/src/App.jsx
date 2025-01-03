@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
 import Home from './components/Home';
-import VolunteerCaregiverRegistration from './components/VolunteerCaregiverRegistration';
+import VCMregistration from './components/VCMregistration';
 import PatientRegistration from './components/PatientRegistration';
 import AdminLogin from './components/AdminLogin';
 import AdminPage from './components/AdminPage';
@@ -21,6 +21,9 @@ import ToDoList from './components/ToDoList';
 import ScheduleList from './components/ScheduleList';
 import About from './components/About';
 import EmergencyFundManager from './components/EmergencyFundManager';
+import PatientAssignment from './components/PatientAssignment';
+import MedicalProfessionalsList from './components/MedicalProfessionalsList';
+import MedicalProfessionalView from './components/MedicalProfessionalView';
 
 
 
@@ -33,7 +36,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/volunteer-caregiver-registration" element={<VolunteerCaregiverRegistration />} />
+          <Route path="/volunteer-caregiver-registration" element={<VCMregistration />} />
           <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
            <Route path="/patient-registration" element={<PatientRegistration />} />
           <Route path="/admin" element={<AdminLogin />} />
@@ -52,6 +55,9 @@ const App = () => {
           <Route path="/admin/schedules" element={<ScheduleList />} />
           <Route path="/about" element={<About />} />
           <Route path="/admin/emergency-fund-management" element={<EmergencyFundManager />} />
+          <Route path="/admin/patient-assignment" element={<PatientAssignment />} />
+          <Route path="/admin/Medical-professionals" element={<MedicalProfessionalsList />} />
+          <Route path="/admin/Medical-professionals/view/:id" element={<MedicalProfessionalView/>} />
 
           
         </Routes>

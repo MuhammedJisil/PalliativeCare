@@ -359,29 +359,29 @@ app.put('/api/patients/:id', async (req, res) => {
 
 
 
-// Registration component (volunteer and caregiver)
 app.post('/api/register', async (req, res) => {
-  const { 
-    userType, 
-    name, 
-    email, 
-    phone_number, 
-    address, 
-    availability, 
-    skills, 
-    experience, 
-    certifications, 
-    notes 
+  const {
+    userType,
+    name,
+    email,
+    phone_number,
+    address,
+    availability,
+    skills,
+    experience,
+    certifications,
+    specialization,
+    license_number,
+    notes
   } = req.body;
 
   try {
     if (!name || !email || !phone_number) {
-      return res.status(400).json({ 
-        error: 'Name, email, and phone number are required' 
+      return res.status(400).json({
+        error: 'Name, email, and phone number are required'
       });
     }
 
-    // Check for duplicate entries in the respective table
     let existingEntry;
 
     if (userType === 'volunteer') {
@@ -394,15 +394,19 @@ app.post('/api/register', async (req, res) => {
         'SELECT 1 FROM caregivers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
         [name.trim(), email.trim(), phone_number.trim()]
       );
+    } else if (userType === 'medical') {
+      existingEntry = await pool.query(
+        'SELECT 1 FROM medical_professionals WHERE LOWER(name) = LOWER($1) AND email = $2 OR license_number = $3',
+        [name.trim(), email.trim(), license_number.trim()]
+      );
     }
 
     if (existingEntry && existingEntry.rows.length > 0) {
-      return res.status(409).json({ 
-        error: `A ${userType} with the same details already exists` 
+      return res.status(409).json({
+        error: `A ${userType} with the same details already exists`
       });
     }
 
-    // Insert into the appropriate table
     if (userType === 'volunteer') {
       await pool.query(
         'INSERT INTO volunteers (name, email, phone_number, address, availability, skills, notes) VALUES ($1, $2, $3, $4, $5, $6, $7)',
@@ -413,19 +417,31 @@ app.post('/api/register', async (req, res) => {
         'INSERT INTO caregivers (name, email, phone_number, address, availability, experience, certifications, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [name.trim(), email.trim(), phone_number.trim(), address, availability, experience, certifications, notes]
       );
+    } else if (userType === 'medical') {
+      await pool.query(
+        'INSERT INTO medical_professionals (name, email, phone_number, address, availability, specialization, license_number, experience, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [
+          name.trim(),
+          email.trim(),
+          phone_number.trim(),
+          address,
+          availability,
+          specialization,
+          license_number,
+          experience,
+          notes
+        ]
+      );
     }
 
     res.status(201).json({ message: 'Registration successful' });
   } catch (err) {
     console.error('Error during registration:', err);
-
-    // Generic error response
-    res.status(500).json({ 
-      error: 'Server error' 
+    res.status(500).json({
+      error: 'Server error'
     });
   }
 });
-
 
 // registration Patient
 
@@ -960,6 +976,246 @@ app.delete('/api/patients-in-need/:id', async (req, res) => {
 });
 
 
+// medical professional component
+
+// Get all medical professional
+app.get('/api/medical-professionals', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM medical_professionals');
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Endpoint to delete a medical professional  by ID
+app.delete('/api/medical-professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM medical_professionals WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'medical professional not found' });
+    }
+    res.json({ message: 'medical professional deleted successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get a single medical professional by ID
+app.get('/api/medical-professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM medical_professionals WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'medical professional not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Route to get all volunteers or filtered by search query
+app.get('/api/medical-professionals', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT * FROM medical_professionals';
+    if (search) {
+      query += ` WHERE LOWER(name) LIKE LOWER('%${search}%')`;
+    }
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching medical professionals:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+
+// Route to add a medical professional
+app.post('/api/medical-professionals', async (req, res) => {
+  const {
+    name,
+    email,
+    phone_number,
+    address,
+    availability,
+    specialization,
+    license_number,
+    experience,
+    notes,
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO medical_professionals 
+        (name, email, phone_number, address, availability, specialization, license_number, experience, notes) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+       RETURNING *`,
+      [name, email, phone_number, address, availability, specialization, license_number, experience, notes]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding medical professional:', error);
+    res.status(500).json({ error: 'Failed to add medical professional.' });
+  }
+});
+
+// Route to add a medical professional
+app.post('/api/medical-professionals', async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone_number,
+      address,
+      availability,
+      specialization,
+      license_number,
+      experience,
+      notes
+    } = req.body;
+
+    // Input validation
+    if (!name || !email || !phone_number || !address || !license_number) {
+      return res.status(400).json({
+        error: 'Name, email, phone number, address, and license number are required'
+      });
+    }
+
+    // Check if medical professional already exists
+    const checkQuery = `
+      SELECT * 
+      FROM medical_professionals 
+      WHERE LOWER(name) = LOWER($1) AND email = $2 AND license_number = $3 AND phone_number = $4
+    `;
+    const checkResult = await pool.query(checkQuery, [name, email, license_number, phone_number]);
+
+    if (checkResult.rows.length > 0) {
+      return res.status(409).json({
+        error: 'A medical professional with these credentials already exists'
+      });
+    }
+
+    // Insert new medical professional
+    const query = `
+      INSERT INTO medical_professionals
+      (name, email, phone_number, address, availability, specialization, 
+       license_number, experience, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+    const values = [
+      name,
+      email,
+      phone_number,
+      address,
+      availability || null,
+      specialization || null,
+      license_number,
+      experience || null,
+      notes || null
+    ];
+
+    const result = await pool.query(query, values);
+    res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+    console.error('Error adding medical professional:', error);
+
+    if (error.code === '23505') {
+      return res.status(409).json({
+        error: 'A medical professional with this license number already exists'
+      });
+    }
+
+    res.status(500).json({
+      error: 'An error occurred while adding the medical professional'
+    });
+  }
+});
+
+// Route to update a medical professional
+app.put('/api/medical-professionals/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      email,
+      phone_number,
+      address,
+      availability,
+      specialization,
+      license_number,
+      experience,
+      notes
+    } = req.body;
+
+    // Input validation
+    if (!name || !email || !phone_number || !address || !license_number) {
+      return res.status(400).json({
+        error: 'Name, email, phone number, address, and license number are required'
+      });
+    }
+
+    const query = `
+      UPDATE medical_professionals
+      SET 
+        name = $1,
+        email = $2,
+        phone_number = $3,
+        address = $4,
+        availability = $5,
+        specialization = $6,
+        license_number = $7,
+        experience = $8,
+        notes = $9
+      WHERE id = $10
+      RETURNING *
+    `;
+    const values = [
+      name,
+      email,
+      phone_number,
+      address,
+      availability || null,
+      specialization || null,
+      license_number,
+      experience || null,
+      notes || null,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Medical professional not found'
+      });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error('Error updating medical professional:', error);
+    
+    if (error.code === '23505') {
+      return res.status(409).json({
+        error: 'A medical professional with this license number already exists'
+      });
+    }
+
+    res.status(500).json({
+      error: 'An error occurred while updating the medical professional'
+    });
+  }
+});
+
+
 // ToDoList Component
 
 app.get('/api/tasks', async (req, res) => {
@@ -1397,6 +1653,82 @@ app.delete('/api/emergency-fund/:id', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while deleting the emergency fund' });
   }
 });
+
+// Get all assignments
+app.get('/api/assignments', async (req, res) => {
+  try {
+    const query = `
+      SELECT a.id, a.helper_type, a.assigned_date,
+             p.name as patient_name, p.id as patient_id,
+             CASE 
+               WHEN a.helper_type = 'volunteer' THEN v.name
+               ELSE c.name
+             END as helper_name,
+             a.helper_id
+      FROM assignments a
+      JOIN patients p ON p.id = a.patient_id
+      LEFT JOIN volunteers v ON v.id = a.helper_id AND a.helper_type = 'volunteer'
+      LEFT JOIN caregivers c ON c.id = a.helper_id AND a.helper_type = 'caregiver'
+      WHERE a.status = 'active'
+    `;
+    const { rows } = await pool.query(query);
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create new assignment
+app.post('/api/assignments', async (req, res) => {
+  const { patientId, helperId, helperType } = req.body;
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Check if patient already has this type of helper
+    const existingAssignment = await client.query(
+      'SELECT id FROM assignments WHERE patient_id = $1 AND helper_type = $2 AND status = $3',
+      [patientId, helperType, 'active']
+    );
+
+    if (existingAssignment.rows.length > 0) {
+      throw new Error(`Patient already has an active ${helperType}`);
+    }
+
+    // Create new assignment
+    const query = `
+      INSERT INTO assignments (patient_id, helper_id, helper_type)
+      VALUES ($1, $2, $3)
+      RETURNING id, assigned_date
+    `;
+    const { rows } = await client.query(query, [patientId, helperId, helperType]);
+    
+    await client.query('COMMIT');
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Remove assignment
+app.delete('/api/assignments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      'UPDATE assignments SET status = $1 WHERE id = $2',
+      ['inactive', id]
+    );
+    res.json({ message: 'Assignment removed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 
 app.listen(port, () => {

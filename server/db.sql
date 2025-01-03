@@ -79,6 +79,21 @@ CREATE TABLE volunteers (
     notes TEXT
 );
 
+
+-- Medical professional table
+CREATE TABLE  medical_professionals (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(30) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  phone_number VARCHAR(10) NOT NULL,
+  address TEXT NOT NULL,
+  availability TEXT,
+  specialization VARCHAR(100) ,
+  license_number VARCHAR(50) UNIQUE ,
+  experience TEXT ,
+  notes TEXT
+);
+
 -- Create Caregivers Table
 CREATE TABLE caregivers (
     id SERIAL PRIMARY KEY,

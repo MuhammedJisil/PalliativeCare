@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle } from 'lucide-react';
+import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle, Stethoscope } from 'lucide-react';
 
-const VolunteerCaregiverRegistration = () => {
+const VCMregistration = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [role, setRole] = useState('');
@@ -16,6 +16,8 @@ const VolunteerCaregiverRegistration = () => {
     skills: '',
     experience: '',
     certifications: '',
+    specialization: '',
+    license_number: '',
     notes: ''
   });
 
@@ -25,13 +27,15 @@ const VolunteerCaregiverRegistration = () => {
     setRole(e.target.value);
     setFormData({
       name: '',
-      email: '', 
+      email: '',
       phone_number: '',
       address: '',
       availability: '',
       skills: '',
       experience: '',
       certifications: '',
+      specialization: '',
+      license_number: '',
       notes: ''
     });
   };
@@ -49,15 +53,9 @@ const VolunteerCaregiverRegistration = () => {
       const url = 'http://localhost:5000/api/register';
       await axios.post(url, { ...formData, userType: role });
       setSuccess('Registration Successful');
-      
-      // Navigate after a short delay to allow the user to see the success message
-      setTimeout(() => {
-        navigate('/');
-      }, 1000); // 1-second delay
+      setTimeout(() => navigate('/'), 1000);
     } catch (error) {
       console.error(error);
-  
-      // Check for a specific error response from the server
       if (error.response) {
         if (error.response.status === 409) {
           setError('A user with the same details already exists. Please try again.');
@@ -71,7 +69,6 @@ const VolunteerCaregiverRegistration = () => {
       }
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -79,7 +76,7 @@ const VolunteerCaregiverRegistration = () => {
         <div className="flex flex-col items-center mb-8">
           <Heart className="h-12 w-12 text-teal-600 mb-4" />
           <h2 className="text-3xl font-semibold text-gray-800 mb-2">Registration</h2>
-          <p className="text-gray-600">Join our community as a Volunteer or Caregiver</p>
+          <p className="text-gray-600">Join our community as a Volunteer, Caregiver, or Medical Professional</p>
         </div>
 
         <div className="max-w-2xl mx-auto">
@@ -105,6 +102,16 @@ const VolunteerCaregiverRegistration = () => {
                 />
                 <span className="text-gray-700 font-medium">Caregiver</span>
               </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="medical"
+                  checked={role === 'medical'}
+                  onChange={handleRoleChange}
+                  className="form-radio text-teal-600"
+                />
+                <span className="text-gray-700 font-medium">Medical Professional</span>
+              </label>
             </div>
 
             {role && (
@@ -115,6 +122,7 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Name</span>
                   </label>
                   <input
+                    placeholder="Full Name"
                     maxLength="30"
                     type="text"
                     name="name"
@@ -131,6 +139,7 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Email</span>
                   </label>
                   <input
+                    placeholder="Email"
                     type="email"
                     name="email"
                     value={formData.email}
@@ -146,15 +155,16 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Phone Number</span>
                   </label>
                   <input
-                   maxLength="10"
-                   pattern="[0-9]*"
-                   inputMode="numeric"
+                    placeholder="Phone number"
+                    maxLength="10"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
                     type="tel"
                     name="phone_number"
                     value={formData.phone_number}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                      if (value.length <= 10) { // Limit to 10 digits
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 10) {
                         handleChange({
                           ...e,
                           target: {
@@ -175,6 +185,7 @@ const VolunteerCaregiverRegistration = () => {
                     <span>Address</span>
                   </label>
                   <textarea
+                    placeholder="Address"
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
@@ -195,6 +206,7 @@ const VolunteerCaregiverRegistration = () => {
                     onChange={handleChange}
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     rows="3"
+                    placeholder="Please specify your available days and times"
                   ></textarea>
                 </div>
 
@@ -210,6 +222,7 @@ const VolunteerCaregiverRegistration = () => {
                       onChange={handleChange}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       rows="3"
+                      placeholder="List any relevant skills or experience"
                     ></textarea>
                   </div>
                 )}
@@ -225,8 +238,10 @@ const VolunteerCaregiverRegistration = () => {
                         name="experience"
                         value={formData.experience}
                         onChange={handleChange}
+                        required
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         rows="3"
+                        placeholder="Describe your caregiving experience"
                       ></textarea>
                     </div>
 
@@ -239,8 +254,62 @@ const VolunteerCaregiverRegistration = () => {
                         name="certifications"
                         value={formData.certifications}
                         onChange={handleChange}
+                        required
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         rows="3"
+                        placeholder="List relevant certifications and qualifications"
+                      ></textarea>
+                    </div>
+                  </>
+                )}
+
+                {role === 'medical' && (
+                  <>
+                    <div>
+                      <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                        <Stethoscope className="h-5 w-5 text-teal-600" />
+                        <span>Specialization</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="specialization"
+                        value={formData.specialization}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="e.g., Pediatrics, Geriatrics, etc."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                        <Award className="h-5 w-5 text-teal-600" />
+                        <span>License Number</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="license_number"
+                        value={formData.license_number}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Enter your medical license number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                        <Book className="h-5 w-5 text-teal-600" />
+                        <span>Experience</span>
+                      </label>
+                      <textarea
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        rows="3"
+                        placeholder="Describe your medical experience and practice history"
                       ></textarea>
                     </div>
                   </>
@@ -257,6 +326,7 @@ const VolunteerCaregiverRegistration = () => {
                     onChange={handleChange}
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     rows="3"
+                    placeholder="Any additional information you'd like to share"
                   ></textarea>
                 </div>
 
@@ -274,42 +344,40 @@ const VolunteerCaregiverRegistration = () => {
         </div>
       </div>
 
-       {/* alert content */}
-       {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
-  >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
+      {(error || success) && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/10"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        >
+          <div 
+            className="fixed top-4 right-4 z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+                <div>
+                  <p className="font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <div>
+                  <p className="font-medium">{success}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 };
 
-export default VolunteerCaregiverRegistration;
+export default VCMregistration;

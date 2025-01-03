@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, HeartPulse } from 'lucide-react';
+import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, HeartPulse, UserPlus, BriefcaseMedical, HeartHandshake} from 'lucide-react';
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -17,14 +17,14 @@ const AdminPage = () => {
     {
       title: "Caregiver",
       description: "Manage and view registered caregivers",
-      icon: <Heart className="h-8 w-8 text-teal-600" />,
+      icon: <HeartHandshake className="h-8 w-8 text-teal-600" />,
       path: '/admin/caregivers',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
     },
     {
       title: "Patients in Need",
-      description: "View details of patients who need caregivers",
+      description: "Manage and view patients who need support",
       icon: <Activity className="h-8 w-8 text-teal-600" />,
       path: '/admin/patients-in-need',
       bgColor: 'bg-white',
@@ -35,6 +35,14 @@ const AdminPage = () => {
       description: "Manage patient information",
       icon: <UserCog className="h-8 w-8 text-teal-600" />,
       path: '/admin/patient-management',
+      bgColor: 'bg-white',
+      hoverColor: 'hover:bg-gray-50'
+    },
+    {
+      title: "Medical Profesional",
+      description: "Manage and view registered medical professionals",
+      icon: <BriefcaseMedical className="h-8 w-8 text-teal-600" />,
+      path: '/admin/medical-professionals',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
     },
@@ -55,12 +63,20 @@ const AdminPage = () => {
       hoverColor: 'hover:bg-gray-50'
     },
     {
-      title: "Emergency Fund Patient Management",
-      description: "Track and support patients requiring emergency financial assistance",
+      title: "Emergency Fund Collection",
+      description: "Manage patient who require emergency fund",
       icon: <HeartPulse className="h-8 w-8 text-teal-600" />,
       path: '/admin/emergency-fund-management',
       bgColor: 'bg-white',
       hoverColor: 'hover:bg-gray-50'
+  },
+  {
+    title: "Patient Assignment",
+    description: "Assign patients to volunteers,caregivers and medical professionals",
+    icon: <UserPlus className="h-8 w-8 text-teal-600" />,
+    path: '/admin/patient-assignment',
+    bgColor: 'bg-white',
+    hoverColor: 'hover:bg-gray-50'
   }
   ];
 
