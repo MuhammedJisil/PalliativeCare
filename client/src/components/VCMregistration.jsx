@@ -79,42 +79,46 @@ const VCMregistration = () => {
           <p className="text-gray-600">Join our community as a Volunteer, Caregiver, or Medical Professional</p>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex justify-center space-x-6 mb-8">
-              <label className="flex items-center space-x-2 cursor-pointer">
+          <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+              <label className="flex items-center justify-center p-3 border rounded-lg cursor-pointer hover:bg-teal-50 transition-colors
+                       border-gray-200 hover:border-teal-500">
                 <input
                   type="radio"
                   value="volunteer"
                   checked={role === 'volunteer'}
                   onChange={handleRoleChange}
-                  className="form-radio text-teal-600"
+                   className="form-radio text-teal-600 focus:ring-teal-500"
                 />
-                <span className="text-gray-700 font-medium">Volunteer</span>
+                <span className="ml-2 text-gray-700 font-medium">Volunteer</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className="flex items-center justify-center p-3 border rounded-lg cursor-pointer hover:bg-teal-50 transition-colors
+                       border-gray-200 hover:border-teal-500">
                 <input
                   type="radio"
                   value="caregiver"
                   checked={role === 'caregiver'}
                   onChange={handleRoleChange}
-                  className="form-radio text-teal-600"
+                   className="form-radio text-teal-600 focus:ring-teal-500"
                 />
-                <span className="text-gray-700 font-medium">Caregiver</span>
+                <span className="ml-2 text-gray-700 font-medium">Caregiver</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className="flex items-center justify-center p-3 border rounded-lg cursor-pointer hover:bg-teal-50 transition-colors
+                       border-gray-200 hover:border-teal-500">
                 <input
                   type="radio"
                   value="medical"
                   checked={role === 'medical'}
                   onChange={handleRoleChange}
-                  className="form-radio text-teal-600"
+                   className="form-radio text-teal-600 focus:ring-teal-500"
                 />
-                <span className="text-gray-700 font-medium">Medical Professional</span>
+                <span className="ml-2 text-gray-700 font-medium">Medical Professional</span>
               </label>
             </div>
 
             {role && (
+              <div className="bg-white rounded-lg shadow-md p-8 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -339,6 +343,7 @@ const VCMregistration = () => {
                   </button>
                 </div>
               </form>
+              </div>
             )}
           </div>
         </div>
