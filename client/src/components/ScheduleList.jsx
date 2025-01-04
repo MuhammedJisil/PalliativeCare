@@ -230,9 +230,9 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">Select Visit Type</option>
-                  <option value="Doctor">Doctor</option>
                   <option value="Volunteer">Volunteer</option>
                   <option value="Caregiver">Caregiver</option>
+                  <option value="Doctor">Medical Professional</option>
                   <option value="Other">Other</option>
                 </select>
               </div>

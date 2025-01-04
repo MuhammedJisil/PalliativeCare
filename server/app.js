@@ -1654,80 +1654,84 @@ app.delete('/api/emergency-fund/:id', async (req, res) => {
   }
 });
 
-// Get all assignments
+
+
+// patient assignment component
+
+// Get all assignments with related information
 app.get('/api/assignments', async (req, res) => {
   try {
-    const query = `
-      SELECT a.id, a.helper_type, a.assigned_date,
-             p.name as patient_name, p.id as patient_id,
-             CASE 
-               WHEN a.helper_type = 'volunteer' THEN v.name
-               ELSE c.name
-             END as helper_name,
-             a.helper_id
+    const result = await pool.query(`
+      SELECT 
+        a.id,
+        a.patient_id,
+        a.helper_id,
+        a.helper_type,
+        a.assigned_date,
+        a.status,
+        p.first_name as patient_name,
+        CASE 
+          WHEN a.helper_type = 'volunteer' THEN (SELECT name FROM volunteers WHERE id = a.helper_id)
+          WHEN a.helper_type = 'caregiver' THEN (SELECT name FROM caregivers WHERE id = a.helper_id)
+          WHEN a.helper_type = 'medical_professional' THEN (SELECT name FROM medical_professionals WHERE id = a.helper_id)
+        END as helper_name
       FROM assignments a
-      JOIN patients p ON p.id = a.patient_id
-      LEFT JOIN volunteers v ON v.id = a.helper_id AND a.helper_type = 'volunteer'
-      LEFT JOIN caregivers c ON c.id = a.helper_id AND a.helper_type = 'caregiver'
-      WHERE a.status = 'active'
-    `;
-    const { rows } = await pool.query(query);
-    res.json(rows);
+      JOIN patients p ON a.patient_id = p.id
+      ORDER BY a.assigned_date DESC
+    `);
+    
+    const formattedAssignments = result.rows.map(row => ({
+      _id: row.id,
+      patient: { _id: row.patient_id, name: row.patient_name },
+      helper: { _id: row.helper_id, name: row.helper_name },
+      helperType: row.helper_type,
+      assigned_date: row.assigned_date,
+      status: row.status
+    }));
+    
+    res.json(formattedAssignments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching assignments:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Create new assignment
 app.post('/api/assignments', async (req, res) => {
   const { patientId, helperId, helperType } = req.body;
-  const client = await pool.connect();
-
+  
   try {
-    await client.query('BEGIN');
-
-    // Check if patient already has this type of helper
-    const existingAssignment = await client.query(
-      'SELECT id FROM assignments WHERE patient_id = $1 AND helper_type = $2 AND status = $3',
-      [patientId, helperType, 'active']
+    const result = await pool.query(
+      `INSERT INTO assignments (patient_id, helper_id, helper_type) 
+       VALUES ($1, $2, $3) 
+       RETURNING *`,
+      [patientId, helperId, helperType]
     );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating assignment:', error);
 
-    if (existingAssignment.rows.length > 0) {
-      throw new Error(`Patient already has an active ${helperType}`);
+    // Check if the error is a duplicate key violation
+    if (error.code === '23505') {
+      res.status(400).json({ error: 'Assignment already exists for this patient and helper type' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Create new assignment
-    const query = `
-      INSERT INTO assignments (patient_id, helper_id, helper_type)
-      VALUES ($1, $2, $3)
-      RETURNING id, assigned_date
-    `;
-    const { rows } = await client.query(query, [patientId, helperId, helperType]);
-    
-    await client.query('COMMIT');
-    res.status(201).json(rows[0]);
-  } catch (error) {
-    await client.query('ROLLBACK');
-    res.status(400).json({ error: error.message });
-  } finally {
-    client.release();
   }
 });
 
-// Remove assignment
+// Delete assignment
 app.delete('/api/assignments/:id', async (req, res) => {
+  const { id } = req.params;
+  
   try {
-    const { id } = req.params;
-    await pool.query(
-      'UPDATE assignments SET status = $1 WHERE id = $2',
-      ['inactive', id]
-    );
-    res.json({ message: 'Assignment removed successfully' });
+    await pool.query('DELETE FROM assignments WHERE id = $1', [id]);
+    res.json({ message: 'Assignment deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error deleting assignment:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 
 

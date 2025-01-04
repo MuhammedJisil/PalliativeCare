@@ -160,6 +160,19 @@ CREATE TABLE emergency_fund (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- patient assignment table
+CREATE TYPE helper_type AS ENUM ('volunteer', 'caregiver', 'medical_professional');
+
+CREATE TABLE assignments (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patients(id),
+    helper_id INTEGER NOT NULL,
+    helper_type helper_type NOT NULL,
+    assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'active',
+    UNIQUE(patient_id, helper_type)
+);
+
 
 -- table changes 
 

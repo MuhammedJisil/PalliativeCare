@@ -487,14 +487,19 @@ const Tasks = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-          <input
-            className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={formData.assignedTo}
-            onChange={(e) => setFormData({...formData, assignedTo: e.target.value})}
-            placeholder="Enter name"
-          />
-        </div>
+  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+  <select
+    className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+    value={formData.assignedTo}
+    onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+  >
+    <option value="" disabled>Select a role</option>
+    <option value="Volunteer">Volunteer</option>
+    <option value="Caregiver">Caregiver</option>
+    <option value="Medical Professionals">Medical Professional</option>
+  </select>
+</div>
+
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
