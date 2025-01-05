@@ -496,7 +496,7 @@ const Tasks = () => {
     <option value="" disabled>Select a role</option>
     <option value="Volunteer">Volunteer</option>
     <option value="Caregiver">Caregiver</option>
-    <option value="Medical Professionals">Medical Professional</option>
+    <option value="Medical Professional">Medical Professional</option>
   </select>
 </div>
 

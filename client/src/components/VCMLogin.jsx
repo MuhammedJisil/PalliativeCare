@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { User, Lock } from 'lucide-react';
 
-const AdminLogin = () => {
+const VCMLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,16 +12,11 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin-login', {
+      const response = await axios.post('http://localhost:5000/api/vcm-login', {
         username,
         password,
       });
-
-      // Store the token in localStorage
-      localStorage.setItem('token', response.data.token);
-
-      // Redirect to admin page
-      window.location.href = '/admin/dashboard';
+      window.location.href = '/vcm/dashboard';
     } catch (error) {
       setError('Your username or password is incorrect');
     }
@@ -32,7 +27,7 @@ const AdminLogin = () => {
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center space-y-4">
           <User className="h-12 w-12 text-teal-600" />
-          <h2 className="text-2xl font-semibold text-gray-800">Admin Login</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Staff Login</h2>
         </div>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
@@ -86,4 +81,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default VCMLogin;

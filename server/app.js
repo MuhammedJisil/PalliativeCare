@@ -33,6 +33,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+//admin login
 
 // Seed database with users
 async function seedUsers() {
@@ -64,7 +65,7 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // Login endpoint
-app.post('/api/login', async (req, res) => {
+app.post('/api/admin-login', async (req, res) => {
   const { username, password } = req.body;
 
   const userResult = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
@@ -85,8 +86,67 @@ app.post('/api/login', async (req, res) => {
   res.json({ token });
 });
 
-// patient management add component
+// Seed database with users
+async function seedUsers() {
+  const users = [
+    { username: 'user1', password: 'password1' },
+    { username: 'user2', password: 'password2' },
+    { username: 'user3', password: 'password3' },
+    { username: 'user4', password: 'password4' },
+  ];
 
+  for (const user of users) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+    await pool.query(
+      'INSERT INTO vcm (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING',
+      [user.username, hashedPassword]
+    );
+  }
+}
+
+// volunteer caregiver and medical professional login
+
+// Seed users if the table is empty
+async function initializeDatabase() {
+  const result = await pool.query('SELECT COUNT(*) FROM vcm');
+  const count = parseInt(result.rows[0].count, 10);
+
+  if (count === 0) {
+    await seedUsers();
+  }
+}
+
+initializeDatabase();
+
+// Login route
+app.post("/api/vcm-login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await pool.query(`SELECT * FROM vcm WHERE username = $1`, [
+      username,
+    ]);
+    if (user.rows.length === 0) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    const validPassword = await bcrypt.compare(
+      password,
+      user.rows[0].password_hash
+    );
+    if (!validPassword) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    res.json({ message: "Login successful" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+// patient management add component
 
 app.post('/api/patients', async (req, res) => {
   const {
@@ -1730,6 +1790,235 @@ app.delete('/api/assignments/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting assignment:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+// Dashboard data endpoints
+app.get('/api/dashboard/:type', async (req, res) => {
+  const { type } = req.params;
+  const client = await pool.connect();
+  
+  try {
+    let dashboardData;
+    
+    switch (type) {
+      case 'volunteer':
+        const [vTeam, vPatients, vTasks, vSchedules] = await Promise.all([
+          client.query('SELECT COUNT(*) FROM volunteers'),
+          client.query(`SELECT COUNT(*) FROM assignments 
+                       WHERE helper_type = 'volunteer' AND status = 'active'`),
+          client.query(`SELECT COUNT(*) FROM tasks 
+                       WHERE LOWER(assigned_to) = 'volunteer' AND status = 'pending'`),
+          client.query(`SELECT COUNT(*) FROM schedules 
+                       WHERE LOWER(visit_type) = 'volunteer' AND visit_date >= CURRENT_DATE`)
+        ]);
+        
+        dashboardData = {
+          teamMembers: parseInt(vTeam.rows[0].count),
+          assignedPatients: parseInt(vPatients.rows[0].count),
+          pendingTasks: parseInt(vTasks.rows[0].count),
+          scheduledTasks: parseInt(vSchedules.rows[0].count)
+        };
+        break;
+
+      case 'caregiver':
+        const [cTeam, cPatients, cTasks, cSchedules] = await Promise.all([
+          client.query('SELECT COUNT(*) FROM caregivers'),
+          client.query(`SELECT COUNT(*) FROM assignments 
+                       WHERE helper_type = 'caregiver' AND status = 'active'`),
+          client.query(`SELECT COUNT(*) FROM tasks 
+                       WHERE LOWER(assigned_to) = 'caregiver' AND status = 'pending'`),
+          client.query(`SELECT COUNT(*) FROM schedules 
+                       WHERE LOWER(visit_type) = 'caregiver' AND visit_date >= CURRENT_DATE`)
+        ]);
+        
+        dashboardData = {
+          teamMembers: parseInt(cTeam.rows[0].count),
+          assignedPatients: parseInt(cPatients.rows[0].count),
+          pendingTasks: parseInt(cTasks.rows[0].count),
+          scheduledTasks: parseInt(cSchedules.rows[0].count)
+        };
+        break;
+
+      case 'medical':
+        const [mTeam, mPatients, mTasks, mSchedules] = await Promise.all([
+          client.query('SELECT COUNT(*) FROM medical_professionals'),
+          client.query(`SELECT COUNT(*) FROM assignments 
+                       WHERE helper_type = 'medical_professional' AND status = 'active'`),
+          client.query(`SELECT COUNT(*) FROM tasks 
+                       WHERE LOWER(assigned_to) = 'medical professional' 
+                       AND status = 'pending'`),
+          client.query(`SELECT COUNT(*) FROM schedules 
+                       WHERE LOWER(visit_type) = 'medical professional' 
+                       AND visit_date >= CURRENT_DATE`)
+        ]);
+        
+        dashboardData = {
+          teamMembers: parseInt(mTeam.rows[0].count),
+          assignedPatients: parseInt(mPatients.rows[0].count),
+          pendingTasks: parseInt(mTasks.rows[0].count),
+          scheduledTasks: parseInt(mSchedules.rows[0].count)
+        };
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Invalid dashboard type' });
+    }
+
+    res.json(dashboardData);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Team members endpoint
+app.get('/api/team/:type', async (req, res) => {
+  const { type } = req.params;
+  const client = await pool.connect();
+  
+  try {
+    let query;
+    switch (type) {
+      case 'volunteer':
+        query = 'SELECT id, name, email, phone_number, address, availability, skills as specialization, notes FROM volunteers';
+        break;
+      case 'caregiver':
+        query = 'SELECT id, name, email, phone_number, address, availability, experience as specialization, notes FROM caregivers';
+        break;
+      case 'medical':
+        query = 'SELECT id, name, email, phone_number, address, availability, specialization, notes FROM medical_professionals';
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid team type' });
+    }
+
+    const result = await client.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Tasks endpoint
+app.get('/api/tasks/:type', async (req, res) => {
+  const { type } = req.params;
+  const client = await pool.connect();
+  
+  try {
+    let assignedToCondition;
+    switch (type) {
+      case 'volunteer':
+        assignedToCondition = "LOWER(assigned_to) = 'volunteer'";
+        break;
+      case 'caregiver':
+        assignedToCondition = "LOWER(assigned_to) = 'caregiver'";
+        break;
+      case 'medical':
+        assignedToCondition = "LOWER(assigned_to) = 'medical professional'";
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid type' });
+    }
+
+    const query = `
+      SELECT * FROM tasks 
+      WHERE ${assignedToCondition} AND status = 'pending'
+      ORDER BY due_date ASC, priority DESC
+    `;
+    
+    const result = await client.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Schedules endpoint
+app.get('/api/schedules/:type', async (req, res) => {
+  const { type } = req.params;
+  const client = await pool.connect();
+  
+  try {
+    let visitTypeCondition;
+    switch (type) {
+      case 'volunteer':
+        visitTypeCondition = "LOWER(visit_type) = 'volunteer'";
+        break;
+      case 'caregiver':
+        visitTypeCondition = "LOWER(visit_type) = 'caregiver'";
+        break;
+      case 'medical':
+        visitTypeCondition = "LOWER(visit_type) = 'medical professional'";
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid type' });
+    }
+
+    const query = `
+      SELECT * FROM schedules 
+      WHERE ${visitTypeCondition} AND visit_date >= CURRENT_DATE
+      ORDER BY visit_date ASC, visit_time ASC
+    `;
+    
+    const result = await client.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
+
+
+app.get('/api/assignments/:type', async (req, res) => {
+  let { type } = req.params;
+  
+  // Map human-readable values to ENUM values
+  const typeMapping = {
+    medical: 'medical_professional',
+    volunteer: 'volunteer',
+    caregiver: 'caregiver',
+  };
+
+  type = typeMapping[type];
+  if (!type) {
+    return res.status(400).json({ message: 'Invalid helper type' });
+  }
+
+  const client = await pool.connect();
+  
+  try {
+    const query = `
+      SELECT 
+        a.*,
+        p.first_name as patient_name
+      FROM assignments a
+      JOIN patients p ON a.patient_id = p.id
+      WHERE helper_type = $1 AND a.status = 'active'
+      ORDER BY assigned_date DESC
+    `;
+
+    const result = await client.query(query, [type]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Database query failed:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 

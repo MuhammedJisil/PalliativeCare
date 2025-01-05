@@ -5,7 +5,7 @@ import Home from './components/Home';
 import VCMregistration from './components/VCMregistration';
 import PatientRegistration from './components/PatientRegistration';
 import AdminLogin from './components/AdminLogin';
-import AdminPage from './components/AdminPage';
+import AdminDashboard from './components/AdminDashboard';
 import VolunteerList from './components/VolunteerList'; 
 import VolunteerView from './components/VolunteerView';
 import CaregiverList from './components/CaregiverList';
@@ -24,7 +24,8 @@ import EmergencyFundManager from './components/EmergencyFundManager';
 import PatientAssignment from './components/PatientAssignment';
 import MedicalProfessionalsList from './components/MedicalProfessionalsList';
 import MedicalProfessionalView from './components/MedicalProfessionalView';
-
+import VCMLogin from './components/VCMLogin';
+import VCMDashboard from './components/VCMDashboard';
 
 
 
@@ -40,7 +41,9 @@ const App = () => {
           <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
            <Route path="/patient-registration" element={<PatientRegistration />} />
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/vcm" element={<VCMLogin/>} />
+          <Route path="/vcm/dashboard" element={<VCMDashboard/>} />
           <Route path="/admin/volunteers" element={<VolunteerList />} />
           <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
           <Route path="/admin/caregivers" element={<CaregiverList />} />
@@ -58,7 +61,6 @@ const App = () => {
           <Route path="/admin/patient-assignment" element={<PatientAssignment />} />
           <Route path="/admin/Medical-professionals" element={<MedicalProfessionalsList />} />
           <Route path="/admin/Medical-professionals/view/:id" element={<MedicalProfessionalView/>} />
-
           
         </Routes>
       </main>

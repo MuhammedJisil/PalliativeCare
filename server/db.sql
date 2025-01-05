@@ -9,7 +9,12 @@ CREATE TABLE admins (
     password VARCHAR(255)
 );
 
---insertion of values into admins table
+CREATE TABLE vcm (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255)
+);
+
 
 
 -- Patients table

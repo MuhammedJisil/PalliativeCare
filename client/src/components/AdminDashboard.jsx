@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, HeartPulse, UserPlus, BriefcaseMedical, HeartHandshake} from 'lucide-react';
 
-const AdminPage = () => {
+const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const cards = [
@@ -134,4 +134,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default AdminDashboard;
