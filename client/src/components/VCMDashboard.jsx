@@ -11,6 +11,8 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sortType, setSortType] = useState('all');
   const [expandedNotes, setExpandedNotes] = useState({});
+  const [statusFilter, setStatusFilter] = useState('all'); 
+  
 
   useEffect(() => {
     fetchDashboardData(activeTab);
@@ -161,7 +163,12 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
 
   const getFilteredAndSortedTasks = () => {
     return detailData
-      .filter(task => priorityFilter === 'all' || task.priority === priorityFilter)
+      .filter(task => {
+        // Apply both priority and status filters
+        const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+        const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+        return matchesPriority && matchesStatus;
+      })
       .sort((a, b) => {
         const dateA = new Date(a.due_date);
         const dateB = new Date(b.due_date);
@@ -181,31 +188,50 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
     const views = {
       tasks: (
         <div className="space-y-4">
-          <div className="flex gap-4 mb-6">
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-2 border rounded-lg"
-            >
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
-            <select
-              value={dueDateSort}
-              onChange={(e) => setDueDateSort(e.target.value)}
-              className="px-4 py-2 border rounded-lg"
-            >
-              <option value="asc">Due Date (Earliest First)</option>
-              <option value="desc">Due Date (Latest First)</option>
-            </select>
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between">
+            {/* Left side filters */}
+            <div className="flex flex-wrap gap-4">
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                <option value="all">All Priorities</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+              <select
+                value={dueDateSort}
+                onChange={(e) => setDueDateSort(e.target.value)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                <option value="asc">Due Date (Earliest First)</option>
+                <option value="desc">Due Date (Latest First)</option>
+              </select>
+            </div>
+            
+            {/* Right side status filter */}
+            <div className="flex gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border rounded-lg bg-white"
+              >
+                <option value="all">All Tasks</option>
+                <option value="pending">Pending Tasks</option>
+                <option value="completed">Completed Tasks</option>
+              </select>
+            </div>
           </div>
+
           <div className="overflow-x-auto space-y-4">
             {getFilteredAndSortedTasks().map((task) => (
               <div
                 key={task.id}
-                className="border-b last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg shadow-sm bg-white"
+                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg shadow-sm bg-white ${
+                  task.status === 'completed' ? 'bg-gray-50' : ''
+                }`}
               >
                 <div className="flex items-center px-6 py-4">
                   <div className="flex-1 flex items-start gap-4">
@@ -221,7 +247,11 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
                       )}
                     </button>
                     <div className="flex-1">
-                      <h3 className="font-medium">{task.title}</h3>
+                      <h3 className={`font-medium ${
+                        task.status === 'completed' ? 'text-gray-500 line-through' : ''
+                      }`}>
+                        {task.title}
+                      </h3>
                       <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                       <div className="mt-2 flex gap-4 text-sm text-gray-500">
                         <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
@@ -231,6 +261,11 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
                           'bg-green-100 text-green-800'
                         }`}>
                           {task.priority}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {task.status}
                         </span>
                       </div>
                     </div>

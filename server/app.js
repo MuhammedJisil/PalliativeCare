@@ -1907,6 +1907,8 @@ app.get('/api/team/:type', async (req, res) => {
   }
 });
 
+
+
 // Tasks endpoint
 app.get('/api/tasks/:type', async (req, res) => {
   const { type } = req.params;
@@ -1927,10 +1929,11 @@ app.get('/api/tasks/:type', async (req, res) => {
       default:
         return res.status(400).json({ message: 'Invalid type' });
     }
-
+    
+    
     const query = `
       SELECT * FROM tasks 
-      WHERE ${assignedToCondition} AND status = 'pending'
+      WHERE ${assignedToCondition}
       ORDER BY due_date ASC, priority DESC
     `;
     
