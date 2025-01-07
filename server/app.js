@@ -1986,24 +1986,27 @@ app.get('/api/schedules/:type', async (req, res) => {
 
 
 
+// assignment section
 
 app.get('/api/assignments/:type', async (req, res) => {
-  let { type } = req.params;
-  
-  // Map human-readable values to ENUM values
-  const typeMapping = {
-    medical: 'medical_professional',
-    volunteer: 'volunteer',
-    caregiver: 'caregiver',
-  };
+  const { type } = req.params;
+  let helperType;
 
-  type = typeMapping[type];
-  if (!type) {
-    return res.status(400).json({ message: 'Invalid helper type' });
+  switch (type) {
+    case 'medical':
+      helperType = 'medical_professional';
+      break;
+    case 'volunteer':
+      helperType = 'volunteer';
+      break;
+    case 'caregiver':
+      helperType = 'caregiver';
+      break;
+    default:
+      return res.status(400).json({ message: 'Invalid helper type' });
   }
 
   const client = await pool.connect();
-  
   try {
     const query = `
       SELECT 
@@ -2015,10 +2018,204 @@ app.get('/api/assignments/:type', async (req, res) => {
       ORDER BY assigned_date DESC
     `;
 
-    const result = await client.query(query, [type]);
+    const result = await client.query(query, [helperType]);
     res.json(result.rows);
   } catch (error) {
     console.error('Database query failed:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get patient details
+app.get('/api/patients/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      'SELECT * FROM patients WHERE id = $1',
+      [req.params.id]
+    );
+    res.json(result.rows[0] || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get helper details (works for all helper types)
+app.get('/api/:helper_type/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { helper_type, id } = req.params;
+    const validTypes = ['volunteers', 'caregivers', 'medical_professionals'];
+    
+    if (!validTypes.includes(helper_type)) {
+      return res.status(400).json({ message: 'Invalid helper type' });
+    }
+
+    const result = await client.query(
+      `SELECT * FROM ${helper_type} WHERE id = $1`,
+      [id]
+    );
+    res.json(result.rows[0] || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
+
+app.get('/api/health-status/:patient_id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const patientId = req.params.patient_id;
+    console.log(`Fetching health status for patient_id: ${patientId}`);
+
+    const patientExists = await client.query(
+      'SELECT id FROM patients WHERE id = $1',
+      [patientId]
+    );
+    if (patientExists.rows.length === 0) {
+      console.log(`Patient with ID ${patientId} not found`);
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const result = await client.query(
+      'SELECT * FROM health_status WHERE patient_id = $1 ORDER BY note_date DESC LIMIT 1',
+      [patientId]
+    );
+    console.log(`Health status for patient_id ${patientId}:`, result.rows);
+    res.json(result.rows[0] || {
+      disease: '',
+      medication: '',
+      note: '',
+      note_date: new Date(),
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get medical history - Fixed to return all history records
+app.get('/api/medical-history/:patient_id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      'SELECT * FROM medical_history WHERE patient_id = $1 ORDER BY created_at DESC',
+      [req.params.patient_id]
+    );
+    res.json(result.rows || []);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update medical history
+app.put('/api/medical-history/:patient_id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { history } = req.body;
+    const patientId = req.params.patient_id;
+
+    // Get existing history for the patient
+    const existingHistoryResult = await client.query(
+      'SELECT history FROM medical_history WHERE patient_id = $1',
+      [patientId]
+    );
+    const existingHistory = existingHistoryResult.rows[0]?.history || '';
+
+    // Format new history entry
+    const newHistoryEntry = `${new Date().toISOString().split('T')[0]}: ${history}\n` + existingHistory;
+
+    // Insert new history or update if a record already exists
+    await client.query(
+      `INSERT INTO medical_history (patient_id, history) 
+       VALUES ($1, $2) 
+       ON CONFLICT (patient_id) 
+       DO UPDATE SET history = EXCLUDED.history`,
+      [patientId, newHistoryEntry]
+    );
+
+    res.json({ message: 'Medical history updated successfully.' });
+  } catch (error) {
+    console.error('Error updating medical history:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
+// Update health status
+app.put('/api/health-status/:patient_id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { disease, medication, note } = req.body;
+    const patientId = req.params.patient_id;
+
+    // Check if health status exists
+    const existingStatus = await client.query(
+      'SELECT * FROM health_status WHERE patient_id = $1',
+      [patientId]
+    );
+
+    let healthStatusResult;
+    if (existingStatus.rows.length > 0) {
+      // Update existing health status
+      healthStatusResult = await client.query(
+        `UPDATE health_status
+         SET disease = $1, medication = $2, note = $3, note_date = CURRENT_DATE
+         WHERE patient_id = $4
+         RETURNING *`,
+        [disease, medication, note, patientId]
+      );
+    } else {
+      // Insert new health status
+      healthStatusResult = await client.query(
+        `INSERT INTO health_status (patient_id, disease, medication, note, note_date)
+         VALUES ($1, $2, $3, $4, CURRENT_DATE)
+         RETURNING *`,
+        [patientId, disease, medication, note]
+      );
+    }
+
+    // Format the history entry
+    const dateStr = new Date().toISOString().split('T')[0];
+    const newHistoryEntry = `${dateStr}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}, Note: ${note || 'N/A'}`;
+
+    // Get existing medical history
+    const existingHistory = await client.query(
+      'SELECT history FROM medical_history WHERE patient_id = $1',
+      [patientId]
+    );
+
+    // Combine new entry with existing history
+    const updatedHistory = existingHistory.rows.length > 0
+      ? `${newHistoryEntry}\n${existingHistory.rows[0].history}`
+      : newHistoryEntry;
+
+    // Update medical history
+    await client.query(
+      `INSERT INTO medical_history (patient_id, history)
+       VALUES ($1, $2)
+       ON CONFLICT (patient_id) 
+       DO UPDATE SET history = $2`,
+      [patientId, updatedHistory]
+    );
+
+    res.json(healthStatusResult.rows[0]);
+  } catch (error) {
+    console.error('Error updating health status:', error);
     res.status(500).json({ message: 'Internal server error' });
   } finally {
     client.release();

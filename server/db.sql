@@ -200,3 +200,15 @@ ALTER COLUMN name TYPE VARCHAR(30),
 ALTER COLUMN relation TYPE VARCHAR(10),
 ALTER COLUMN phone_number TYPE NUMERIC(10, 0) 
 USING phone_number::NUMERIC(10, 0);
+
+
+ALTER TABLE assignments
+DROP CONSTRAINT IF EXISTS assignments_patient_id_fkey;
+
+
+ALTER TABLE assignments
+ADD CONSTRAINT assignments_patient_id_fkey
+FOREIGN KEY (patient_id)
+REFERENCES patients(id)
+ON DELETE CASCADE;
+
