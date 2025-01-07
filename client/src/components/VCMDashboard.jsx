@@ -69,54 +69,22 @@ useEffect(() => {
 
 // Add these functions before the render methods
 const fetchAssignmentDetails = async (assignment) => {
-  if (!assignment) {
-    console.error("Assignment is undefined");
-    return;
-  }
-
   try {
-    console.log("Fetching details for assignment:", assignment);
-
     const [patientRes, helperRes, statusRes, historyRes] = await Promise.all([
       fetch(`http://localhost:5000/api/patients/${assignment.patient_id}`),
       fetch(`http://localhost:5000/api/${assignment.helper_type}s/${assignment.helper_id}`),
       fetch(`http://localhost:5000/api/health-status/${assignment.patient_id}`),
-      fetch(`http://localhost:5000/api/medical-history/${assignment.patient_id}`),
+      fetch(`http://localhost:5000/api/medical-history/${assignment.patient_id}`)
     ]);
-
-    // Log response status
-    console.log("Patient Response Status:", patientRes.status);
-    console.log("Helper Response Status:", helperRes.status);
-    console.log("Health Status Response Status:", statusRes.status);
-    console.log("Medical History Response Status:", historyRes.status);
-
-    // Check if all responses are OK
-    if (!patientRes.ok || !helperRes.ok || !statusRes.ok || !historyRes.ok) {
-      throw new Error("Failed to fetch one or more resources");
-    }
-
-    // Parse JSON responses
-    const patientData = await patientRes.json();
-    const helperData = await helperRes.json();
-    const healthStatus = await statusRes.json();
-    const medicalHistory = await historyRes.json();
-
-    // Update state with fetched data
-    setPatientData(patientData);
-    setHelperData(helperData);
-    setHealthStatus(healthStatus);
-    setMedicalHistory(medicalHistory);
-
-    // Log fetched data
-    console.log("Patient Data:", patientData);
-    console.log("Helper Data:", helperData);
-    console.log("Health Status:", healthStatus);
-    console.log("Medical History:", medicalHistory);
+    
+    setPatientData(await patientRes.json());
+    setHelperData(await helperRes.json());
+    setHealthStatus(await statusRes.json());
+    setMedicalHistory(await historyRes.json());
   } catch (error) {
-    console.error("Error fetching assignment details:", error);
+    console.error('Error fetching assignment details:', error);
   }
 };
-
 
 const handleUpdateHealthStatus = async (e) => {
   e.preventDefault();
