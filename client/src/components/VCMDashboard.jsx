@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, X, Phone, MapPin, Calendar, UserPlus, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Circle, CalendarDays, ListFilter, Clock } from 'lucide-react';
-
+import AssignmentDetails from './AssignmentDetails';
 const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [activeTab, setActiveTab] = useState(userType);
@@ -18,106 +18,33 @@ const [patientData, setPatientData] = useState(null);
 const [helperData, setHelperData] = useState(null);
 const [healthStatus, setHealthStatus] = useState(null);
 const [medicalHistory, setMedicalHistory] = useState(null);
-const [isEditingHealth, setIsEditingHealth] = useState(false);
-const [isEditingMedicalHistory, setIsEditingMedicalHistory] = useState(false);
-const [newMedicalHistory, setNewMedicalHistory] = useState({ history: '' });
-const [editedHealthStatus, setEditedHealthStatus] = useState({
-  disease: '',
-  medication: '',
-  note: ''
-});
-
-// Add this function to handle medical history updates
-const handleUpdateMedicalHistory = async (e) => {
-  e.preventDefault();
-  
-  if (!selectedAssignment || !selectedAssignment.patient_id) {
-    console.error('No patient selected');
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:5000/api/medical-history/${selectedAssignment.patient_id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newMedicalHistory)
-    });
-
-    if (response.ok) {
-      const updatedHistory = await response.json();
-      setMedicalHistory(updatedHistory);
-      setIsEditingMedicalHistory(false);
-      setNewMedicalHistory({ history: '' });
-    } else {
-      console.error('Failed to update medical history:', await response.json());
-    }
-  } catch (error) {
-    console.error('Error updating medical history:', error);
-  }
-};
 
 
-useEffect(() => {
-  if (healthStatus) {
-    setEditedHealthStatus({
-      disease: healthStatus.disease || '',
-      medication: healthStatus.medication || '',
-      note: healthStatus.note || ''
-    });
-  }
-}, [healthStatus]);
+
+
 
 // Add these functions before the render methods
 const fetchAssignmentDetails = async (assignment) => {
   try {
-    const [patientRes, helperRes, statusRes, historyRes] = await Promise.all([
+    // Fetch patient data (including health status and medical history) and helper data
+    const [patientRes, helperRes] = await Promise.all([
       fetch(`http://localhost:5000/api/patients/${assignment.patient_id}`),
-      fetch(`http://localhost:5000/api/${assignment.helper_type}s/${assignment.helper_id}`),
-      fetch(`http://localhost:5000/api/health-status/${assignment.patient_id}`),
-      fetch(`http://localhost:5000/api/medical-history/${assignment.patient_id}`)
+      fetch(`http://localhost:5000/api/${assignment.helper_type}s/${assignment.helper_id}`)
     ]);
+
+    const patientData = await patientRes.json();
+    setPatientData(patientData);
+    // Set health status and medical history from patient data
+    setHealthStatus(patientData.healthStatus);
+    setMedicalHistory(patientData.medicalHistory);
     
-    setPatientData(await patientRes.json());
     setHelperData(await helperRes.json());
-    setHealthStatus(await statusRes.json());
-    setMedicalHistory(await historyRes.json());
   } catch (error) {
     console.error('Error fetching assignment details:', error);
   }
 };
 
-const handleUpdateHealthStatus = async (e) => {
-  e.preventDefault();
 
-  if (!selectedAssignment || !selectedAssignment.patient_id) {
-    console.error('No patient selected for health status update.');
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:5000/api/health-status/${selectedAssignment.patient_id}`, {
-      method: 'PUT', // Use PUT instead of POST
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...editedHealthStatus,
-        note_date: new Date().toISOString()
-      })
-    });
-
-    if (response.ok) {
-      const updatedStatus = await response.json();
-      setHealthStatus(prev => [updatedStatus, ...(Array.isArray(prev) ? prev : [])]);
-      setIsEditingHealth(false);
-      setEditedHealthStatus({ disease: '', medication: '', note: '' });
-    } else {
-      console.error('Failed to update health status:', await response.json());
-      alert('Failed to update health status. Please try again.');
-    }
-  } catch (error) {
-    console.error('Error updating health status:', error);
-    alert('Failed to update health status. Please try again later.');
-  }
-};
 
 
   useEffect(() => {
@@ -502,250 +429,39 @@ const handleUpdateHealthStatus = async (e) => {
       ),
       assignments: (
         <div className="space-y-4">
-          {detailData.map((assignment) => (
-            <div 
-              key={assignment.id} 
-              className="bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => {
-                setSelectedAssignment(assignment);
-                fetchAssignmentDetails(assignment);
-              }}
-            >
-              <h3 className="font-medium">{assignment.patient_name}</h3>
-              <div className="mt-2 space-y-1 text-sm">
-                <div>Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}</div>
-                <div>Status: {assignment.status}</div>
-              </div>
-            </div>
-          ))}
-      
-          {selectedAssignment && patientData && helperData && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-xl font-semibold">Assignment Details</h2>
-                  <button 
-                    onClick={() => {
-                      setSelectedAssignment(null);
-                      setPatientData(null);
-                      setHelperData(null);
-                    }} 
-                    className="p-1 hover:bg-gray-100 rounded"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-      
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Patient Card */}
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-medium mb-4">Patient Information</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>{patientData.first_name}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>Age: {patientData.age}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Phone className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>{patientData.phone_number}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <MapPin className="w-5 h-5 mr-2 mt-1 text-gray-400" />
-                        <span>{patientData.address}</span>
-                      </div>
-                    </div>
-      
-                    {/* Health Status Section */}
-                    <div className="mt-6">
-  <div className="flex justify-between items-center mb-4">
-    <h4 className="font-medium">Health Status History</h4>
-    <button
-      onClick={() => setIsEditingHealth(true)}
-      className="text-sm text-teal-600 hover:text-teal-700"
+  {detailData.map((assignment) => (
+    <div
+      key={assignment.id}
+      className="bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => {
+        setSelectedAssignment(assignment);
+        fetchAssignmentDetails(assignment);
+      }}
     >
-      Add New Status
-    </button>
-  </div>
-
-  {isEditingHealth ? (
-    <form onSubmit={handleUpdateHealthStatus} className="space-y-4">
-      <input
-        type="text"
-        value={editedHealthStatus.disease}
-        onChange={(e) => setEditedHealthStatus(prev => ({
-          ...prev,
-          disease: e.target.value
-        }))}
-        placeholder="Disease"
-        className="w-full p-2 border rounded"
-        required
-      />
-      <input
-        type="text"
-        value={editedHealthStatus.medication}
-        onChange={(e) => setEditedHealthStatus(prev => ({
-          ...prev,
-          medication: e.target.value
-        }))}
-        placeholder="Medication"
-        className="w-full p-2 border rounded"
-        required
-      />
-      <textarea
-        value={editedHealthStatus.note}
-        onChange={(e) => setEditedHealthStatus(prev => ({
-          ...prev,
-          note: e.target.value
-        }))}
-        placeholder="Notes"
-        className="w-full p-2 border rounded"
-        rows={3}
-        
-      />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsEditingHealth(false)}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-        >
-          Cancel
-        </button>
+      <h3 className="font-medium">{assignment.patient_name}</h3>
+      <div className="mt-2 space-y-1 text-sm">
+        <div>Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}</div>
+        <div>Status: {assignment.status}</div>
       </div>
-    </form>
-  ) : (
-    <div className="space-y-4">
-      {Array.isArray(healthStatus) && healthStatus.length > 0 ? (
-        healthStatus.map((status, index) => (
-          <div key={index} className="bg-white p-4 rounded border">
-            <div className="flex justify-between items-start mb-2">
-              <p className="text-sm text-gray-500">
-                {new Date(status.note_date).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p><strong>Disease:</strong> {status.disease}</p>
-              <p><strong>Medication:</strong> {status.medication}</p>
-              <p><strong>Notes:</strong> {status.note}</p>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500">No health status records available</p>
-      )}
     </div>
-  )}
-</div>
-
-{/* Medical History Section */}
-<div className="mt-6">
-  <div className="flex justify-between items-center mb-4">
-    <h4 className="font-medium">Medical History</h4>
-    <button
-      onClick={() => setIsEditingMedicalHistory(true)}
-      className="text-sm text-teal-600 hover:text-teal-700"
-    >
-      Add New History
-    </button>
-  </div>
-
-  {isEditingMedicalHistory ? (
-    <form onSubmit={handleUpdateMedicalHistory} className="space-y-4">
-      <textarea
-        value={newMedicalHistory.history}
-        onChange={(e) => setNewMedicalHistory({ history: e.target.value })}
-        placeholder="Enter medical history"
-        className="w-full p-2 border rounded"
-        rows={4}
-        required
-      />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setIsEditingMedicalHistory(false);
-            setNewMedicalHistory({ history: '' });
-          }}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  ) : (
-    <div className="space-y-4">
-      {medicalHistory ? (
-        <div className="bg-white p-4 rounded border">
-          <p className="whitespace-pre-wrap">{medicalHistory.history}</p>
-        </div>
-      ) : (
-        <p className="text-gray-500">No medical history available</p>
-      )}
-    </div>
-  )}
-</div>
-</div>
+  ))}
       
-                  {/* Helper Card */}
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-medium mb-4">
-                      {selectedAssignment.helper_type.charAt(0).toUpperCase() + 
-                       selectedAssignment.helper_type.slice(1)} Information
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>{helperData.name}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FileText className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>{helperData.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Phone className="w-5 h-5 mr-2 text-gray-400" />
-                        <span>{helperData.phone_number}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <MapPin className="w-5 h-5 mr-2 mt-1 text-gray-400" />
-                        <span>{helperData.address}</span>
-                      </div>
-                      {helperData.availability && (
-                        <div className="flex items-center">
-                          <Clock className="w-5 h-5 mr-2 text-gray-400" />
-                          <span>{helperData.availability}</span>
-                        </div>
-                      )}
-                      {helperData.specialization && (
-                        <div className="mt-4">
-                          <strong>Specialization:</strong> {helperData.specialization}
-                        </div>
-                      )}
-                      {helperData.experience && (
-                        <div className="mt-2">
-                          <strong>Experience:</strong> {helperData.experience}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+      {selectedAssignment && patientData && helperData && healthStatus && medicalHistory && (
+  <AssignmentDetails
+    selectedAssignment={selectedAssignment}
+    patientData={patientData}
+    helperData={helperData}
+    healthStatus={healthStatus}
+    medicalHistory={medicalHistory}
+    onClose={() => {
+      setSelectedAssignment(null);
+      setPatientData(null);
+      setHelperData(null);
+      setHealthStatus(null);
+      setMedicalHistory(null);
+    }}
+  />
+)}
         </div>
       ),
       team: (
