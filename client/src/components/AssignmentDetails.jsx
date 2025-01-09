@@ -71,7 +71,7 @@ const AssignmentDetails = ({
 
   const [isEditingMedicalHistory, setIsEditingMedicalHistory] = useState(false);
   const [newMedicalHistory, setNewMedicalHistory] = useState({ 
-    history: safeMedicalHistory.history || '' 
+    history: '' // Always initialize with empty string
   });
 
   const [isHealthStatusModalOpen, setIsHealthStatusModalOpen] = useState(false);
@@ -186,26 +186,28 @@ const AssignmentDetails = ({
         {/* Content Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Patient Information Card */}
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-medium mb-4">Patient Information</h3>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <Users className="w-5 h-5 mr-2 text-gray-400" />
-                <span>{safePatientData.first_name} {safePatientData.last_name || 'N/A'}</span>
-              </div>
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 mr-2 text-gray-400" />
-                <span>Age: {safePatientData.age || 'N/A'}</span>
-              </div>
-              <div className="flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-gray-400" />
-                <span>{safePatientData.phone_number || 'N/A'}</span>
-              </div>
-              <div className="flex items-start">
-                <MapPin className="w-5 h-5 mr-2 mt-1 text-gray-400" />
-                <span>{safePatientData.address || 'N/A'}</span>
-              </div>
-            </div>
+<div className="space-y-3">
+  <div className="flex items-center">
+    <Users className="w-5 h-5 mr-2 text-gray-400" />
+    <span>
+      {safePatientData.first_name || safePatientData.last_name ? 
+        `${safePatientData.first_name || ''} ${safePatientData.last_name || ''}`.trim() : 
+        'N/A'
+      }
+    </span>
+  </div>
+  <div className="flex items-center">
+    <Calendar className="w-5 h-5 mr-2 text-gray-400" />
+    <span>{safePatientData.age ? `Age: ${safePatientData.age}` : 'Age: N/A'}</span>
+  </div>
+  <div className="flex items-center">
+    <Phone className="w-5 h-5 mr-2 text-gray-400" />
+    <span>{safePatientData.phone_number || 'N/A'}</span>
+  </div>
+  <div className="flex items-start">
+    <MapPin className="w-5 h-5 mr-2 mt-1 text-gray-400" />
+    <span>{safePatientData.address || 'N/A'}</span>
+  </div>
 
             {/* Health Status Section */}
             <div className="mt-6">
@@ -306,36 +308,37 @@ const AssignmentDetails = ({
                 </div>
               </div>
 
-              {isEditingMedicalHistory && (
-                <form onSubmit={handleUpdateMedicalHistory} className="space-y-4">
-                  <textarea
-                    value={newMedicalHistory.history}
-                    onChange={(e) => setNewMedicalHistory({ history: e.target.value })}
-                    placeholder="Enter medical history"
-                    className="w-full p-2 border rounded"
-                    rows={4}
-                    required
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingMedicalHistory(false);
-                        setNewMedicalHistory({ history: '' });
-                      }}
-                      className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
+     
+{isEditingMedicalHistory && (
+  <form onSubmit={handleUpdateMedicalHistory} className="space-y-4">
+    <textarea
+      value={newMedicalHistory.history}
+      onChange={(e) => setNewMedicalHistory({ history: e.target.value })}
+      placeholder="Enter new medical history"
+      className="w-full p-2 border rounded"
+      rows={4}
+      required
+    />
+    <div className="flex gap-2">
+      <button
+        type="submit"
+        className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+      >
+        Save
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setIsEditingMedicalHistory(false);
+          setNewMedicalHistory({ history: '' });
+        }}
+        className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+)}
             </div>
           </div>
 
