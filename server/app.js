@@ -2028,21 +2028,51 @@ app.get('/api/assignments/:type', async (req, res) => {
   }
 });
 
-// Get patient details
 app.get('/api/patients/:id', async (req, res) => {
   const client = await pool.connect();
   try {
-    const result = await client.query(
+    // First get patient basic info
+    const patientResult = await client.query(
       'SELECT * FROM patients WHERE id = $1',
       [req.params.id]
     );
-    res.json(result.rows[0] || null);
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const patient = patientResult.rows[0];
+
+    // Get medical history
+    const historyResult = await client.query(
+      'SELECT history FROM medical_history WHERE patient_id = $1',
+      [req.params.id]
+    );
+
+    // Get health status
+    const statusResult = await client.query(
+      'SELECT disease, medication, note, note_date FROM health_status WHERE patient_id = $1',
+      [req.params.id]
+    );
+
+    // Combine all data
+    const response = {
+      ...patient,
+      medical_history: historyResult.rows[0]?.history || '',
+      health_status: statusResult.rows || []  // Send as array even if empty
+    };
+
+    console.log('Sending patient data:', response);  // Debug log
+    res.json(response);
+
   } catch (error) {
+    console.error('Error fetching patient details:', error);
     res.status(500).json({ message: 'Internal server error' });
   } finally {
     client.release();
   }
 });
+
 
 // Get helper details (works for all helper types)
 app.get('/api/:helper_type/:id', async (req, res) => {

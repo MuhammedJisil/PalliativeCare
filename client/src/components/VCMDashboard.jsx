@@ -14,31 +14,46 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [statusFilter, setStatusFilter] = useState('all'); 
 
   const [selectedAssignment, setSelectedAssignment] = useState(null);
-const [patientData, setPatientData] = useState(null);
-const [helperData, setHelperData] = useState(null);
-const [healthStatus, setHealthStatus] = useState(null);
-const [medicalHistory, setMedicalHistory] = useState(null);
+  const [patientData, setPatientData] = useState(null);
+  const [helperData, setHelperData] = useState(null);
+  const [healthStatus, setHealthStatus] = useState([]);  // Initialize as empty array
+  const [medicalHistory, setMedicalHistory] = useState('');  // Initialize as empty string
 
 
 
 
 
-// Add these functions before the render methods
 const fetchAssignmentDetails = async (assignment) => {
   try {
-    // Fetch patient data (including health status and medical history) and helper data
+    // First, set the selected assignment
+    setSelectedAssignment(assignment);
+    
+    // Then fetch the data
     const [patientRes, helperRes] = await Promise.all([
       fetch(`http://localhost:5000/api/patients/${assignment.patient_id}`),
       fetch(`http://localhost:5000/api/${assignment.helper_type}s/${assignment.helper_id}`)
     ]);
 
+    if (!patientRes.ok || !helperRes.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
     const patientData = await patientRes.json();
+    const helperData = await helperRes.json();
+
+    // Update all states at once
     setPatientData(patientData);
-    // Set health status and medical history from patient data
-    setHealthStatus(patientData.healthStatus);
-    setMedicalHistory(patientData.medicalHistory);
-    
-    setHelperData(await helperRes.json());
+    setHealthStatus(patientData.healthStatus || []); // Use empty array as fallback
+    setMedicalHistory(patientData.medicalHistory || ''); // Use empty string as fallback
+    setHelperData(helperData);
+
+    console.log('Fetched Data:', {
+      patientData,
+      helperData,
+      healthStatus: patientData.health_status,
+      medicalHistory: patientData.medical_history
+    });
+
   } catch (error) {
     console.error('Error fetching assignment details:', error);
   }
@@ -446,20 +461,15 @@ const fetchAssignmentDetails = async (assignment) => {
     </div>
   ))}
       
-      {selectedAssignment && patientData && helperData && healthStatus && medicalHistory && (
+      {selectedAssignment && (
   <AssignmentDetails
     selectedAssignment={selectedAssignment}
     patientData={patientData}
     helperData={helperData}
     healthStatus={healthStatus}
     medicalHistory={medicalHistory}
-    onClose={() => {
-      setSelectedAssignment(null);
-      setPatientData(null);
-      setHelperData(null);
-      setHealthStatus(null);
-      setMedicalHistory(null);
-    }}
+    onClose={() => setSelectedAssignment(null)}
+    onUpdate={() => fetchAssignmentDetails(selectedAssignment)}
   />
 )}
         </div>
