@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, X, Phone, MapPin, Calendar, UserPlus, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Circle, CalendarDays, ListFilter, Clock } from 'lucide-react';
+import { Users, FileText, X, Activity, MapPin, Calendar, UserPlus, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Circle, CalendarDays, ListFilter, Clock } from 'lucide-react';
 import AssignmentDetails from './AssignmentDetails';
 const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -12,6 +12,7 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [sortType, setSortType] = useState('all');
   const [expandedNotes, setExpandedNotes] = useState({});
   const [statusFilter, setStatusFilter] = useState('all'); 
+  const [expandedTasks, setExpandedTasks] = useState({});
 
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [patientData, setPatientData] = useState(null);
@@ -174,6 +175,8 @@ const fetchAssignmentDetails = async (assignment) => {
       }
     };
 
+    
+
   // Updated toggle function to use the provided backend endpoint
   const toggleTaskStatus = async (taskId) => {
     try {
@@ -212,7 +215,6 @@ const fetchAssignmentDetails = async (assignment) => {
   const getFilteredAndSortedTasks = () => {
     return detailData
       .filter(task => {
-        // Apply both priority and status filters
         const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
         const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
         return matchesPriority && matchesStatus;
@@ -223,6 +225,14 @@ const fetchAssignmentDetails = async (assignment) => {
         return dueDateSort === 'asc' ? dateA - dateB : dateB - dateA;
       });
   };
+
+  // Add this function to handle description toggle:
+const toggleDescription = (taskId) => {
+  setExpandedTasks(prev => ({
+    ...prev,
+    [taskId]: !prev[taskId]
+  }));
+};
 
   // New function to toggle note expansion
   const toggleNoteExpansion = (scheduleId) => {
@@ -236,92 +246,118 @@ const fetchAssignmentDetails = async (assignment) => {
     const views = {
       tasks: (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between">
-            {/* Left side filters */}
-            <div className="flex flex-wrap gap-4">
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-4 py-2 border rounded-lg"
-              >
-                <option value="all">All Priorities</option>
-                <option value="high">High Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="low">Low Priority</option>
-              </select>
-              <select
-                value={dueDateSort}
-                onChange={(e) => setDueDateSort(e.target.value)}
-                className="px-4 py-2 border rounded-lg"
-              >
-                <option value="asc">Due Date (Earliest First)</option>
-                <option value="desc">Due Date (Latest First)</option>
-              </select>
-            </div>
-            
-            {/* Right side status filter */}
-            <div className="flex gap-4">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border rounded-lg bg-white"
-              >
-                <option value="all">All Tasks</option>
-                <option value="pending">Pending Tasks</option>
-                <option value="completed">Completed Tasks</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto space-y-4">
-            {getFilteredAndSortedTasks().map((task) => (
-              <div
-                key={task.id}
-                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg shadow-sm bg-white ${
-                  task.status === 'completed' ? 'bg-gray-50' : ''
-                }`}
-              >
-                <div className="flex items-center px-6 py-4">
-                  <div className="flex-1 flex items-start gap-4">
-                    <button 
-                      onClick={() => toggleTaskStatus(task.id)}
-                      disabled={isLoading}
-                      className="disabled:opacity-50"
-                    >
-                      {task.status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
-                      )}
-                    </button>
-                    <div className="flex-1">
-                      <h3 className={`font-medium ${
-                        task.status === 'completed' ? 'text-gray-500 line-through' : ''
-                      }`}>
-                        {task.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                      <div className="mt-2 flex gap-4 text-sm text-gray-500">
-                        <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {task.priority}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {task.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      
+          {/* Filters Section */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Sort dropdown */}
+              <div className="flex-1 min-w-[200px]">
+                <select
+                  value={dueDateSort}
+                  onChange={(e) => setDueDateSort(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="asc">Due Date (Earliest First)</option>
+                  <option value="desc">Due Date (Latest First)</option>
+                </select>
               </div>
-            ))}
+      
+              {/* Priority filter */}
+              <div className="flex-1 min-w-[200px]">
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="high">High Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="low">Low Priority</option>
+                </select>
+              </div>
+      
+              {/* Status filter */}
+              <div className="flex-1 min-w-[200px]">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="all">All Tasks</option>
+                  <option value="pending">Pending Tasks</option>
+                  <option value="completed">Completed Tasks</option>
+                </select>
+              </div>
+            </div>
           </div>
+      
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {getFilteredAndSortedTasks().map((task) => (
+    <div
+      key={task.id}
+      className={`bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow ${
+        task.status === 'completed' ? 'bg-gray-50' : ''
+      }`}
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <button 
+            onClick={() => toggleTaskStatus(task.id)}
+            disabled={isLoading}
+            className="mt-1 disabled:opacity-50 hover:scale-110 transition-transform"
+          >
+            {task.status === 'completed' ? (
+              <CheckCircle className="w-5 h-5 text-teal-500" />
+            ) : (
+              <Circle className="w-5 h-5 text-gray-300 hover:text-teal-500" />
+            )}
+          </button>
+          <div className="flex-1 min-w-0">
+            <h3 className={`font-medium ${
+              task.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-800'
+            }`}>
+              {task.title}
+            </h3>
+            <div className="mt-1">
+            <p className={`text-sm text-gray-600 ${
+  expandedTasks[task.id] ? '' : 'line-clamp-2'
+}`}>
+  {task.description || ''}
+</p>
+
+              {(task.description?.length || 0) > 100 && (
+  <button 
+    onClick={() => toggleDescription(task.id)}
+    className="text-teal-600 hover:text-teal-700 text-xs mt-1 font-medium"
+  >
+    {expandedTasks[task.id] ? 'Show Less' : 'Show More'}
+  </button>
+)}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span className="inline-flex items-center text-xs text-gray-500">
+                <Calendar className="w-3 h-3 mr-1" />
+                {new Date(task.due_date).toLocaleDateString()}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {task.priority}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                task.status === 'completed' ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800'
+              }`}>
+                {task.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
         </div>
       ),
       schedules: (
@@ -415,12 +451,12 @@ const fetchAssignmentDetails = async (assignment) => {
       }`}
     >
       <div className="p-3 bg-gray-50 rounded-md">
-        <p className="text-sm text-gray-600 whitespace-pre-wrap">
-          {schedule.notes}
-        </p>
+      <p className="text-sm text-gray-600 whitespace-pre-wrap">
+  {schedule.notes || ''}
+</p>
       </div>
     </div>
-    {!expandedNotes[schedule.id] && schedule.notes.length > 100 && (
+    {!expandedNotes[schedule.id] && (schedule.notes?.length || 0) > 100 && (
       <div className="text-center mt-2">
         <button 
           className="text-teal-600 hover:text-teal-700 text-sm"
@@ -505,59 +541,84 @@ const fetchAssignmentDetails = async (assignment) => {
 
     return (
       <div className="space-y-4">
-        <button 
-          onClick={() => setCurrentView('dashboard')}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </button>
+        {/* Back button with improved design */}
+        <div className="mb-8">
+            <button 
+              onClick={() => setCurrentView('dashboard')}
+              className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-colors duration-200 group"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" />
+              <span className="font-medium">Back to Dashboard</span>
+            </button>
+          </div>
+      
         {views[currentView]}
       </div>
     );
   };
 
   const renderDashboard = () => (
-    <>
-      <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-        {['volunteer', 'caregiver', 'medical'].map((type) => (
-          <button
-            key={type}
-            onClick={() => setActiveTab(type)}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md ${
-              activeTab === type
-                ? 'bg-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {getMetrics(activeTab).map((metric) => {
-          const Icon = metric.icon;
-          return (
+    <div className="bg-gray-50">
+      <div className="container mx-auto">
+       
+  
+        {/* Tabs */}
+        <div className="bg-gray-100 rounded-lg p-1 mb-8 flex space-x-1 max-w-md">
+          {['volunteer', 'caregiver', 'medical'].map((type) => (
             <button
-              key={metric.title}
-              onClick={metric.onClick}
-              className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+              key={type}
+              onClick={() => setActiveTab(type)}
+              className={`
+                flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                ${activeTab === type 
+                  ? 'bg-white text-teal-600 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700'
+                }
+              `}
             >
-              <div className="flex items-center justify-between mb-2">
-                <Icon className="w-6 h-6 text-gray-400" />
-                <span className="text-2xl font-semibold">{metric.value}</span>
-              </div>
-              <h3 className="text-sm text-gray-500">{metric.title}</h3>
+              {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
-          )
-        })}
+          ))}
+        </div>
+  
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {getMetrics(activeTab).map((metric, index) => {
+            const Icon = metric.icon;
+            return (
+              <button
+                key={metric.title}
+                onClick={metric.onClick}
+                className="bg-white rounded-lg shadow-md transition-all duration-200 hover:shadow-lg p-6"
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="bg-teal-50 rounded-lg p-3">
+                    <Icon className="h-6 w-6 text-teal-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    {metric.value}
+                  </h2>
+                </div>
+                <p className="text-gray-600">
+                  {metric.title}
+                </p>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
+       {/* Header */}
+       <div className="flex items-center space-x-2 mb-8">
+          <Activity className="h-8 w-8 text-teal-600" />
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Care Management Dashboard
+          </h1>
+        </div>
       {currentView === 'dashboard' ? renderDashboard() : renderDetailView()}
     </div>
   );
