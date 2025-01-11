@@ -767,7 +767,7 @@ const FilterHeader = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Existing header */}
       <header className="bg-white shadow-md sticky top-0 z-10">
         <div className="container mx-auto px-4">
