@@ -178,6 +178,34 @@ CREATE TABLE assignments (
     UNIQUE(patient_id, helper_type)
 );
 
+-- equipment table
+CREATE TABLE equipment (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    status VARCHAR(20) CHECK (status IN ('Available', 'In Use', 'Under Maintenance', 'Out of Service')) DEFAULT 'Available',
+    condition VARCHAR(50),
+	image_url VARCHAR(255),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Trigger to update the updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_equipment_updated_at
+    BEFORE UPDATE ON equipment
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 
 -- table changes 
 

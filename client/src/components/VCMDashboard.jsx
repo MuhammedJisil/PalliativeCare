@@ -37,7 +37,7 @@ const fetchAssignmentDetails = async (assignment) => {
     // Then fetch the data
     const [patientRes, helperRes] = await Promise.all([
       fetch(`http://localhost:5000/api/patients/${assignment.patient_id}`),
-      fetch(`http://localhost:5000/api/${assignment.helper_type}s/${assignment.helper_id}`)
+      fetch(`http://localhost:5000/api/helpers/${assignment.helper_type}s/${assignment.helper_id}`)
     ]);
 
     if (!patientRes.ok || !helperRes.ok) {

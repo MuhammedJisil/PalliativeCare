@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Box, 
-  Tool, 
+  WrenchIcon, 
   RefreshCw, 
   Plus, 
   Search, 
   Edit2, 
   Trash2, 
+  Eye,
   AlertCircle,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,14 +26,15 @@ const EquipmentList = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const navigate = useNavigate();
-
+ 
   const [formData, setFormData] = useState({
     name: '',
     type: '',
     quantity: 0,
     status: 'Available',
     condition: '',
-    notes: ''
+    notes: '',
+    image: null // Added for image handling
   });
 
   useEffect(() => {
@@ -54,15 +56,45 @@ const EquipmentList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formDataToSend = new FormData();
+    
+    // Append all form fields to FormData
+    Object.keys(formData).forEach(key => {
+      if (key !== 'image') {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
+    
+    // Append image if it exists
+    if (formData.image) {
+      formDataToSend.append('image', formData.image);
+    }
+
     try {
       if (editingEquipment) {
-        const response = await axios.put(`http://localhost:5000/api/equipment/${editingEquipment.id}`, formData);
+        const response = await axios.put(
+          `http://localhost:5000/api/equipment/${editingEquipment.id}`, 
+          formDataToSend,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
         setEquipment(equipment.map(item => 
           item.id === editingEquipment.id ? response.data : item
         ));
         setSuccess('Equipment updated successfully!');
       } else {
-        const response = await axios.post('http://localhost:5000/api/equipment', formData);
+        const response = await axios.post(
+          'http://localhost:5000/api/equipment', 
+          formDataToSend,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
         setEquipment([response.data, ...equipment]);
         setSuccess('Equipment added successfully!');
       }
@@ -71,7 +103,9 @@ const EquipmentList = () => {
       setError(error.response?.data?.error || 'An error occurred');
     }
   };
+ 
 
+  
   const handleDelete = (id) => {
     setDeleteId(id);
     setShowConfirm(true);
@@ -126,7 +160,7 @@ const EquipmentList = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
-              <Tool className="h-8 w-8 text-teal-600" />
+              <WrenchIcon className="h-8 w-8 text-teal-600" />
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
                 Equipment Management
               </h1>
@@ -167,8 +201,8 @@ const EquipmentList = () => {
           </div>
         </div>
 
-        {/* Equipment List */}
-        <div className="bg-white rounded-lg shadow-md">
+       {/* Equipment List */}
+       <div className="bg-white rounded-lg shadow-md">
           {isLoading ? (
             <div className="flex justify-center items-center h-48">
               <RefreshCw className="animate-spin text-teal-600" size={24} />
@@ -183,10 +217,7 @@ const EquipmentList = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Type</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Quantity</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Equipment Name</th>
                     <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
                   </tr>
                 </thead>
@@ -194,20 +225,15 @@ const EquipmentList = () => {
                   {filteredEquipment.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.quantity}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          item.status === 'Available' ? 'bg-green-100 text-green-800' :
-                          item.status === 'In Use' ? 'bg-blue-100 text-blue-800' :
-                          item.status === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => navigate(`/admin/equipments/view/${item.id}`)}
+                            className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors"
+                          >
+                            <Eye size={16} className="mr-1.5" />
+                            <span className="hidden md:inline">View</span>
+                          </button>
                           <button
                             onClick={() => handleEdit(item)}
                             className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
@@ -263,12 +289,12 @@ const EquipmentList = () => {
             </div>
 
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    {editingEquipment ? 'Edit Equipment' : 'Add New Equipment'}
-                  </h3>
-                  <div className="space-y-4">
+            <form onSubmit={handleSubmit}>
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  {editingEquipment ? 'Edit Equipment' : 'Add New Equipment'}
+                </h3>
+                <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Name
@@ -343,6 +369,18 @@ const EquipmentList = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                       ></textarea>
                     </div>
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Image
+                    </label>
+                    <input
+                      type="file"
+                      name="image"
+                      accept="image/*"
+                      onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
                   </div>
                 </div>
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">

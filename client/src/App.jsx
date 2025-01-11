@@ -26,6 +26,9 @@ import MedicalProfessionalsList from './components/MedicalProfessionalsList';
 import MedicalProfessionalView from './components/MedicalProfessionalView';
 import VCMLogin from './components/VCMLogin';
 import VCMDashboard from './components/VCMDashboard';
+import EquipmentList from './components/EquipmentList';
+import EquipmentView from './components/EquipmentView';
+import EquipmentDisplay from './components/EquipmentDisplay';
 
 
 
@@ -61,6 +64,9 @@ const App = () => {
           <Route path="/admin/patient-assignment" element={<PatientAssignment />} />
           <Route path="/admin/Medical-professionals" element={<MedicalProfessionalsList />} />
           <Route path="/admin/Medical-professionals/view/:id" element={<MedicalProfessionalView/>} />
+          <Route path="/admin/equipments" element={<EquipmentList/>} />
+          <Route path="/admin/equipments/view/:id" element={<EquipmentView />} />
+          <Route path="/equipment-display" element={<EquipmentDisplay />} />
           
         </Routes>
       </main>

@@ -162,6 +162,7 @@ const AddPatient = () => {
                 <input
                   type="number"
                   name="age"
+                  min="1"
                   value={formData.age}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"

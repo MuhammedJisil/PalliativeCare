@@ -54,6 +54,7 @@ const UpiPayment = ({ amount, setAmount, upiId }) => (
           <input
             id="amount"
             type="number"
+            min="1"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Enter amount"

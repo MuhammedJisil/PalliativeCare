@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, UserCog, Activity, CheckSquare, Calendar, HeartPulse, UserPlus, BriefcaseMedical, HeartHandshake} from 'lucide-react';
+import { Users, Heart, UserCog, Activity, WrenchIcon, CheckSquare, Calendar, HeartPulse, UserPlus, BriefcaseMedical, HeartHandshake} from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -75,6 +75,14 @@ const AdminDashboard = () => {
     description: "Assign patients to volunteers,caregivers and medical professionals",
     icon: <UserPlus className="h-8 w-8 text-teal-600" />,
     path: '/admin/patient-assignment',
+    bgColor: 'bg-white',
+    hoverColor: 'hover:bg-gray-50'
+  },
+  {
+    title: "Equipments",
+    description: "Manage Medical Equipments",
+    icon: <WrenchIcon className="h-8 w-8 text-teal-600" />,
+    path: '/admin/equipments',
     bgColor: 'bg-white',
     hoverColor: 'hover:bg-gray-50'
   }

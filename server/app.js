@@ -33,6 +33,24 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+
+// Function to delete existing file
+const deleteExistingFile = async (filePath) => {
+  if (filePath) {
+    try {
+      const fullPath = path.join(process.cwd(), filePath);
+      await fs.unlink(fullPath); // Promise-based unlink
+      console.log(`Successfully deleted file: ${fullPath}`);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.warn(`File not found, skipping: ${filePath}`);
+      } else {
+        console.error('Error deleting file:', err);
+      }
+    }
+  }
+};
+
 //admin login
 
 // Seed database with users
@@ -1556,22 +1574,7 @@ app.get('/api/emergency-fund', async (req, res) => {
 });
 
 
-// Function to delete existing file
-const deleteExistingFile = async (filePath) => {
-  if (filePath) {
-    try {
-      const fullPath = path.join(process.cwd(), filePath);
-      await fs.unlink(fullPath); // Promise-based unlink
-      console.log(`Successfully deleted file: ${fullPath}`);
-    } catch (err) {
-      if (err.code === 'ENOENT') {
-        console.warn(`File not found, skipping: ${filePath}`);
-      } else {
-        console.error('Error deleting file:', err);
-      }
-    }
-  }
-};
+
 
 
 // Route to add/update emergency_fund (only one emergency_fund at a time)
@@ -2074,30 +2077,30 @@ app.get('/api/patients/:id', async (req, res) => {
 });
 
 
-// Get helper details (works for all helper types)
-app.get('/api/:helper_type/:id', async (req, res) => {
+
+/// Helper types endpoint
+app.get('/api/helpers/:helper_type/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     const { helper_type, id } = req.params;
     const validTypes = ['volunteers', 'caregivers', 'medical_professionals'];
     
     if (!validTypes.includes(helper_type)) {
-      return res.status(400).json({ message: 'Invalid helper type' });
+      return res.status(400).json({ error: 'Invalid helper type' });
     }
-
+    
     const result = await client.query(
       `SELECT * FROM ${helper_type} WHERE id = $1`,
       [id]
     );
     res.json(result.rows[0] || null);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Helper type query error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();
   }
 });
-
-
 
 
 // Update medical history
@@ -2203,6 +2206,178 @@ app.put('/api/health-status/:patient_id', async (req, res) => {
 });
 
 
+// Equipment component
+
+
+// Get all equipment
+app.get('/api/equipment', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM equipment ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching equipment' });
+  }
+});
+
+// Changed equipment route to be more specific
+app.get('/api/inventory/equipment/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    
+    const equipmentId = parseInt(id);
+    if (isNaN(equipmentId)) {
+      return res.status(400).json({ error: 'Invalid equipment ID format' });
+    }
+    
+    const result = await client.query(
+      'SELECT * FROM equipment WHERE id = $1',
+      [equipmentId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Equipment not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Equipment query error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
+
+// Add new equipment with image upload
+app.post('/api/equipment', upload.single('image'), async (req, res) => {
+  const { name, type, quantity, status, condition, notes } = req.body;
+  const image_url = req.file ? req.file.path : null;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO equipment (name, type, quantity, status, condition, notes, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [name, type, quantity, status, condition, notes, image_url]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error adding equipment' });
+  }
+});
+
+// Update equipment with optional image upload
+app.put('/api/equipment/:id', upload.single('image'), async (req, res) => {
+  const { id } = req.params;
+  const { name, type, quantity, status, condition, notes } = req.body;
+  const client = await pool.connect();
+
+  try {
+    // Find existing equipment to delete old image
+    const existingEquipment = await client.query('SELECT image_url FROM equipment WHERE id = $1', [id]);
+
+    let image_url = null;
+    if (req.file) {
+      // Delete old image if it exists
+      if (existingEquipment.rows[0]?.image_url) {
+        await deleteExistingFile(existingEquipment.rows[0].image_url);
+      }
+      image_url = `/uploads/${req.file.filename}`;
+    }
+
+    let updateQuery = `
+      UPDATE equipment 
+      SET name = $1, 
+          type = $2, 
+          quantity = $3, 
+          status = $4, 
+          condition = $5, 
+          notes = $6,
+          image_url = COALESCE($7, image_url),
+          updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $8 
+      RETURNING *
+    `;
+
+    const values = [
+      name,
+      type,
+      quantity,
+      status,
+      condition,
+      notes,
+      image_url,
+      id
+    ];
+
+    const result = await client.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Equipment not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error updating equipment' });
+  } finally {
+    client.release();
+  }
+});
+
+
+// Delete equipment
+app.delete('/api/equipment/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Get the image_url before deleting the record
+    const equipment = await pool.query('SELECT image_url FROM equipment WHERE id = $1', [id]);
+    
+    // Delete the record from the database
+    const result = await pool.query('DELETE FROM equipment WHERE id = $1', [id]);
+    
+    // If there was an image, delete the file
+    if (equipment.rows[0]?.image_url) {
+      const filename = equipment.rows[0].image_url.split('/').pop();
+      const filePath = path.join('uploads', filename);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+    
+    res.json({ message: 'Equipment deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error deleting equipment' });
+  }
+});
+
+app.get('/api/equipment/available', async (req, res) => {
+  try {
+    const query = `
+      SELECT id, name, type, quantity, status, condition, image_url, notes
+      FROM equipment
+      WHERE status = 'Available' AND quantity > 0
+      ORDER BY name ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    // Add a small delay to prevent potential race conditions on the frontend
+    setTimeout(() => {
+      res.json(result.rows);
+    }, 300);
+  } catch (error) {
+    console.error('Error fetching equipment:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
+    });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
