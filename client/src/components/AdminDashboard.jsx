@@ -79,8 +79,8 @@ const AdminDashboard = () => {
     hoverColor: 'hover:bg-gray-50'
   },
   {
-    title: "Equipments",
-    description: "Manage Medical Equipments",
+    title: "Equipment",
+    description: "Manage Medical Equipment",
     icon: <WrenchIcon className="h-8 w-8 text-teal-600" />,
     path: '/admin/equipments',
     bgColor: 'bg-white',

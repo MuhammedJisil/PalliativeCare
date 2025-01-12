@@ -341,7 +341,7 @@ const VolunteerList = () => {
               <Users className="h-8 w-8 text-teal-600" />
               <Link to="/admin/dashboard" className="text-gray-800">
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Volunteer Management
+                Volunteers
               </h1>
               </Link>
             </div>

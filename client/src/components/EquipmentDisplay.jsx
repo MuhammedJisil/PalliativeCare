@@ -1,5 +1,63 @@
 import React, { useEffect, useState } from 'react';
-import { BadgeCheck, Box, Loader } from 'lucide-react';
+import { BadgeCheck, Box, Loader, ImageIcon } from 'lucide-react';
+
+const EquipmentCard = ({ item }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `http://localhost:5000/${url}`;
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
+      <div className="aspect-video relative bg-gray-100">
+        {imageError || !item.image_url ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-200">
+            <ImageIcon className="h-12 w-12 text-gray-400" />
+            <span className="text-sm text-gray-500 mt-2">No image available</span>
+          </div>
+        ) : (
+          <img
+            src={getImageUrl(item.image_url)}
+            alt={item.name}
+            className="absolute inset-0 w-full h-full object-contain bg-gray-50"
+            onError={(e) => {
+              console.error('Image failed to load:', e.target.src);
+              setImageError(true);
+            }}
+          />
+        )}
+      </div>
+      <div className="p-4 flex-1 flex flex-col">
+        <h3 className="text-xl font-bold text-teal-700 mb-3">{item.name}</h3>
+        <div className="space-y-3 flex-1">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Type:</span>
+            <span className="font-medium">{item.type}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Quantity:</span>
+            <span className="font-medium">{item.quantity}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Status:</span>
+            <span className="flex items-center">
+              <BadgeCheck className="mr-1 text-teal-700" size={16} />
+              <span className="text-teal-800 font-medium">{item.status}</span>
+            </span>
+          </div>
+          {item.notes && (
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <p className="text-sm text-gray-600">{item.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EquipmentDisplay = () => {
   const [equipment, setEquipment] = useState([]);
@@ -19,6 +77,7 @@ const EquipmentDisplay = () => {
       const data = await response.json();
       setEquipment(data);
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -45,43 +104,7 @@ const EquipmentDisplay = () => {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {equipment.map((item) => (
-          <div
-            key={item.id}
-            className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <div className="h-48 overflow-hidden bg-gray-100">
-              <img
-                src={item.image_url || '/api/placeholder/400/300'}
-                alt={item.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-xl font-bold text-teal-700">{item.name}</h3>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Type:</span>
-                  <span className="font-medium">{item.type}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Quantity:</span>
-                  <span className="font-medium">{item.quantity}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="flex items-center">
-                    <BadgeCheck className="mr-1 text-teal-700" size={16} />
-                    <span className="text-teal-800 font-medium">{item.status}</span>
-                  </span>
-                </div>
-                {item.notes && (
-                  <div className="mt-2 pt-2 border-t border-gray-100">
-                    <p className="text-sm text-gray-600">{item.notes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <EquipmentCard key={item.id} item={item} />
         ))}
       </div>
     </div>

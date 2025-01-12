@@ -2355,6 +2355,8 @@ app.delete('/api/equipment/:id', async (req, res) => {
   }
 });
 
+
+// equipment display
 app.get('/api/equipment/available', async (req, res) => {
   try {
     const query = `

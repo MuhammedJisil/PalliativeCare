@@ -162,7 +162,7 @@ const EquipmentList = () => {
             <div className="flex items-center space-x-2">
               <WrenchIcon className="h-8 w-8 text-teal-600" />
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Equipment Management
+                Equipment
               </h1>
             </div>
             

@@ -39,8 +39,19 @@ const ServiceImages = {
       <rect x="180" y="180" width="40" height="70" fill="#f0fdfa"/>
       <path d="M200 140 C200 120 180 120 180 130 C180 140 200 150 200 150 C200 150 220 140 220 130 C220 120 200 120 200 140" fill="#14b8a6"/>
     </svg>
+  ),
+  Equipment: () => (
+    <svg viewBox="0 0 400 300" className="w-full h-48 object-cover rounded-lg mb-4">
+      <rect width="400" height="300" fill="#f0fdfa"/>
+      <rect x="150" y="100" width="100" height="150" fill="#0d9488" rx="10"/>
+      <rect x="170" y="120" width="60" height="20" fill="#f0fdfa" rx="5"/>
+      <rect x="170" y="150" width="60" height="20" fill="#f0fdfa" rx="5"/>
+      <rect x="170" y="180" width="60" height="20" fill="#f0fdfa" rx="5"/>
+      <circle cx="200" cy="80" r="20" fill="#14b8a6"/>
+    </svg>
   )
 };
+
 
 
 const Home = () => {
@@ -141,6 +152,39 @@ const Home = () => {
               <ServiceImages.Home />
               <h3 className="text-xl font-semibold mb-2 text-teal-800">Home Care</h3>
               <p className="text-gray-600">Dedicated home care services to ensure comfort in familiar surroundings</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-teal-900 mb-4">
+              Available Medical Equipment
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Browse our inventory of medical equipment available for patients in need. From mobility aids to specialized care equipment, we're here to support your care journey.
+            </p>
+          </div>
+
+          <div className="flex justify-center items-center">
+            <div className="bg-teal-50 p-8 rounded-lg max-w-md w-full hover:shadow-lg transition-all duration-300">
+              <ServiceImages.Equipment />
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-teal-800 mb-4">
+                  View Available Equipment
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Access our complete catalog of medical equipment, including wheelchairs, hospital beds, oxygen concentrators, and more.
+                </p>
+                <button
+                  onClick={() => navigate('/equipment-display')}
+                  className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-full transition duration-300"
+                >
+                  Browse Equipment
+                </button>
+              </div>
             </div>
           </div>
         </div>
