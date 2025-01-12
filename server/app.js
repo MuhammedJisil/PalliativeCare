@@ -2255,7 +2255,7 @@ app.get('/api/inventory/equipment/:id', async (req, res) => {
 // Add new equipment with image upload
 app.post('/api/equipment', upload.single('image'), async (req, res) => {
   const { name, type, quantity, status, condition, notes } = req.body;
-  const image_url = req.file ? req.file.path : null;
+  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
     const result = await pool.query(

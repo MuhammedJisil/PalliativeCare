@@ -25,26 +25,31 @@ const EquipmentView = () => {
   useEffect(() => {
     fetchEquipmentDetails();
   }, [id]);
-
   const fetchEquipmentDetails = async () => {
     try {
       const response = await axios.get(`http://localhost:5000/api/inventory/equipment/${id}`);
       console.log('Raw equipment data:', response.data);
-      
+  
       const equipmentData = response.data;
-      if (equipmentData.image_url && !equipmentData.image_url.startsWith('http')) {
-        equipmentData.image_url = `http://localhost:5000/${equipmentData.image_url.replace(/\\/g, '/')}`;
+  
+      // Convert relative `image_url` to absolute URL if necessary
+      if (equipmentData.image_url) {
+        const cleanPath = equipmentData.image_url.startsWith('/') 
+          ? equipmentData.image_url.substring(1) 
+          : equipmentData.image_url;
+        equipmentData.image_url = `http://localhost:5000/${cleanPath}`;
       }
-      
+  
       console.log('Processed equipment data:', equipmentData);
       setEquipment(equipmentData);
     } catch (error) {
       setError('Failed to fetch equipment details');
-      console.error('Error:', error);
+      console.error('Error fetching equipment details:', error);
     } finally {
       setLoading(false);
     }
   };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

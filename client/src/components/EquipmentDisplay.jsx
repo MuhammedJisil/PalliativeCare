@@ -6,9 +6,10 @@ const EquipmentCard = ({ item }) => {
   
   const getImageUrl = (url) => {
     if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `http://localhost:5000/${url}`;
+    // Ensure URL does not have double slashes
+    return `http://localhost:5000${url.startsWith('/') ? url : `/${url}`}`;
   };
+  
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">

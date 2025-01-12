@@ -13,7 +13,10 @@ import {
   CheckCircle,
   ArrowLeft,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import ScrollToBottomButton from './ScrollToBottomButton';
+import ConfirmDialog from './ConfrmDialog';
+import AddEditEquipmentModal from './AddEditEquipmentModal';
 
 const EquipmentList = () => {
   const [equipment, setEquipment] = useState([]);
@@ -161,9 +164,9 @@ const EquipmentList = () => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <WrenchIcon className="h-8 w-8 text-teal-600" />
-              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Equipment
-              </h1>
+              <Link to="/admin/dashboard" className="text-gray-800">
+                                <h1 className="text-xl font-semibold tracking-tight">Equipment</h1>
+                              </Link>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -229,14 +232,14 @@ const EquipmentList = () => {
                         <div className="flex justify-end space-x-2">
                           <button
                             onClick={() => navigate(`/admin/equipments/view/${item.id}`)}
-                            className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
                           >
                             <Eye size={16} className="mr-1.5" />
                             <span className="hidden md:inline">View</span>
                           </button>
                           <button
                             onClick={() => handleEdit(item)}
-                            className="inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors"
                           >
                             <Edit2 size={16} className="mr-1.5" />
                             <span className="hidden md:inline">Edit</span>
@@ -279,175 +282,7 @@ const EquipmentList = () => {
           </button>
         </div>
       </div>
-
-      {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <form onSubmit={handleSubmit}>
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {editingEquipment ? 'Edit Equipment' : 'Add New Equipment'}
-                </h3>
-                <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Type
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        value={formData.quantity}
-                        onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Status
-                      </label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      >
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
-                        <option value="Under Maintenance">Under Maintenance</option>
-                        <option value="Out of Service">Out of Service</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Condition
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.condition}
-                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Notes
-                      </label>
-                      <textarea
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        rows="3"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      ></textarea>
-                    </div>
-                    <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Image
-                    </label>
-                    <input
-                      type="file"
-                      name="image"
-                      accept="image/*"
-                      onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    {editingEquipment ? 'Update' : 'Add'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Dialog */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <AlertCircle className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg font-medium text-gray-900">Delete Equipment</h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Are you sure you want to delete this equipment? This action cannot be undone.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={confirmDelete}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Delete
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:w-auto sm:text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* Alert Messages */}
       {(error || success) && (
@@ -469,6 +304,25 @@ const EquipmentList = () => {
           </div>
         </div>
       )}
+      <ScrollToBottomButton />
+
+      <ConfirmDialog
+ isOpen={showConfirm}
+ title="Delete equipment"
+ message="Are you sure you want to delete this equipment?"
+ onConfirm={confirmDelete}
+ onCancel={() => setShowConfirm(false)}
+/>
+
+{/* Add/Edit Modal */}
+<AddEditEquipmentModal
+  isModalOpen={isModalOpen}
+  handleCloseModal={handleCloseModal}
+  editingEquipment={editingEquipment}
+  formData={formData}
+  setFormData={setFormData}
+  handleSubmit={handleSubmit}
+/>
     </div>
   );
 };
