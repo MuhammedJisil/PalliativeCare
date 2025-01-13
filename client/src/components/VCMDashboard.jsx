@@ -1,9 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText,  Activity,  Calendar, UserPlus, ArrowLeft } from 'lucide-react';
+import { 
+  Users, 
+  FileText, 
+  Activity, 
+  Calendar, 
+  UserPlus, 
+  ArrowLeft, 
+  CircleDot,
+  HeartHandshake, 
+  Stethoscope,
+  ClipboardList,
+  CalendarClock,
+  UserCheck,
+  ListTodo,
+  CalendarDays,
+  UsersRound,
+  AlertCircle,
+  Clipboard,
+  HeartPulse
+} from 'lucide-react';
 import AssignmentDetails from './AssignmentDetails';
 import TasksView from './TaskView';
 import ScheduleView from './ScheduleView';
 import TeamView from './TeamView';
+import AssignmentCard from './AssignmentCard'
 
 
 const VCMDashboard = ({ userType = 'volunteer' }) => {
@@ -85,33 +105,90 @@ const fetchAssignmentDetails = async (assignment) => {
   const getMetrics = (type) => {
     if (!dashboardData) return [];
     
-    return [
-      { 
-        title: 'Assigned Patients', 
-        value: dashboardData.assignedPatients || '0', 
-        icon: Users,
-        onClick: () => fetchDetailData('assignments')
-      },
-      { 
-        title: 'Tasks Pending', 
-        value: dashboardData.pendingTasks || '0', 
-        icon: FileText,
-        onClick: () => fetchDetailData('tasks')
-      },
-      { 
-        title: 'Schedules', 
-        value: dashboardData.scheduledTasks || '0', 
-        icon: Calendar,
-        onClick: () => fetchDetailData('schedules')
-      },
-      { 
-        title: 'Team', 
-        value: dashboardData.teamMembers || '0', 
-        icon: UserPlus,
-        onClick: () => fetchDetailData('team')
-      }
-    ];
+    const metricsByType = {
+      volunteer: [
+        { 
+          title: 'Assisted Patients', 
+          value: dashboardData.assignedPatients || '0', 
+          icon: HeartHandshake,
+          onClick: () => fetchDetailData('assignments')
+        },
+        { 
+          title: 'Support Tasks', 
+          value: dashboardData.pendingTasks || '0', 
+          icon: ClipboardList,
+          onClick: () => fetchDetailData('tasks')
+        },
+        { 
+          title: 'Schedules', 
+          value: dashboardData.scheduledTasks || '0', 
+          icon: CalendarClock,
+          onClick: () => fetchDetailData('schedules')
+        },
+        { 
+          title: 'Active Volunteers', 
+          value: dashboardData.teamMembers || '0', 
+          icon: UserCheck,
+          onClick: () => fetchDetailData('team')
+        }
+      ],
+      caregiver: [
+        { 
+          title: 'Care Recipients', 
+          value: dashboardData.assignedPatients || '0', 
+          icon: Users,
+          onClick: () => fetchDetailData('assignments')
+        },
+        { 
+          title: 'Care Tasks', 
+          value: dashboardData.pendingTasks || '0', 
+          icon: ListTodo,
+          onClick: () => fetchDetailData('tasks')
+        },
+        { 
+          title: 'Care Schedule', 
+          value: dashboardData.scheduledTasks || '0', 
+          icon: CalendarDays,
+          onClick: () => fetchDetailData('schedules')
+        },
+        { 
+          title: 'Active Caregivers', 
+          value: dashboardData.teamMembers || '0', 
+          icon: UsersRound,
+          onClick: () => fetchDetailData('team')
+        }
+      ],
+      medical: [
+        { 
+          title: 'Patient Cases', 
+          value: dashboardData.assignedPatients || '0', 
+          icon: HeartPulse,
+          onClick: () => fetchDetailData('assignments')
+        },
+        { 
+          title: 'Medical Tasks', 
+          value: dashboardData.pendingTasks || '0', 
+          icon: Clipboard,
+          onClick: () => fetchDetailData('tasks')
+        },
+        { 
+          title: 'Patient Rounds', 
+          value: dashboardData.scheduledTasks || '0', 
+          icon: Calendar,
+          onClick: () => fetchDetailData('schedules')
+        },
+        { 
+          title: 'Active Healthcare Providers', 
+          value: dashboardData.teamMembers || '0', 
+          icon: Stethoscope,
+          onClick: () => fetchDetailData('team')
+        }
+      ]
+    };
+    
+    return metricsByType[type] || [];
   };
+
 
 
   const fetchDetailData = async (view) => {
@@ -184,21 +261,34 @@ const toggleDescription = (taskId) => {
   };
 
   const renderDetailView = () => {
+    const NoDataMessage = ({ message }) => (
+      <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+        <AlertCircle className="w-12 h-12 text-gray-400 mb-3" />
+        <p className="text-gray-600 text-lg font-medium">{message}</p>
+      </div>
+    );
+
     const views = {
       tasks: (
-        <TasksView
-          detailData={detailData}
-          toggleTaskStatus={toggleTaskStatus}
-          isLoading={isLoading}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-          dueDateSort={dueDateSort}
-          setDueDateSort={setDueDateSort}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          expandedTasks={expandedTasks}
-          toggleDescription={toggleDescription}
-        />
+        <>
+          {detailData.length > 0 ? (
+            <TasksView
+              detailData={detailData}
+              toggleTaskStatus={toggleTaskStatus}
+              isLoading={isLoading}
+              priorityFilter={priorityFilter}
+              setPriorityFilter={setPriorityFilter}
+              dueDateSort={dueDateSort}
+              setDueDateSort={setDueDateSort}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              expandedTasks={expandedTasks}
+              toggleDescription={toggleDescription}
+            />
+          ) : (
+            <NoDataMessage message="No tasks assigned at the moment" />
+          )}
+        </>
       ),
       schedules: (
         <ScheduleView
@@ -211,52 +301,57 @@ const toggleDescription = (taskId) => {
       ),
       assignments: (
         <div className="space-y-4">
-  {detailData.map((assignment) => (
-    <div
-      key={assignment.id}
-      className="bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => {
-        setSelectedAssignment(assignment);
-        fetchAssignmentDetails(assignment);
-      }}
-    >
-      <h3 className="font-medium">{assignment.patient_name}</h3>
-      <div className="mt-2 space-y-1 text-sm">
-        <div>Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}</div>
-        <div>Status: {assignment.status}</div>
-      </div>
-    </div>
-  ))}
-      
-      {selectedAssignment && (
-  <AssignmentDetails
-    selectedAssignment={selectedAssignment}
-    patientData={patientData}
-    helperData={helperData}
-    healthStatus={healthStatus}
-    medicalHistory={medicalHistory}
-    onClose={() => setSelectedAssignment(null)}
-    onUpdate={() => fetchAssignmentDetails(selectedAssignment)}
-  />
-)}
+          {detailData.length > 0 ? (
+            <>
+              {detailData.map((assignment) => (
+                <AssignmentCard
+                  key={assignment.id}
+                  assignment={assignment}
+                  onClick={() => {
+                    setSelectedAssignment(assignment);
+                    fetchAssignmentDetails(assignment);
+                  }}
+                />
+              ))}
+              {selectedAssignment && (
+                <AssignmentDetails
+                  selectedAssignment={selectedAssignment}
+                  patientData={patientData}
+                  helperData={helperData}
+                  healthStatus={healthStatus}
+                  medicalHistory={medicalHistory}
+                  onClose={() => setSelectedAssignment(null)}
+                  onUpdate={() => fetchAssignmentDetails(selectedAssignment)}
+                />
+              )}
+            </>
+          ) : (
+            <NoDataMessage message="No patients assigned currently" />
+          )}
         </div>
       ),
-      team: <TeamView detailData={detailData} />
+      team: (
+        <>
+          {detailData.length > 0 ? (
+            <TeamView detailData={detailData} />
+          ) : (
+            <NoDataMessage message="No team members available" />
+          )}
+        </>
+      )
     };
 
     return (
       <div className="space-y-4">
-        {/* Back button with improved design */}
         <div className="mb-8">
-            <button 
-              onClick={() => setCurrentView('dashboard')}
-              className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-colors duration-200 group"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" />
-              <span className="font-medium">Back to Dashboard</span>
-            </button>
-          </div>
-      
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-colors duration-200 group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" />
+            <span className="font-medium">Back to Dashboard</span>
+          </button>
+        </div>
         {views[currentView]}
       </div>
     );

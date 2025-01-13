@@ -346,91 +346,204 @@ app.get('/api/patients/:id', async (req, res) => {
 });
 
 //Update patient component
-
-app.put('/api/patients/:id', async (req, res) => {
+// Personal Information Update Route
+app.put('/api/patients/:id/personal', async (req, res) => {
   const { id } = req.params;
-  const { first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver, health_status, medical_proxy, medical_history } = req.body;
+  const { first_name, dob, age, gender, address, phone_number } = req.body;
 
   try {
-     // Check if the patient exists
-     const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
-     if (patientResult.rows.length === 0) {
-       return res.status(404).json({ message: 'Patient not found' });
-     }
- 
-     // Check for duplicate details (excluding the current patient's ID)
-     const duplicateCheckQuery = `
-       SELECT * 
-       FROM patients 
-       WHERE LOWER(first_name) = LOWER($1) 
-         AND phone_number = $2 
-         AND LOWER(address) = LOWER($3) 
-         AND dob = $4 
-         AND gender = $5 
-         AND age = $6 
-         AND id != $7
-     `;
-     const duplicateResult = await pool.query(duplicateCheckQuery, [
-       first_name,
-       phone_number,
-       address,
-       dob,
-       gender,
-       age,
-       id,
-     ]);
- 
-     if (duplicateResult.rows.length > 0) {
-       return res.status(409).json({
-         message:
-           'A patient with this personal information (name, DOB, gender, age, address, phone number) already exists',
-       });
-     }
- 
+    // Check if patient exists
+    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Check for duplicate details
+    const duplicateCheckQuery = `
+      SELECT * 
+      FROM patients 
+      WHERE LOWER(first_name) = LOWER($1)
+        AND phone_number = $2
+        AND LOWER(address) = LOWER($3)
+        AND dob = $4
+        AND gender = $5
+        AND age = $6
+        AND id != $7
+    `;
+    const duplicateResult = await pool.query(duplicateCheckQuery, [
+      first_name,
+      phone_number,
+      address,
+      dob,
+      gender,
+      age,
+      id,
+    ]);
+
+    if (duplicateResult.rows.length > 0) {
+      return res.status(409).json({
+        message: 'A patient with this personal information already exists'
+      });
+    }
+
+    // Update personal information
     await pool.query(
-      `UPDATE patients SET first_name = $1, initial_treatment_date = $2, dob = $3, age = $4, gender = $5, address = $6, phone_number = $7, doctor = $8, caregiver = $9 WHERE id = $10`,
-      [first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver, id]
+      `UPDATE patients SET 
+        first_name = $1, 
+        dob = $2, 
+        age = $3, 
+        gender = $4, 
+        address = $5, 
+        phone_number = $6 
+      WHERE id = $7`,
+      [first_name, dob, age, gender, address, phone_number, id]
+    );
+
+    res.status(200).json({ message: 'Personal information updated successfully' });
+  } catch (error) {
+    console.error('Error updating personal information:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Medical Information Update Route
+app.put('/api/patients/:id/medical', async (req, res) => {
+  const { id } = req.params;
+  const { initial_treatment_date, doctor, caregiver, health_status } = req.body;
+
+  try {
+    // Check if patient exists
+    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Update basic medical information
+    await pool.query(
+      `UPDATE patients SET 
+        initial_treatment_date = $1, 
+        doctor = $2, 
+        caregiver = $3 
+      WHERE id = $4`,
+      [initial_treatment_date, doctor, caregiver, id]
     );
 
     if (health_status) {
       const { disease, medication, note, note_date } = health_status;
+      
+      // Get existing health status note
+      const existingHealthStatus = await pool.query(
+        'SELECT note FROM health_status WHERE patient_id = $1',
+        [id]
+      );
+      
+      const newNote = `${note_date || new Date().toISOString().split('T')[0]}: ${note}\n` + 
+        (existingHealthStatus.rows[0]?.note || '');
 
-      const existingHealthStatus = await pool.query('SELECT note FROM health_status WHERE patient_id = $1', [id]);
-      const newNote = `${note_date || new Date().toISOString().split('T')[0]}: ${note}\n` + (existingHealthStatus.rows[0]?.note || '');
-
+      // Update health status
       await pool.query(
-        'UPDATE health_status SET disease = $1, medication = $2, note = $3, note_date = $4 WHERE patient_id = $5',
-        [disease, medication, newNote, note_date || new Date().toISOString().split('T')[0], id]
+        `INSERT INTO health_status (patient_id, disease, medication, note, note_date) 
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (patient_id) 
+         DO UPDATE SET 
+           disease = EXCLUDED.disease,
+           medication = EXCLUDED.medication,
+           note = EXCLUDED.note,
+           note_date = EXCLUDED.note_date`,
+        [id, disease, medication, newNote, note_date || new Date().toISOString().split('T')[0]]
       );
 
-      const existingHistory = (await pool.query('SELECT history FROM medical_history WHERE patient_id = $1', [id])).rows[0]?.history || '';
-      const newHistoryEntry = `${new Date().toISOString().split('T')[0]}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}\n` + existingHistory;
+      // Update medical history
+      const existingHistory = (await pool.query(
+        'SELECT history FROM medical_history WHERE patient_id = $1',
+        [id]
+      )).rows[0]?.history || '';
+
+      const newHistoryEntry = 
+        `${new Date().toISOString().split('T')[0]}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}\n` + 
+        existingHistory;
+
       await pool.query(
-        'INSERT INTO medical_history (patient_id, history) VALUES ($1, $2) ON CONFLICT (patient_id) DO UPDATE SET history = EXCLUDED.history',
+        `INSERT INTO medical_history (patient_id, history) 
+         VALUES ($1, $2) 
+         ON CONFLICT (patient_id) 
+         DO UPDATE SET history = EXCLUDED.history`,
         [id, newHistoryEntry]
       );
+    }
+
+    res.status(200).json({ message: 'Medical information updated successfully' });
+  } catch (error) {
+    console.error('Error updating medical information:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Medical Proxy Update Route
+app.put('/api/patients/:id/proxy', async (req, res) => {
+  const { id } = req.params;
+  const { medical_proxy } = req.body;
+
+  try {
+    // Check if patient exists
+    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
     }
 
     if (medical_proxy) {
       const { name, relation, phone_number } = medical_proxy;
       await pool.query(
-        'UPDATE medical_proxies SET name = $1, relation = $2, phone_number = $3 WHERE patient_id = $4',
-        [name, relation, phone_number, id]
+        `INSERT INTO medical_proxies (patient_id, name, relation, phone_number) 
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (patient_id) 
+         DO UPDATE SET 
+           name = EXCLUDED.name,
+           relation = EXCLUDED.relation,
+           phone_number = EXCLUDED.phone_number`,
+        [id, name, relation, phone_number]
       );
     }
 
+    res.status(200).json({ message: 'Medical proxy updated successfully' });
+  } catch (error) {
+    console.error('Error updating medical proxy:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Medical History Update Route
+app.put('/api/patients/:id/history', async (req, res) => {
+  const { id } = req.params;
+  const { medical_history } = req.body;
+
+  try {
+    // Check if patient exists
+    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
     if (medical_history) {
-      const existingHistory = (await pool.query('SELECT history FROM medical_history WHERE patient_id = $1', [id])).rows[0]?.history || '';
+      const existingHistory = (await pool.query(
+        'SELECT history FROM medical_history WHERE patient_id = $1',
+        [id]
+      )).rows[0]?.history || '';
+
       const newHistoryEntry = `${new Date().toISOString().split('T')[0]}: ${medical_history}\n` + existingHistory;
+
       await pool.query(
-        'INSERT INTO medical_history (patient_id, history) VALUES ($1, $2) ON CONFLICT (patient_id) DO UPDATE SET history = EXCLUDED.history',
+        `INSERT INTO medical_history (patient_id, history) 
+         VALUES ($1, $2) 
+         ON CONFLICT (patient_id) 
+         DO UPDATE SET history = EXCLUDED.history`,
         [id, newHistoryEntry]
       );
     }
 
-    res.status(200).json({ message: 'Patient details updated successfully' });
+    res.status(200).json({ message: 'Medical history updated successfully' });
   } catch (error) {
-    console.error('Error updating patient details:', error);
+    console.error('Error updating medical history:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
