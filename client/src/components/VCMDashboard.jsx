@@ -300,7 +300,7 @@ const toggleDescription = (taskId) => {
         />
       ),
       assignments: (
-        <div className="space-y-4">
+        <div className="flex flex-wrap gap-4">
           {detailData.length > 0 ? (
             <>
               {detailData.map((assignment) => (
