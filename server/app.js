@@ -421,37 +421,55 @@ app.put('/api/patients/:id/medical', async (req, res) => {
     // Update basic medical information
     await pool.query(
       `UPDATE patients SET 
-        initial_treatment_date = $1, 
-        doctor = $2, 
-        caregiver = $3 
-      WHERE id = $4`,
+         initial_treatment_date = $1,
+         doctor = $2,
+         caregiver = $3
+       WHERE id = $4`,
       [initial_treatment_date, doctor, caregiver, id]
     );
 
     if (health_status) {
       const { disease, medication, note, note_date } = health_status;
-      
-      // Get existing health status note
+      const currentDate = new Date().toISOString().split('T')[0];
+
+      // Get existing health status
       const existingHealthStatus = await pool.query(
-        'SELECT note FROM health_status WHERE patient_id = $1',
+        'SELECT * FROM health_status WHERE patient_id = $1',
         [id]
       );
-      
-      const newNote = `${note_date || new Date().toISOString().split('T')[0]}: ${note}\n` + 
-        (existingHealthStatus.rows[0]?.note || '');
 
-      // Update health status
-      await pool.query(
-        `INSERT INTO health_status (patient_id, disease, medication, note, note_date) 
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (patient_id) 
-         DO UPDATE SET 
-           disease = EXCLUDED.disease,
-           medication = EXCLUDED.medication,
-           note = EXCLUDED.note,
-           note_date = EXCLUDED.note_date`,
-        [id, disease, medication, newNote, note_date || new Date().toISOString().split('T')[0]]
-      );
+      // Prepare the new note if provided
+      let updatedNote = existingHealthStatus.rows[0]?.note || '';
+      if (note) {
+        const noteDate = note_date || currentDate;
+        updatedNote = `${noteDate}: ${note}\n${updatedNote}`;
+      }
+
+      if (existingHealthStatus.rows.length > 0) {
+        // Update existing health status preserving data for non-provided fields
+        await pool.query(
+          `UPDATE health_status 
+           SET disease = COALESCE($1, disease),
+               medication = COALESCE($2, medication),
+               note = COALESCE($3, note),
+               note_date = COALESCE($4, note_date)
+           WHERE patient_id = $5`,
+          [
+            disease || existingHealthStatus.rows[0]?.disease,
+            medication || existingHealthStatus.rows[0]?.medication,
+            note ? updatedNote : existingHealthStatus.rows[0]?.note,
+            note_date || currentDate,
+            id
+          ]
+        );
+      } else {
+        // Insert new health status if none exists
+        await pool.query(
+          `INSERT INTO health_status (patient_id, disease, medication, note, note_date)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [id, disease, medication, note ? updatedNote : '', note_date || currentDate]
+        );
+      }
 
       // Update medical history
       const existingHistory = (await pool.query(
@@ -459,14 +477,14 @@ app.put('/api/patients/:id/medical', async (req, res) => {
         [id]
       )).rows[0]?.history || '';
 
-      const newHistoryEntry = 
-        `${new Date().toISOString().split('T')[0]}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}\n` + 
+      const newHistoryEntry =
+        `${new Date().toISOString().split('T')[0]}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}\n` +
         existingHistory;
 
       await pool.query(
-        `INSERT INTO medical_history (patient_id, history) 
-         VALUES ($1, $2) 
-         ON CONFLICT (patient_id) 
+        `INSERT INTO medical_history (patient_id, history)
+         VALUES ($1, $2)
+         ON CONFLICT (patient_id)
          DO UPDATE SET history = EXCLUDED.history`,
         [id, newHistoryEntry]
       );
@@ -479,30 +497,53 @@ app.put('/api/patients/:id/medical', async (req, res) => {
   }
 });
 
-// Medical Proxy Update Route
 app.put('/api/patients/:id/proxy', async (req, res) => {
   const { id } = req.params;
   const { medical_proxy } = req.body;
 
   try {
     // Check if patient exists
-    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    const patientResult = await pool.query(
+      'SELECT * FROM patients WHERE id = $1',
+      [id]
+    );
+    
     if (patientResult.rows.length === 0) {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
     if (medical_proxy) {
       const { name, relation, phone_number } = medical_proxy;
-      await pool.query(
-        `INSERT INTO medical_proxies (patient_id, name, relation, phone_number) 
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (patient_id) 
-         DO UPDATE SET 
-           name = EXCLUDED.name,
-           relation = EXCLUDED.relation,
-           phone_number = EXCLUDED.phone_number`,
-        [id, name, relation, phone_number]
+
+      // Get existing proxy data
+      const existingProxy = await pool.query(
+        'SELECT * FROM medical_proxies WHERE patient_id = $1',
+        [id]
       );
+
+      if (existingProxy.rows.length > 0) {
+        // Update existing proxy
+        await pool.query(
+          `UPDATE medical_proxies 
+           SET name = COALESCE($1, name),
+               relation = COALESCE($2, relation),
+               phone_number = COALESCE($3, phone_number)
+           WHERE patient_id = $4`,
+          [
+            name || existingProxy.rows[0]?.name,
+            relation || existingProxy.rows[0]?.relation,
+            phone_number || existingProxy.rows[0]?.phone_number,
+            id
+          ]
+        );
+      } else {
+        // Insert new proxy if none exists
+        await pool.query(
+          `INSERT INTO medical_proxies (patient_id, name, relation, phone_number)
+           VALUES ($1, $2, $3, $4)`,
+          [id, name, relation, phone_number]
+        );
+      }
     }
 
     res.status(200).json({ message: 'Medical proxy updated successfully' });
@@ -511,6 +552,7 @@ app.put('/api/patients/:id/proxy', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 // Medical History Update Route
 app.put('/api/patients/:id/history', async (req, res) => {
@@ -2256,60 +2298,79 @@ app.put('/api/medical-history/:patient_id', async (req, res) => {
 app.put('/api/health-status/:patient_id', async (req, res) => {
   const client = await pool.connect();
   try {
-    const { disease, medication, note } = req.body;
-    const patientId = req.params.patient_id;
+    const id = req.params.patient_id;
+    const health_status = req.body;
 
-    // Check if health status exists
-    const existingStatus = await client.query(
-      'SELECT * FROM health_status WHERE patient_id = $1',
-      [patientId]
-    );
+    if (health_status) {
+      const { disease, medication, note, note_date } = health_status;
+      const currentDate = new Date().toISOString().split('T')[0];
 
-    let healthStatusResult;
-    if (existingStatus.rows.length > 0) {
-      // Update existing health status
-      healthStatusResult = await client.query(
-        `UPDATE health_status
-         SET disease = $1, medication = $2, note = $3, note_date = CURRENT_DATE
-         WHERE patient_id = $4
-         RETURNING *`,
-        [disease, medication, note, patientId]
+      // Get existing health status
+      const existingHealthStatus = await client.query(
+        'SELECT * FROM health_status WHERE patient_id = $1',
+        [id]
       );
+
+      // Prepare the new note if provided
+      let updatedNote = existingHealthStatus.rows[0]?.note || '';
+      if (note) {
+        const noteDate = note_date || currentDate;
+        updatedNote = `${noteDate}: ${note}\n${updatedNote}`;
+      }
+
+      if (existingHealthStatus.rows.length > 0) {
+        // Update existing health status preserving data for non-provided fields
+        await client.query(
+          `UPDATE health_status 
+            SET disease = COALESCE($1, disease),
+                medication = COALESCE($2, medication),
+                note = COALESCE($3, note),
+                note_date = COALESCE($4, note_date)
+            WHERE patient_id = $5`,
+          [
+            disease || existingHealthStatus.rows[0]?.disease,
+            medication || existingHealthStatus.rows[0]?.medication,
+            note ? updatedNote : existingHealthStatus.rows[0]?.note,
+            note_date || currentDate,
+            id
+          ]
+        );
+      } else {
+        // Insert new health status if none exists
+        await client.query(
+          `INSERT INTO health_status (patient_id, disease, medication, note, note_date)
+            VALUES ($1, $2, $3, $4, $5)`,
+          [id, disease, medication, note ? updatedNote : '', note_date || currentDate]
+        );
+      }
+
+      // Update medical history
+      const existingHistory = (await client.query(
+        'SELECT history FROM medical_history WHERE patient_id = $1',
+        [id]
+      )).rows[0]?.history || '';
+
+      const newHistoryEntry =
+        `${currentDate}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}\n` +
+        existingHistory;
+
+      await client.query(
+        `INSERT INTO medical_history (patient_id, history)
+          VALUES ($1, $2)
+          ON CONFLICT (patient_id)
+          DO UPDATE SET history = EXCLUDED.history`,
+        [id, newHistoryEntry]
+      );
+
+      // Return updated health status
+      const updatedHealthStatus = await client.query(
+        'SELECT * FROM health_status WHERE patient_id = $1',
+        [id]
+      );
+      res.json(updatedHealthStatus.rows[0]);
     } else {
-      // Insert new health status
-      healthStatusResult = await client.query(
-        `INSERT INTO health_status (patient_id, disease, medication, note, note_date)
-         VALUES ($1, $2, $3, $4, CURRENT_DATE)
-         RETURNING *`,
-        [patientId, disease, medication, note]
-      );
+      res.status(400).json({ message: 'No health status data provided' });
     }
-
-    // Format the history entry
-    const dateStr = new Date().toISOString().split('T')[0];
-    const newHistoryEntry = `${dateStr}: Updated disease: ${disease || 'N/A'}, Updated medication: ${medication || 'N/A'}, Note: ${note || 'N/A'}`;
-
-    // Get existing medical history
-    const existingHistory = await client.query(
-      'SELECT history FROM medical_history WHERE patient_id = $1',
-      [patientId]
-    );
-
-    // Combine new entry with existing history
-    const updatedHistory = existingHistory.rows.length > 0
-      ? `${newHistoryEntry}\n${existingHistory.rows[0].history}`
-      : newHistoryEntry;
-
-    // Update medical history
-    await client.query(
-      `INSERT INTO medical_history (patient_id, history)
-       VALUES ($1, $2)
-       ON CONFLICT (patient_id) 
-       DO UPDATE SET history = $2`,
-      [patientId, updatedHistory]
-    );
-
-    res.json(healthStatusResult.rows[0]);
   } catch (error) {
     console.error('Error updating health status:', error);
     res.status(500).json({ message: 'Internal server error' });

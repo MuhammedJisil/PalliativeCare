@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Users, Calendar, Phone, MapPin, FileText, 
-  Clock, X, HeartPulse, ClipboardList 
+  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle
 } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -70,11 +70,16 @@ const AssignmentDetails = ({
 
   const [isHealthStatusModalOpen, setIsHealthStatusModalOpen] = useState(false);
   const [isMedicalHistoryModalOpen, setIsMedicalHistoryModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const handleUpdateHealthStatus = async (e) => {
     e.preventDefault();
     try {
-      if (!safeAssignment.patient_id) return;
+      if (!safeAssignment.patient_id) {
+        setError('Patient ID is missing');
+        return;
+      }
       
       const response = await fetch(`http://localhost:5000/api/health-status/${safeAssignment.patient_id}`, {
         method: 'PUT',
@@ -85,20 +90,33 @@ const AssignmentDetails = ({
         })
       });
 
-      if (response.ok) {
-        onUpdate && onUpdate();
-        setIsEditingHealth(false);
-        setEditedHealthStatus({ disease: '', medication: '', note: '' });
+      if (!response.ok) {
+        throw new Error('Failed to update health status');
       }
+
+      setSuccess('Health status updated successfully');
+      onUpdate && onUpdate();
+      setIsEditingHealth(false);
+      setEditedHealthStatus({ disease: '', medication: '', note: '' });
     } catch (error) {
       console.error('Error updating health status:', error);
+      setError(error.message || 'Failed to update health status');
+    } finally {
+      // Clear alerts after 3 seconds
+      setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
     }
   };
 
   const handleUpdateMedicalHistory = async (e) => {
     e.preventDefault();
     try {
-      if (!safeAssignment.patient_id) return;
+      if (!safeAssignment.patient_id) {
+        setError('Patient ID is missing');
+        return;
+      }
 
       const response = await fetch(`http://localhost:5000/api/medical-history/${safeAssignment.patient_id}`, {
         method: 'PUT',
@@ -106,15 +124,26 @@ const AssignmentDetails = ({
         body: JSON.stringify(newMedicalHistory)
       });
 
-      if (response.ok) {
-        onUpdate && onUpdate();
-        setIsEditingMedicalHistory(false);
-        setNewMedicalHistory({ history: '' });
+      if (!response.ok) {
+        throw new Error('Failed to update medical history');
       }
+
+      setSuccess('Medical history updated successfully');
+      onUpdate && onUpdate();
+      setIsEditingMedicalHistory(false);
+      setNewMedicalHistory({ history: '' });
     } catch (error) {
       console.error('Error updating medical history:', error);
+      setError(error.message || 'Failed to update medical history');
+    } finally {
+      // Clear alerts after 3 seconds
+      setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
     }
   };
+
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -230,7 +259,7 @@ const AssignmentDetails = ({
           }))}
           placeholder="Disease"
           className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
-          required
+          
         />
         <input
           type="text"
@@ -241,7 +270,7 @@ const AssignmentDetails = ({
           }))}
           placeholder="Medication"
           className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
-          required
+          
         />
       </div>
       <textarea
@@ -385,6 +414,41 @@ const AssignmentDetails = ({
             </div>
           </div>
         </div>
+
+        {/* Alert Overlay */}
+      {(error || success) && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/10"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        >
+          <div 
+            className="fixed top-4 right-4 z-[70]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+                <div>
+                  <p className="font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <div>
+                  <p className="font-medium">{success}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       </div>
     );
   };

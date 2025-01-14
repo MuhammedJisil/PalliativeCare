@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, 
-  FileText, 
+  Users,  
   Activity, 
-  Calendar, 
-  UserPlus, 
+  Calendar,  
   ArrowLeft, 
-  CircleDot,
   HeartHandshake, 
   Stethoscope,
   ClipboardList,
@@ -17,7 +14,8 @@ import {
   UsersRound,
   AlertCircle,
   Clipboard,
-  HeartPulse
+  HeartPulse,
+  CheckCircle
 } from 'lucide-react';
 import AssignmentDetails from './AssignmentDetails';
 import TasksView from './TaskView';
@@ -38,6 +36,8 @@ const VCMDashboard = ({ userType = 'volunteer' }) => {
   const [expandedNotes, setExpandedNotes] = useState({});
   const [statusFilter, setStatusFilter] = useState('all'); 
   const [expandedTasks, setExpandedTasks] = useState({});
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [patientData, setPatientData] = useState(null);
@@ -226,22 +226,27 @@ const fetchAssignmentDetails = async (assignment) => {
 
       const updatedTask = await response.json();
       
-      // Update the local state with the response from the server
       setDetailData(prevData =>
         prevData.map(task =>
           task.id === taskId ? {...task, status: updatedTask.status} : task
         )
       );
 
-      // Optionally refresh dashboard data if needed
+      setSuccess('Task status updated successfully');
       fetchDashboardData(activeTab);
     } catch (error) {
       console.error('Error toggling task status:', error);
-      // You might want to add error handling UI here
+      setError(error.message || 'Failed to update task status');
     } finally {
       setIsLoading(false);
+      // Clear alerts after 3 seconds
+      setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
     }
   };
+
 
 
 
@@ -420,6 +425,40 @@ const toggleDescription = (taskId) => {
           </h1>
         </div>
       {currentView === 'dashboard' ? renderDashboard() : renderDetailView()}
+
+      {/* Alert Overlay */}
+      {(error || success) && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/10"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        >
+          <div 
+            className="fixed top-4 right-4 z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+                <div>
+                  <p className="font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <div>
+                  <p className="font-medium">{success}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
