@@ -95,7 +95,10 @@ const UpdatePatient = () => {
         phone_number: formData.phoneNumber || null,
       });
       setSuccess('Personal information updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => {
+        setSuccess(null);
+        navigate('/admin/patient-management');
+      }, 1000);
     } catch (error) {
       setError('Failed to update personal information');
       setTimeout(() => setError(null), 3000);
@@ -117,7 +120,10 @@ const UpdatePatient = () => {
         }
       });
       setSuccess('Medical information updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => {
+        setSuccess(null);
+        navigate('/admin/patient-management');
+      }, 1000);
     } catch (error) {
       setError('Failed to update medical information');
       setTimeout(() => setError(null), 3000);
@@ -135,7 +141,10 @@ const UpdatePatient = () => {
         }
       });
       setSuccess('Medical proxy updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => {
+        setSuccess(null);
+        navigate('/admin/patient-management');
+      }, 1000);
     } catch (error) {
       setError('Failed to update medical proxy');
       setTimeout(() => setError(null), 3000);
@@ -149,7 +158,10 @@ const UpdatePatient = () => {
         medical_history: formData.history
       });
       setSuccess('Medical history updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => {
+        setSuccess(null);
+        navigate('/admin/patient-management');
+      }, 1000);
     } catch (error) {
       setError('Failed to update medical history');
       setTimeout(() => setError(null), 3000);
@@ -194,12 +206,12 @@ const UpdatePatient = () => {
                   <h2 className="text-xl font-semibold text-gray-700">Personal Information</h2>
                 </div>
                 <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Update 
-                </button>
+  type="submit"
+  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
+>
+  <Save className="w-4 h-4 mr-2" />
+  Update
+</button>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -305,12 +317,12 @@ const UpdatePatient = () => {
                   <h2 className="text-xl font-semibold text-gray-700">Medical Information</h2>
                 </div>
                 <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Update 
-                </button>
+  type="submit"
+  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
+>
+  <Save className="w-4 h-4 mr-2" />
+  Update
+</button>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -407,12 +419,12 @@ const UpdatePatient = () => {
                   <h2 className="text-xl font-semibold text-gray-700">Medical Proxy</h2>
                 </div>
                 <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Update 
-                </button>
+  type="submit"
+  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
+>
+  <Save className="w-4 h-4 mr-2" />
+  Update
+</button>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -474,12 +486,12 @@ const UpdatePatient = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-700">Medical History</h2>
                 <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Update 
-                </button>
+  type="submit"
+  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
+>
+  <Save className="w-4 h-4 mr-2" />
+  Update
+</button>
               </div>
 
               <div>

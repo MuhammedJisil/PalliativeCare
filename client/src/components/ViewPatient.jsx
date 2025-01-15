@@ -12,69 +12,7 @@ import {
   X
 } from 'lucide-react';
 import axios from 'axios';
-
-const DetailModal = ({ isOpen, onClose, title, children }) => {
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .detail-modal-scrollbar::-webkit-scrollbar {
-        width: 8px;
-      }
-      .detail-modal-scrollbar::-webkit-scrollbar-track {
-        background: rgba(13, 148, 136, 0.1);
-        border-radius: 10px;
-      }
-      .detail-modal-scrollbar::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #0d9488, #0f766e);
-        border-radius: 10px;
-        transition: all 0.3s ease;
-      }
-      .detail-modal-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #0f766e, #0d9488);
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Background Overlay with Blur */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal Container */}
-      <div 
-        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-teal-600 transition-colors duration-200"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Modal Content with Custom Scrollbar */}
-        <div className="p-6 overflow-y-auto detail-modal-scrollbar flex-1">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
+import { HealthStatusModal, MedicalHistoryModal } from './DetailModal';
 
 const ViewPatient = () => {
   const { id } = useParams();
@@ -117,7 +55,6 @@ const ViewPatient = () => {
       <div>{children}</div>
     </div>
   );
-
   const Field = ({ label, value }) => (
     <div className="mb-2">
       <span className="text-sm font-medium text-gray-500">{label}</span>
@@ -125,49 +62,13 @@ const ViewPatient = () => {
     </div>
   );
 
+  
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* Modals */}
-      <DetailModal 
-        isOpen={isHealthStatusModalOpen}
-        onClose={() => setIsHealthStatusModalOpen(false)}
-        title="Detailed Health Status"
-      >
-        <div className="space-y-4">
-          <Field label="Disease" value={patient.healthStatus?.[0]?.disease} />
-          <Field label="Medication" value={patient.healthStatus?.[0]?.medication} />
-          <Field label="Complete Note" value={patient.healthStatus?.[0]?.note} />
-          <Field label="Note Date" value={patient.healthStatus?.[0]?.note_date} />
-          
-          {/* You can add more detailed information here */}
-          {patient.healthStatus?.[0]?.additionalDetails && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Additional Details</h3>
-              <p className="text-gray-700">{patient.healthStatus[0].additionalDetails}</p>
-            </div>
-          )}
-        </div>
-      </DetailModal>
+      
 
-      <DetailModal 
-        isOpen={isMedicalHistoryModalOpen}
-        onClose={() => setIsMedicalHistoryModalOpen(false)}
-        title="Comprehensive Medical History"
-      >
-        <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap text-gray-900">
-            {patient.medicalHistory?.history || 'No detailed medical history available'}
-          </p>
-          
-          {/* Optional: Add more structured medical history details */}
-          {patient.medicalHistory?.additionalDetails && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">Additional Medical Insights</h3>
-              <p className="text-gray-700">{patient.medicalHistory.additionalDetails}</p>
-            </div>
-          )}
-        </div>
-      </DetailModal>
+      
 
       <div className="max-w-6xl mx-auto">
         <button
@@ -255,6 +156,17 @@ const ViewPatient = () => {
           </div>
         </div>
       </div>
+      <HealthStatusModal
+  isOpen={isHealthStatusModalOpen}
+  onClose={() => setIsHealthStatusModalOpen(false)}
+  patient={patient}
+/>
+
+<MedicalHistoryModal
+  isOpen={isMedicalHistoryModalOpen}
+  onClose={() => setIsMedicalHistoryModalOpen(false)}
+  patient={patient}
+/>
     </div>
   );
 };
