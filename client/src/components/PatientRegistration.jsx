@@ -13,12 +13,21 @@ const PatientRegistration = () => {
     contact_phone_number: '',
     place: '',
     address: '',
+    support_type: '',
     health_condition: '',
     care_details: '',
     notes: ''
   });
 
   const navigate = useNavigate();
+
+  const supportTypes = [
+    { value: '', label: 'Select Support Type' },
+    { value: 'volunteer', label: 'Volunteer' },
+    { value: 'caregiver', label: 'Caregiver' },
+    { value: 'medical', label: 'Medical' },
+    { value: 'others', label: 'Others' }
+  ];
 
   const handleChange = (e) => {
     setFormData({
@@ -46,7 +55,6 @@ const PatientRegistration = () => {
       }
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -117,8 +125,8 @@ const PatientRegistration = () => {
                   name="contact_phone_number"
                   value={formData.contact_phone_number}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                    if (value.length <= 10) { // Limit to 10 digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 10) {
                       handleChange({
                         ...e,
                         target: {
@@ -165,32 +173,57 @@ const PatientRegistration = () => {
 
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Stethoscope className="h-5 w-5 text-teal-600" />
-                  <span>Health Condition</span>
+                  <Activity className="h-5 w-5 text-teal-600" />
+                  <span>Support Type</span>
                 </label>
-                <textarea
-                  name="health_condition"
-                  value={formData.health_condition}
+                <select
+                  name="support_type"
+                  value={formData.support_type}
                   onChange={handleChange}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
+                >
+                  {supportTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Activity className="h-5 w-5 text-teal-600" />
-                  <span>Care Details</span>
-                </label>
-                <textarea
-                  name="care_details"
-                  value={formData.care_details}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
+              {formData.support_type === 'medical' && (
+                <div>
+                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                    <Stethoscope className="h-5 w-5 text-teal-600" />
+                    <span>Health Condition</span>
+                  </label>
+                  <textarea
+                    name="health_condition"
+                    value={formData.health_condition}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    rows="3"
+                  ></textarea>
+                </div>
+              )}
+
+              {formData.support_type === 'caregiver' && (
+                <div>
+                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                    <Activity className="h-5 w-5 text-teal-600" />
+                    <span>Care Details</span>
+                  </label>
+                  <textarea
+                    name="care_details"
+                    value={formData.care_details}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    rows="3"
+                  ></textarea>
+                </div>
+              )}
 
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -218,39 +251,39 @@ const PatientRegistration = () => {
           </div>
         </div>
       </div>
-       {/* alert content */}
-       {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
-  >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
+
+      {(error || success) && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/10"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        >
+          <div 
+            className="fixed top-4 right-4 z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+                <div>
+                  <p className="font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <div>
+                  <p className="font-medium">{success}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
     </div>
   );
 };

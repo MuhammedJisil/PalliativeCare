@@ -112,7 +112,6 @@ CREATE TABLE caregivers (
     notes TEXT
 );
 
--- Create Patients in need  Table
 CREATE TABLE patients_register (
     id SERIAL PRIMARY KEY,
     patient_name VARCHAR(255) NOT NULL,
@@ -121,7 +120,8 @@ CREATE TABLE patients_register (
     contact_phone_number VARCHAR(50) NOT NULL,
     place VARCHAR(20) NOT NULL,
     address TEXT NOT NULL,
-    health_condition TEXT NOT NULL,
+    support_type VARCHAR(20) NOT NULL,
+    health_condition TEXT,
     care_details TEXT,
     notes TEXT
 );
