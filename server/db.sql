@@ -20,6 +20,7 @@ CREATE TABLE vcm (
 -- Patients table
 CREATE TABLE patients (
     id SERIAL PRIMARY KEY,
+    original_id INTEGER REFERENCES patients_register(id),
     first_name VARCHAR(100),
     initial_treatment_date DATE,
     dob DATE,
@@ -27,6 +28,7 @@ CREATE TABLE patients (
     gender VARCHAR(10),
     address TEXT,
     phone_number VARCHAR(15),
+    support_type VARCHAR(50),
     doctor VARCHAR(100),
     caregiver VARCHAR(100)
 );
@@ -120,7 +122,7 @@ CREATE TABLE patients_register (
     contact_phone_number VARCHAR(50) NOT NULL,
     place VARCHAR(20) NOT NULL,
     address TEXT NOT NULL,
-    support_type VARCHAR(20) NOT NULL,
+    support_type VARCHAR(20) NOT NULL DEFAULT 'others',
     health_condition TEXT,
     care_details TEXT,
     notes TEXT

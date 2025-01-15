@@ -1103,7 +1103,7 @@ app.delete('/api/caregivers/:id', async (req, res) => {
 // Get all patients in need
 app.get('/api/patients-in-need', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM patients_register');
+    const result = await pool.query('SELECT * FROM patients_register ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -1111,53 +1111,7 @@ app.get('/api/patients-in-need', async (req, res) => {
   }
 });
 
-// Endpoint to register a patient in need
-app.post('/api/patients-in-need', async (req, res) => {
-  const {
-    patient_name,
-    contact_name,
-    contact_email,
-    contact_phone_number,
-    place,
-    address,
-    support_type,
-    health_condition,
-    care_details,
-    notes
-  } = req.body;
 
-  try {
-    // Check if the patient already exists
-    const existingPatient = await pool.query(
-      'SELECT * FROM patients_register WHERE LOWER(TRIM(patient_name)) = LOWER(TRIM($1)) AND LOWER(TRIM(contact_name)) = LOWER(TRIM($2)) AND TRIM(contact_email) = TRIM($3) AND contact_phone_number = $4',
-      [patient_name, contact_name, contact_email, contact_phone_number]
-    );
-
-    if (existingPatient.rows.length > 0) {
-      return res.status(409).json({ message: 'Patient with the same details already exists!' });
-    }
-
-    // Validate required fields based on support_type
-    if (support_type === 'medical' && !health_condition) {
-      return res.status(400).json({ message: 'Health condition is required for medical support type' });
-    }
-
-    if (support_type === 'caregiver' && !care_details) {
-      return res.status(400).json({ message: 'Care details are required for caregiver support type' });
-    }
-
-    // Insert new patient if no duplicate exists
-    await pool.query(
-      'INSERT INTO patients_register (patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-      [patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes]
-    );
-
-    res.status(201).json({ message: 'Patient in need registered successfully!' });
-  } catch (error) {
-    console.error('Error registering patient:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 // Update patient in need
 app.put('/api/patients-in-need/:id', async (req, res) => {
@@ -1266,14 +1220,15 @@ app.get('/api/patients-in-need/:id', async (req, res) => {
 
 
 
-// Delete a patient by ID
-app.delete('/api/patients-in-need/:id', async (req, res) => {
+// Delete a patient from only patients_register table
+app.delete('/api/patients-register/:id', async (req, res) => {
   const { id } = req.params;
+  
   try {
     await pool.query('DELETE FROM patients_register WHERE id = $1', [id]);
-    res.status(204).end();
+    res.json({ message: 'Patient deleted from register successfully' });
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -2624,6 +2579,111 @@ app.get('/api/equipment/available', async (req, res) => {
     });
   }
 });
+
+
+
+
+// Get all active patients
+app.get('/api/active-patients', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT original_id FROM patients');
+    console.log('Active patients query result:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching active patients:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Add a patient to the patients table
+app.post('/api/patients-to-add', async (req, res) => {
+  const {
+    original_id,
+    first_name,
+    phone_number,
+    address,
+    support_type
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO patients (
+        original_id,
+        first_name,
+        phone_number,
+        address,
+        support_type,
+        initial_treatment_date
+      ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE) 
+      RETURNING *`,
+      [original_id, first_name, phone_number, address, support_type]
+    );
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/patients/remove', async (req, res) => {
+  console.log('Received delete request with body:', req.body);
+  
+  const { original_id } = req.body;
+  console.log('Original ID from request:', original_id, 'Type:', typeof original_id);
+  
+  // Ensure we have a valid number
+  const patientId = Number(original_id);
+  
+  if (isNaN(patientId)) {
+    console.error('Invalid ID received:', original_id);
+    return res.status(400).json({ 
+      message: 'Invalid patient ID format',
+      received: original_id,
+      type: typeof original_id
+    });
+  }
+
+  try {
+    console.log('Attempting to delete patient with ID:', patientId);
+    
+    // First verify the patient exists
+    const checkQuery = 'SELECT id FROM patients WHERE original_id = $1';
+    const checkResult = await pool.query(checkQuery, [patientId]);
+    
+    console.log('Check query result:', checkResult.rows);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'Patient not found in active patients',
+        queried_id: patientId
+      });
+    }
+
+    // Delete the patient
+    const deleteQuery = 'DELETE FROM patients WHERE original_id = $1 RETURNING *';
+    const deleteResult = await pool.query(deleteQuery, [patientId]);
+    
+    console.log('Delete result:', deleteResult.rows);
+
+    res.json({
+      success: true,
+      message: 'Patient successfully removed from active patients',
+      removed_id: patientId
+    });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Database error while removing patient',
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+});
+
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

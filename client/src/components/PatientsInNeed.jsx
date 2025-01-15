@@ -8,310 +8,21 @@ import {
   Trash2, 
   ArrowLeft,
   RefreshCw,
-  UserPlus,
-  X,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  ActivityIcon,
-  FileText,
+  AlertCircle,
   CheckCircle,
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
-import ErrorNotification from './ErrorNotification';
 import ConfirmDialog from './ConfrmDialog';
 
-const AddPatientModal = ({ isOpen, onClose, onPatientAdded }) => {
-  const [formData, setFormData] = useState({
-    patient_name: '',
-    contact_name: '',
-    contact_email: '',
-    contact_phone_number: '',
-    place: '',
-    address: '',
-    health_condition: '',
-    care_details: '',
-    notes: ''
-  });
 
-  const [error, setError] = useState(null);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('http://localhost:5000/api/patients-in-need', formData);
-      
-      // Clear form after successful submission
-      setFormData({
-        patient_name: '',
-        contact_name: '',
-        contact_email: '',
-        contact_phone_number: '',
-        place: '',
-        address: '',
-        health_condition: '',
-        care_details: '',
-        notes: ''
-      });
-
-      // Notify parent component
-      onPatientAdded(response.data);
-      onClose();
-
-    } catch (error) {
-      console.error('Error adding patient:', error);
-  
-      // Handle duplicate entry error
-      if (error.response && error.response.status === 409) {
-        setError('This patient already exist.');
-      } else {
-        // Generic error handling
-        setError('Failed to add patient. Please try again.');
-      }
-    }
-  };
-
-  
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div 
-          className="fixed inset-0 transition-opacity" 
-          aria-hidden="true"
-          onClick={onClose}
-        >
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-
-        {/* Modal container */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            {/* Close button */}
-            <button 
-              onClick={onClose} 
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <X size={24} />
-            </button>
-
-            {/* Modal Header */}
-            <div className="sm:flex sm:items-start mb-6">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
-                <Heart className="h-6 w-6 text-teal-600" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Add New Patient
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Fill out the details for a new patient in need
-                </p>
-              </div>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Patient Name */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <User className="h-5 w-5 text-teal-600" />
-                  <span>Patient Name</span>
-                </label>
-                <input
-                  maxLength="30"
-                  type="text"
-                  name="patient_name"
-                  value={formData.patient_name}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Contact Name */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <User className="h-5 w-5 text-teal-600" />
-                  <span>Contact Name</span>
-                </label>
-                <input
-                  type="text"
-                  name="contact_name"
-                  value={formData.contact_name}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Contact Email */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Mail className="h-5 w-5 text-teal-600" />
-                  <span>Contact Email</span>
-                </label>
-                <input
-                  type="email"
-                  name="contact_email"
-                  value={formData.contact_email}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Contact Phone Number */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Phone className="h-5 w-5 text-teal-600" />
-                  <span>Contact Phone Number</span>
-                </label>
-                <input
-                  placeholder="Enter 10 digit number"
-                  maxLength="10"
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                  type="tel"
-                  name="contact_phone_number"
-                  value={formData.contact_phone_number}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                    if (value.length <= 10) { // Limit to 10 digits
-                      handleChange({
-                        ...e,
-                        target: {
-                          name: 'contact_phone_number',
-                          value: value
-                        }
-                      });
-                    }
-                  }}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Place */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <MapPin className="h-5 w-5 text-teal-600" />
-                  <span>Place</span>
-                </label>
-                <input
-                  type="text"
-                  name="place"
-                  value={formData.place}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <MapPin className="h-5 w-5 text-teal-600" />
-                  <span>Address</span>
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              {/* Health Condition */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <ActivityIcon className="h-5 w-5 text-teal-600" />
-                  <span>Health Condition</span>
-                </label>
-                <textarea
-                  name="health_condition"
-                  value={formData.health_condition}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              {/* Care Details */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
-                  <span>Care Details</span>
-                </label>
-                <textarea
-                  name="care_details"
-                  value={formData.care_details}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
-                  <span>Additional Notes</span>
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="submit"
-                  className="w-full inline-flex justify-center rounded-full border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Add Patient
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="mt-3 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-       {/* Error component */}
-      <ErrorNotification error={error} onClose={() => setError(null)} />
-    </div>
-  );
-};
 
 // patient in need component
 
 const PatientsInNeed = () => {
   const [patients, setPatients] = useState([]);
+  const [activePatients, setActivePatients] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -320,6 +31,7 @@ const PatientsInNeed = () => {
 
   useEffect(() => {
     fetchPatients();
+    fetchActivePatients();
   }, []);
 
   const fetchPatients = async () => {
@@ -334,37 +46,100 @@ const PatientsInNeed = () => {
     }
   };
 
+  const fetchActivePatients = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/active-patients');
+      // Ensure all IDs are numbers
+      const activeIds = new Set(response.data.map(patient => parseInt(patient.original_id)));
+      setActivePatients(activeIds);
+    } catch (error) {
+      console.error('Error fetching active patients:', error);
+    }
+  };
+
   const handleView = (id) => {
     navigate(`/admin/patients-in-need/view/${id}`);
   };
 
- 
-const handleDelete = async (id) => {
-  setDeleteId(id);
-  setShowConfirm(true);
- };
- 
- const confirmDelete = async () => {
-  try {
-    await axios.delete(`http://localhost:5000/api/patients-in-need/${deleteId}`);
-    setPatients(patients.filter((patient) => patient.id !== deleteId));
-    setSuccess('patient deleted successfully!');
-  } catch (error) {
-    console.error('Error deleting patient:', error);
-    setError('Failed to delete patient');
-  }
-  setShowConfirm(false);
- };
+  const handleDelete = async (id) => {
+    setDeleteId(id);
+    setShowConfirm(true);
+  };
 
+  const confirmDelete = async () => {
+    try {
+      // Only delete from patients_register table
+      await axios.delete(`http://localhost:5000/api/patients-register/${deleteId}`);
+      setPatients(patients.filter((patient) => patient.id !== deleteId));
+      setSuccess('Patient deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      setError('Failed to delete patient');
+    }
+    setShowConfirm(false);
+  };
+
+
+  const handleTogglePatient = async (patient) => {
+    try {
+      console.log('Toggle patient:', patient);
+      console.log('Patient ID type:', typeof patient.id);
+      console.log('Patient ID value:', patient.id);
+      console.log('Current active patients:', Array.from(activePatients));
+      
+      // Ensure we have a valid number ID
+      const patientId = Number(patient.id);
+      
+      if (isNaN(patientId)) {
+        setError('Invalid patient ID');
+        return;
+      }
+
+      const isActive = activePatients.has(patientId);
+      console.log('Is patient active?', isActive);
+
+      if (!isActive) {
+        // Add to patients table
+        const response = await axios.post('http://localhost:5000/api/patients-to-add', {
+          original_id: patientId,
+          first_name: patient.patient_name,
+          phone_number: patient.contact_phone_number,
+          address: patient.address,
+          support_type: patient.support_type,
+        });
+        
+        setActivePatients(prev => new Set([...prev, patientId]));
+        setSuccess('Patient added to active patients!');
+      } else {
+        console.log('Attempting to remove patient with ID:', patientId);
+        const response = await axios.delete('http://localhost:5000/api/patients/remove', {
+          data: {
+            original_id: patientId
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.status === 200) {
+          setActivePatients(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(patientId);
+            return newSet;
+          });
+          setSuccess('Patient removed from active patients!');
+        }
+      }
+    } catch (error) {
+      console.error('Toggle error details:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'Failed to update patient status');
+    }
+  };
+
+  
   const filteredPatients = patients.filter((patient) =>
     patient.patient_name && patient.patient_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const handleAddPatient = (newPatient) => {
-    setSuccess('patient added successfully!');
-    // Add the new patient to the list
-    setPatients([...patients, newPatient]);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -375,30 +150,17 @@ const handleDelete = async (id) => {
             <div className="flex items-center space-x-2">
               <Heart className="h-8 w-8 text-red-600" />
               <Link to="/admin/dashboard" className="text-gray-800">
-              <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Patients in Need
-              </h1>
+                <h1 className="text-xl font-semibold tracking-tight text-gray-800">
+                  Patients in Need
+                </h1>
               </Link>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Add Patient Button for Large screens */}
-            <div className="hidden sm:block">
-                            <button 
-                              onClick={() => setIsAddModalOpen(true)}
-                              className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
-                            >
-                                <UserPlus size={16} className="mr-2" />
-                                Add Patient
-                            </button>
-                            </div>
-              <button
-                onClick={fetchPatients}
-                className="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <RefreshCw size={20} />
-              </button>
-            </div>
+            <button
+              onClick={fetchPatients}
+              className="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <RefreshCw size={20} />
+            </button>
           </div>
         </div>
       </div>
@@ -419,117 +181,142 @@ const handleDelete = async (id) => {
           </div>
         </div>
 
-        {/* patients List */}
-<div className="bg-white rounded-lg shadow-md">
-  {isLoading ? (
-    <div className="flex justify-center items-center h-48">
-      <RefreshCw className="animate-spin text-teal-600" size={24} />
-    </div>
-  ) : filteredPatients.length === 0 ? (
-    <div className="flex flex-col items-center justify-center h-48 text-gray-500">
-      <Heart size={48} className="mb-4 text-gray-400" />
-      <p>No patients found</p>
-    </div>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
-            <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {filteredPatients.map((patient) => (
-            <tr key={patient.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {patient.patient_name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right">
-                <div className="flex justify-end space-x-2">
-                  {/* View Button - Desktop */}
-                  <button
-                    onClick={() => handleView(patient.id)}
-                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
-                  >
-                    <Eye size={20} className="mr-1.5" />
-                    <span>View</span>
-                  </button>
-                  {/* View Button - Mobile */}
-                  <button
-                    onClick={() => handleView(patient.id)}
-                    className="md:hidden inline-flex items-center p-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
-                  >
-                    <Eye size={20} />
-                  </button>
-
-                  {/* Delete Button - Desktop */}
-                  <button
-                    onClick={() => handleDelete(patient.id)}
-                    className="hidden md:inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 size={20} className="mr-1.5" />
-                    <span>Delete</span>
-                  </button>
-                  {/* Delete Button - Mobile */}
-                  <button
-                    onClick={() => handleDelete(patient.id)}
-                    className="md:hidden inline-flex items-center p-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
-         {/* alert content */}
-         {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
+        {/* Patients List */}
+        <div className="bg-white rounded-lg shadow-md">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-48">
+              <RefreshCw className="animate-spin text-teal-600" size={24} />
+            </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+              <Heart size={48} className="mb-4 text-gray-400" />
+              <p>No patients found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredPatients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {patient.patient_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex justify-end space-x-2">
+                          {/* Toggle Button - Desktop */}
+                          {/* Inside the table row actions */}
+  <button
+    onClick={() => handleTogglePatient(patient)}
+    className={`hidden md:inline-flex items-center px-3 py-1.5 rounded-full transition-colors ${
+      activePatients.has(patient.id)
+        ? 'bg-green-100 text-green-700'
+        : 'bg-gray-50 text-gray-700'
+    }`}
   >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+    <CheckCircle 
+      size={20} 
+      className={`mr-1.5 ${
+        activePatients.has(patient.id) ? 'fill-green-700' : ''
+      }`}
+    />
+    <span>{activePatients.has(patient.id) ? 'Active' : 'Make Active'}</span>
+  </button>
 
-        {/* Add Patient Button for Mobile */}
-        <div className="sm:hidden fixed bottom-4 right-4 z-50">
-                    <button 
-                      onClick={() => setIsAddModalOpen(true)}
-                      className="flex items-center px-4 py-2 bg-teal-600 space-x-2 text-white rounded-full hover:bg-teal-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
-                    >
-                        <UserPlus size={24} />
-                    </button>
+  {/* Mobile version */}
+  <button
+    onClick={() => handleTogglePatient(patient)}
+    className={`md:hidden inline-flex items-center p-1.5 rounded-full transition-colors ${
+      activePatients.has(patient.id)
+        ? 'bg-green-100 text-green-700'
+        : 'bg-gray-50 text-gray-700'
+    }`}
+  >
+    <CheckCircle 
+      size={20}
+      className={activePatients.has(patient.id) ? 'fill-green-700' : ''}
+    />
+  </button>
+
+                          {/* View Button - Desktop */}
+                          <button
+                            onClick={() => handleView(patient.id)}
+                            className="hidden md:inline-flex items-center px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                          >
+                            <Eye size={20} className="mr-1.5" />
+                            <span>View</span>
+                          </button>
+                          {/* View Button - Mobile */}
+                          <button
+                            onClick={() => handleView(patient.id)}
+                            className="md:hidden inline-flex items-center p-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
+                          >
+                            <Eye size={20} />
+                          </button>
+
+                          {/* Delete Button - Desktop */}
+                          <button
+                            onClick={() => handleDelete(patient.id)}
+                            className="hidden md:inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                          >
+                            <Trash2 size={20} className="mr-1.5" />
+                            <span>Delete</span>
+                          </button>
+                          {/* Delete Button - Mobile */}
+                          <button
+                            onClick={() => handleDelete(patient.id)}
+                            className="md:hidden inline-flex items-center p-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Alert Content */}
+        {(error || success) && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/10"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+            }}
+          >
+            <div 
+              className="fixed top-4 right-4 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-medium">{error}</p>
+                  </div>
                 </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <div>
+                    <p className="font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Back Button */}
         <div className="mt-6">
@@ -542,20 +329,14 @@ const handleDelete = async (id) => {
           </button>
         </div>
       </div>
-      {isAddModalOpen && (
-        <AddPatientModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)}
-          onPatientAdded={handleAddPatient}
-        />
-      )}
+
       <ConfirmDialog
- isOpen={showConfirm}
- title="Delete Patient"
- message="Are you sure you want to delete this patient?"
- onConfirm={confirmDelete} 
- onCancel={() => setShowConfirm(false)}
-/>
+        isOpen={showConfirm}
+        title="Delete Patient"
+        message="Are you sure you want to delete this patient?"
+        onConfirm={confirmDelete} 
+        onCancel={() => setShowConfirm(false)}
+      />
       <ScrollToBottomButton/>
     </div>
   );
