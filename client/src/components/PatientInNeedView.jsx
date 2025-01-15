@@ -12,8 +12,13 @@ import {
   RefreshCw,
   Heart,
   X,
-  CheckCircle
+  CheckCircle,
+  Activity,
+  Stethoscope,
+  LifeBuoy
 } from 'lucide-react';
+
+
 
 const UpdatePatientModal = ({ 
   isOpen, 
@@ -29,10 +34,19 @@ const UpdatePatientModal = ({
     contact_phone_number: '',
     place: '',
     address: '',
+    support_type: '',
     health_condition: '',
     care_details: '',
     notes: ''
   });
+
+  const supportTypes = [
+    { value: '', label: 'Select Support Type' },
+    { value: 'volunteer', label: 'Volunteer' },
+    { value: 'caregiver', label: 'Caregiver' },
+    { value: 'medical', label: 'Medical' },
+    { value: 'others', label: 'Others' }
+  ];
 
   // Populate form data when modal opens or initial data changes
   useEffect(() => {
@@ -44,6 +58,7 @@ const UpdatePatientModal = ({
         contact_phone_number: initialData.contact_phone_number || '',
         place: initialData.place || '',
         address: initialData.address || '',
+        support_type: initialData.support_type || '',
         health_condition: initialData.health_condition || '',
         care_details: initialData.care_details || '',
         notes: initialData.notes || ''
@@ -64,7 +79,6 @@ const UpdatePatientModal = ({
       const url = `http://localhost:5000/api/patients-in-need/${patientId}`;
       const response = await axios.put(url, formData);
       
-      // Pass only the patient object, not the entire response
       onPatientUpdated(response.data.patient);
       onClose();
       
@@ -172,16 +186,16 @@ const UpdatePatientModal = ({
                   <span>Contact Phone Number</span>
                 </label>
                 <input
-                 placeholder="Enter 10 digit number"
-                 maxLength="10"
-                 pattern="[0-9]*"
-                 inputMode="numeric"
+                  placeholder="Enter 10 digit number"
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   type="tel"
                   name="contact_phone_number"
                   value={formData.contact_phone_number}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                    if (value.length <= 10) { // Limit to 10 digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 10) {
                       handleChange({
                         ...e,
                         target: {
@@ -228,36 +242,62 @@ const UpdatePatientModal = ({
                 ></textarea>
               </div>
 
-              {/* Health Condition Input */}
+              {/* Support Type Dropdown */}
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Heart className="h-5 w-5 text-teal-600" />
-                  <span>Health Condition</span>
+                  <Activity className="h-5 w-5 text-teal-600" />
+                  <span>Support Type</span>
                 </label>
-                <textarea
-                  name="health_condition"
-                  value={formData.health_condition}
+                <select
+                  name="support_type"
+                  value={formData.support_type}
                   onChange={handleChange}
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
+                >
+                  {supportTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Care Details Input */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
-                  <span>Care Details</span>
-                </label>
-                <textarea
-                  name="care_details"
-                  value={formData.care_details}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows="3"
-                ></textarea>
-              </div>
+              {/* Health Condition Input - Only show for medical support type */}
+              {formData.support_type === 'medical' && (
+                <div>
+                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                    <Stethoscope className="h-5 w-5 text-teal-600" />
+                    <span>Health Condition</span>
+                  </label>
+                  <textarea
+                    name="health_condition"
+                    value={formData.health_condition}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    rows="3"
+                  ></textarea>
+                </div>
+              )}
+
+              {/* Care Details Input - Only show for caregiver support type */}
+              {formData.support_type === 'caregiver' && (
+                <div>
+                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                    <Activity className="h-5 w-5 text-teal-600" />
+                    <span>Care Details</span>
+                  </label>
+                  <textarea
+                    name="care_details"
+                    value={formData.care_details}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    rows="3"
+                  ></textarea>
+                </div>
+              )}
 
               {/* Notes Input */}
               <div>
@@ -324,12 +364,28 @@ const PatientInNeedView = () => {
       setIsLoading(false);
     }
   };
+
   const handleUpdatePatient = (updatedPatient) => {
-    setSuccess('patient updated successfully!');
-    console.log('Updated Patient Full Object:', JSON.stringify(updatedPatient, null, 2));
-    console.log('Updated Patient Keys:', Object.keys(updatedPatient));
+    setSuccess('Patient updated successfully!');
     setPatient(updatedPatient);
     setIsUpdateModalOpen(false);
+  };
+
+  // Function to determine which fields to show based on support type
+  const shouldShowField = (fieldType) => {
+    if (!patient) return false;
+    
+    switch (patient.support_type) {
+      case 'medical':
+        return fieldType === 'health_condition';
+      case 'caregiver':
+        return fieldType === 'care_details';
+      case 'volunteer':
+      case 'others':
+        return false;
+      default:
+        return true;
+    }
   };
 
   if (isLoading) {
@@ -425,81 +481,94 @@ const PatientInNeedView = () => {
             </div>
           </div>
 
-           {/* alert content */}
-         {(error || success) && (
-  <div 
-    className="fixed inset-0 z-40 bg-black/10"
-    onClick={() => {
-      setError(null);
-      setSuccess(null);
-    }}
-  >
-    <div 
-      className="fixed top-4 right-4 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <div>
-            <p className="font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <div>
-            <p className="font-medium">{success}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
-{/* patient details*/}
-<div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
-        <Heart className="mr-2 text-teal-600" size={20} />
-        Patient Details
-      </h2>
-      
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
-          <MapPin className="w-5 h-5 text-gray-400 mt-1" />
-          <div className="w-full">
-            <p className="text-sm text-gray-500">Place</p>
-            <p className="text-gray-800 break-words">{patient.place}</p>
+          {/* Patient Details */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+              <Heart className="mr-2 text-teal-600" size={20} />
+              Patient Details
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                <div className="w-full">
+                  <p className="text-sm text-gray-500">Place</p>
+                  <p className="text-gray-800 break-words">{patient.place}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                <LifeBuoy className="w-5 h-5 text-gray-400 mt-1" />
+                <div className="w-full">
+                  <p className="text-sm text-gray-500">Support Type</p>
+                  <p className="text-gray-800 break-words capitalize">{patient.support_type}</p>
+                </div>
+              </div>
+
+              {shouldShowField('health_condition') && (
+                <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                  <Heart className="w-5 h-5 text-gray-400 mt-1" />
+                  <div className="w-full">
+                    <p className="text-sm text-gray-500">Health Condition</p>
+                    <p className="text-gray-800 break-words">{patient.health_condition}</p>
+                  </div>
+                </div>
+              )}
+
+              {shouldShowField('care_details') && (
+                <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                  <FileText className="w-5 h-5 text-gray-400 mt-1" />
+                  <div className="w-full">
+                    <p className="text-sm text-gray-500">Care Details</p>
+                    <p className="text-gray-800 break-words">{patient.care_details}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
+                <FileText className="w-5 h-5 text-gray-400 mt-1" />
+                <div className="w-full">
+                  <p className="text-sm text-gray-500">Additional Notes</p>
+                  <p className="text-gray-800 break-words">{patient.notes}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
-          <Heart className="w-5 h-5 text-gray-400 mt-1" />
-          <div className="w-full">
-            <p className="text-sm text-gray-500">Health Condition</p>
-            <p className="text-gray-800 break-words">{patient.health_condition}</p>
+        {/* Alert Content */}
+        {(error || success) && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/10"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+            }}
+          >
+            <div 
+              className="fixed top-4 right-4 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <div>
+                    <p className="font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
-          <FileText className="w-5 h-5 text-gray-400 mt-1" />
-          <div className="w-full">
-            <p className="text-sm text-gray-500">Care Details</p>
-            <p className="text-gray-800 break-words">{patient.care_details}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:space-x-3 space-y-2 sm:space-y-0">
-          <FileText className="w-5 h-5 text-gray-400 mt-1" />
-          <div className="w-full">
-            <p className="text-sm text-gray-500">Additional Notes</p>
-            <p className="text-gray-800 break-words">{patient.notes}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-between items-center">
@@ -521,13 +590,14 @@ const PatientInNeedView = () => {
           </div>
         </div>
       </div>
+
       <UpdatePatientModal
-      isOpen={isUpdateModalOpen}
-      onClose={() => setIsUpdateModalOpen(false)}
-      patientId={id}
-      initialData={patient}
-      onPatientUpdated={handleUpdatePatient}
-    />
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        patientId={id}
+        initialData={patient}
+        onPatientUpdated={handleUpdatePatient}
+      />
     </div>
   );
 };

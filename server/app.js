@@ -1111,7 +1111,55 @@ app.get('/api/patients-in-need', async (req, res) => {
   }
 });
 
-// update patient in need
+// Endpoint to register a patient in need
+app.post('/api/patients-in-need', async (req, res) => {
+  const {
+    patient_name,
+    contact_name,
+    contact_email,
+    contact_phone_number,
+    place,
+    address,
+    support_type,
+    health_condition,
+    care_details,
+    notes
+  } = req.body;
+
+  try {
+    // Check if the patient already exists
+    const existingPatient = await pool.query(
+      'SELECT * FROM patients_register WHERE LOWER(TRIM(patient_name)) = LOWER(TRIM($1)) AND LOWER(TRIM(contact_name)) = LOWER(TRIM($2)) AND TRIM(contact_email) = TRIM($3) AND contact_phone_number = $4',
+      [patient_name, contact_name, contact_email, contact_phone_number]
+    );
+
+    if (existingPatient.rows.length > 0) {
+      return res.status(409).json({ message: 'Patient with the same details already exists!' });
+    }
+
+    // Validate required fields based on support_type
+    if (support_type === 'medical' && !health_condition) {
+      return res.status(400).json({ message: 'Health condition is required for medical support type' });
+    }
+
+    if (support_type === 'caregiver' && !care_details) {
+      return res.status(400).json({ message: 'Care details are required for caregiver support type' });
+    }
+
+    // Insert new patient if no duplicate exists
+    await pool.query(
+      'INSERT INTO patients_register (patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+      [patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes]
+    );
+
+    res.status(201).json({ message: 'Patient in need registered successfully!' });
+  } catch (error) {
+    console.error('Error registering patient:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update patient in need
 app.put('/api/patients-in-need/:id', async (req, res) => {
   const { id } = req.params;
   const {
@@ -1121,12 +1169,22 @@ app.put('/api/patients-in-need/:id', async (req, res) => {
     contact_phone_number,
     place,
     address,
+    support_type,
     health_condition,
     care_details,
     notes,
   } = req.body;
 
   try {
+    // Validate required fields based on support_type
+    if (support_type === 'medical' && !health_condition) {
+      return res.status(400).json({ message: 'Health condition is required for medical support type' });
+    }
+
+    if (support_type === 'caregiver' && !care_details) {
+      return res.status(400).json({ message: 'Care details are required for caregiver support type' });
+    }
+
     const result = await pool.query(
       `
       UPDATE patients_register
@@ -1137,10 +1195,11 @@ app.put('/api/patients-in-need/:id', async (req, res) => {
         contact_phone_number = $4,
         place = $5,
         address = $6,
-        health_condition = $7,
-        care_details = $8,
-        notes = $9
-      WHERE id = $10
+        support_type = $7,
+        health_condition = $8,
+        care_details = $9,
+        notes = $10
+      WHERE id = $11
       RETURNING *;
       `,
       [
@@ -1150,6 +1209,7 @@ app.put('/api/patients-in-need/:id', async (req, res) => {
         contact_phone_number,
         place,
         address,
+        support_type,
         health_condition,
         care_details,
         notes,
