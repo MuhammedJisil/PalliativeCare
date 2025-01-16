@@ -164,10 +164,10 @@ app.post("/api/vcm-login", async (req, res) => {
 
 
 
-// patient management add component
-
+// pa// Add patient route
 app.post('/api/patients', async (req, res) => {
   const {
+    original_id,
     first_name,
     initial_treatment_date,
     dob,
@@ -175,6 +175,7 @@ app.post('/api/patients', async (req, res) => {
     gender,
     address,
     phone_number,
+    support_type = 'medical', // Default value if not provided
     doctor,
     caregiver,
     health_status,
@@ -200,18 +201,24 @@ app.post('/api/patients', async (req, res) => {
     const checkResult = await client.query(checkPatientQuery, [first_name, phone_number, address, dob, gender, age]);
 
     if (checkResult.rows.length > 0) {
-      // Rollback the transaction before returning an error
       await client.query('ROLLBACK');
       return res.status(409).json({
-        message: 'A patient with this personal information (name, DOB, gender, age, address, phone number) already exists'
+        message: 'A patient with this personal information already exists'
       });
     }
 
     const insertPatientQuery = `
-      INSERT INTO patients (first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
+      INSERT INTO patients (
+        original_id, first_name, initial_treatment_date, dob, age, gender, 
+        address, phone_number, support_type, doctor, caregiver
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+      RETURNING id
     `;
-    const patientResult = await client.query(insertPatientQuery, [first_name, initial_treatment_date, dob, age, gender, address, phone_number, doctor, caregiver]);
+    const patientResult = await client.query(insertPatientQuery, [
+      original_id, first_name, initial_treatment_date, dob, age, gender,
+      address, phone_number, support_type, doctor, caregiver
+    ]);
     const patientId = patientResult.rows[0].id;
 
     if (health_status) {
@@ -249,6 +256,7 @@ app.post('/api/patients', async (req, res) => {
   }
 });
 
+// Get all patients
 app.get('/api/patients', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM patients');
@@ -259,17 +267,25 @@ app.get('/api/patients', async (req, res) => {
   }
 });
 
-// patient management search part
+// Search patients
 app.get('/patients', async (req, res) => {
-  const { search } = req.query; // Capture the search query
+  const { search, support_type } = req.query;
 
   try {
-    let query = 'SELECT * FROM patients';
+    let query = 'SELECT * FROM patients WHERE 1=1';
     const queryParams = [];
+    let paramCount = 1;
 
     if (search) {
-      query += ' WHERE first_name ILIKE $1';
+      query += ` AND first_name ILIKE $${paramCount}`;
       queryParams.push(`%${search}%`);
+      paramCount++;
+    }
+
+    if (support_type) {
+      query += ` AND support_type = $${paramCount}`;
+      queryParams.push(support_type);
+      paramCount++;
     }
 
     const result = await pool.query(query, queryParams);
@@ -280,14 +296,13 @@ app.get('/patients', async (req, res) => {
   }
 });
 
-
-// deleting patient
+// Delete patient
 app.delete('/api/patients/:id', async (req, res) => {
   const patientId = parseInt(req.params.id);
 
   const client = await pool.connect();
   try {
-    await client.query('BEGIN'); // Start a transaction
+    await client.query('BEGIN');
 
     // Delete from health_status table
     await client.query('DELETE FROM health_status WHERE patient_id = $1', [patientId]);
@@ -304,10 +319,10 @@ app.delete('/api/patients/:id', async (req, res) => {
       throw new Error('Patient not found');
     }
 
-    await client.query('COMMIT'); // Commit the transaction
+    await client.query('COMMIT');
     res.status(200).json({ message: 'Patient deleted successfully' });
   } catch (error) {
-    await client.query('ROLLBACK'); // Rollback the transaction on error
+    await client.query('ROLLBACK');
     console.error('Error deleting patient:', error.message);
     res.status(500).json({ message: `Failed to delete patient: ${error.message}` });
   } finally {
@@ -316,7 +331,6 @@ app.delete('/api/patients/:id', async (req, res) => {
 });
 
 // View patient details
-
 app.get('/api/patients/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -326,7 +340,7 @@ app.get('/api/patients/:id', async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    // Fetch additional details if needed from other tables
+    // Fetch additional details from other tables
     const healthStatus = await pool.query('SELECT * FROM health_status WHERE patient_id = $1', [id]);
     const medicalProxy = await pool.query('SELECT * FROM medical_proxies WHERE patient_id = $1', [id]);
     const medicalHistory = await pool.query('SELECT * FROM medical_history WHERE patient_id = $1', [id]);
@@ -345,11 +359,19 @@ app.get('/api/patients/:id', async (req, res) => {
   }
 });
 
-//Update patient component
-// Personal Information Update Route
+// Update personal information
 app.put('/api/patients/:id/personal', async (req, res) => {
   const { id } = req.params;
-  const { first_name, dob, age, gender, address, phone_number } = req.body;
+  const { 
+    original_id,
+    first_name, 
+    dob, 
+    age, 
+    gender, 
+    address, 
+    phone_number,
+    support_type 
+  } = req.body;
 
   try {
     // Check if patient exists
@@ -387,17 +409,29 @@ app.put('/api/patients/:id/personal', async (req, res) => {
     }
 
     // Update personal information
-    await pool.query(
-      `UPDATE patients SET 
-        first_name = $1, 
-        dob = $2, 
-        age = $3, 
-        gender = $4, 
-        address = $5, 
-        phone_number = $6 
-      WHERE id = $7`,
-      [first_name, dob, age, gender, address, phone_number, id]
-    );
+    const updateQuery = `
+      UPDATE patients SET 
+        original_id = COALESCE($1, original_id),
+        first_name = COALESCE($2, first_name), 
+        dob = COALESCE($3, dob), 
+        age = COALESCE($4, age), 
+        gender = COALESCE($5, gender), 
+        address = COALESCE($6, address), 
+        phone_number = COALESCE($7, phone_number),
+        support_type = COALESCE($8, support_type)
+      WHERE id = $9`;
+
+    await pool.query(updateQuery, [
+      original_id,
+      first_name, 
+      dob, 
+      age, 
+      gender, 
+      address, 
+      phone_number,
+      support_type, 
+      id
+    ]);
 
     res.status(200).json({ message: 'Personal information updated successfully' });
   } catch (error) {
@@ -406,7 +440,7 @@ app.put('/api/patients/:id/personal', async (req, res) => {
   }
 });
 
-// Medical Information Update Route
+// Update medical information
 app.put('/api/patients/:id/medical', async (req, res) => {
   const { id } = req.params;
   const { initial_treatment_date, doctor, caregiver, health_status } = req.body;
@@ -497,6 +531,7 @@ app.put('/api/patients/:id/medical', async (req, res) => {
   }
 });
 
+// Update medical proxy
 app.put('/api/patients/:id/proxy', async (req, res) => {
   const { id } = req.params;
   const { medical_proxy } = req.body;
@@ -553,8 +588,7 @@ app.put('/api/patients/:id/proxy', async (req, res) => {
   }
 });
 
-
-// Medical History Update Route
+// Update medical history
 app.put('/api/patients/:id/history', async (req, res) => {
   const { id } = req.params;
   const { medical_history } = req.body;
@@ -590,7 +624,7 @@ app.put('/api/patients/:id/history', async (req, res) => {
   }
 });
 
-
+// Volunteer caregiver and medical professional registration part
 
 app.post('/api/register', async (req, res) => {
   const {

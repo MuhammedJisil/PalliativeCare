@@ -9,7 +9,7 @@ import {
   Stethoscope, 
   ClipboardList, 
   HeartPulse,
-  X
+  Tag
 } from 'lucide-react';
 import axios from 'axios';
 import { HealthStatusModal, MedicalHistoryModal } from './DetailModal';
@@ -18,8 +18,6 @@ const ViewPatient = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
-  
-  // State for modals
   const [isHealthStatusModalOpen, setIsHealthStatusModalOpen] = useState(false);
   const [isMedicalHistoryModalOpen, setIsMedicalHistoryModalOpen] = useState(false);
 
@@ -55,6 +53,7 @@ const ViewPatient = () => {
       <div>{children}</div>
     </div>
   );
+
   const Field = ({ label, value }) => (
     <div className="mb-2">
       <span className="text-sm font-medium text-gray-500">{label}</span>
@@ -62,14 +61,106 @@ const ViewPatient = () => {
     </div>
   );
 
-  
+  const renderBasicInfo = () => (
+    <>
+      <InfoSection icon={Calendar} title="Personal Information">
+        <Field label="Support Type" value={patient.support_type} />
+        <Field label="Date of Birth" value={patient.dob} />
+        <Field label="Age" value={patient.age} />
+        <Field label="Gender" value={patient.gender} />
+      </InfoSection>
+
+      <InfoSection icon={Phone} title="Contact Details">
+        <Field label="Phone Number" value={patient.phone_number} />
+        <Field label="Address" value={patient.address} />
+      </InfoSection>
+    </>
+  );
+
+  const renderFullInfo = () => (
+    <>
+      <InfoSection icon={Calendar} title="Personal Information">
+        <Field label="Support Type" value={patient.support_type} />
+        <Field label="Initial Treatment Date" value={patient.initial_treatment_date} />
+        <Field label="Date of Birth" value={patient.dob} />
+        <Field label="Age" value={patient.age} />
+        <Field label="Gender" value={patient.gender} />
+      </InfoSection>
+
+      <InfoSection icon={Phone} title="Contact Details">
+        <Field label="Phone Number" value={patient.phone_number} />
+        <Field label="Address" value={patient.address} />
+      </InfoSection>
+
+      <InfoSection icon={UserPlus} title="Care Team">
+        <Field label="Doctor" value={patient.doctor} />
+        <Field label="Caregiver" value={patient.caregiver} />
+      </InfoSection>
+
+      <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+        <div className="mb-4">
+          <h2 className="text-lg font-medium flex items-center gap-2 text-gray-900">
+            <HeartPulse className="h-5 w-5 text-teal-600" />
+            Health Status
+          </h2>
+        </div>
+        <div className="flex justify-between items-center">
+          <Field label="Current Status" value={patient.healthStatus?.[0]?.disease} />
+          <button 
+            onClick={() => setIsHealthStatusModalOpen(true)}
+            className="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600 transition-colors"
+          >
+            View 
+          </button>
+        </div>
+      </div>
+
+      <InfoSection icon={Stethoscope} title="Medical Proxy">
+        <Field label="Name" value={patient.medicalProxy?.name} />
+        <Field label="Relation" value={patient.medicalProxy?.relation} />
+        <Field label="Phone Number" value={patient.medicalProxy?.phone_number} />
+      </InfoSection>
+
+      <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+        <div className="mb-4">
+          <h2 className="text-lg font-medium flex items-center gap-2 text-gray-900">
+            <ClipboardList className="h-5 w-5 text-teal-600" />
+            Medical History
+          </h2>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-gray-700 truncate max-w-[200px]">
+            {patient.medicalHistory?.history || 'No history'}
+          </p>
+          <button 
+            onClick={() => setIsMedicalHistoryModalOpen(true)}
+            className="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600 transition-colors"
+          >
+            View 
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  const renderContent = () => {
+    if (patient.support_type === 'medical' || patient.support_type === 'caregiver') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {renderFullInfo()}
+        </div>
+      );
+    } else {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {renderBasicInfo()}
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      
-
-      
-
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigate('/admin/patient-management')}
@@ -92,81 +183,21 @@ const ViewPatient = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <InfoSection icon={Calendar} title="Personal Information">
-              <Field label="Initial Treatment Date" value={patient.initial_treatment_date} />
-              <Field label="Date of Birth" value={patient.dob} />
-              <Field label="Age" value={patient.age} />
-              <Field label="Gender" value={patient.gender} />
-            </InfoSection>
-
-            <InfoSection icon={Phone} title="Contact Details">
-              <Field label="Phone Number" value={patient.phone_number} />
-              <Field label="Address" value={patient.address} />
-            </InfoSection>
-
-            <InfoSection icon={UserPlus} title="Care Team">
-              <Field label="Doctor" value={patient.doctor} />
-              <Field label="Caregiver" value={patient.caregiver} />
-            </InfoSection>
-
-            <div className="bg-white rounded-lg shadow-sm p-6 w-full">
-              <div className="mb-4">
-                <h2 className="text-lg font-medium flex items-center gap-2 text-gray-900">
-                  <HeartPulse className="h-5 w-5 text-teal-600" />
-                  Health Status
-                </h2>
-              </div>
-              <div className="flex justify-between items-center">
-                <Field label="Current Status" value={patient.healthStatus?.[0]?.disease} />
-                <button 
-                  onClick={() => setIsHealthStatusModalOpen(true)}
-                  className="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600 transition-colors"
-                >
-                  View 
-                </button>
-              </div>
-            </div>
-
-            <InfoSection icon={Stethoscope} title="Medical Proxy">
-              <Field label="Name" value={patient.medicalProxy?.name} />
-              <Field label="Relation" value={patient.medicalProxy?.relation} />
-              <Field label="Phone Number" value={patient.medicalProxy?.phone_number} />
-            </InfoSection>
-
-            <div className="bg-white rounded-lg shadow-sm p-6 w-full">
-              <div className="mb-4">
-                <h2 className="text-lg font-medium flex items-center gap-2 text-gray-900">
-                  <ClipboardList className="h-5 w-5 text-teal-600" />
-                  Medical History
-                </h2>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-gray-700 truncate max-w-[200px]">
-                  {patient.medicalHistory?.history || 'No history'}
-                </p>
-                <button 
-                  onClick={() => setIsMedicalHistoryModalOpen(true)}
-                  className="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600 transition-colors"
-                >
-                  View 
-                </button>
-              </div>
-            </div>
-          </div>
+          {renderContent()}
         </div>
       </div>
-      <HealthStatusModal
-  isOpen={isHealthStatusModalOpen}
-  onClose={() => setIsHealthStatusModalOpen(false)}
-  patient={patient}
-/>
 
-<MedicalHistoryModal
-  isOpen={isMedicalHistoryModalOpen}
-  onClose={() => setIsMedicalHistoryModalOpen(false)}
-  patient={patient}
-/>
+      <HealthStatusModal
+        isOpen={isHealthStatusModalOpen}
+        onClose={() => setIsHealthStatusModalOpen(false)}
+        patient={patient}
+      />
+
+      <MedicalHistoryModal
+        isOpen={isMedicalHistoryModalOpen}
+        onClose={() => setIsMedicalHistoryModalOpen(false)}
+        patient={patient}
+      />
     </div>
   );
 };
