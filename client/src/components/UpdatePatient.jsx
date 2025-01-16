@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  UserPlus, 
-  User, 
-  Stethoscope, 
-  UserCheck,  
-  ArrowLeft, 
-  CheckCircle,
-  AlertCircle,
-  Save
-} from 'lucide-react';
+import axios from 'axios';
+import { UserPlus, Save, ArrowLeft, User, Stethoscope, UserCheck, CheckCircle } from 'lucide-react';
 
 const UpdatePatient = () => {
   const { id } = useParams();
@@ -25,6 +16,7 @@ const UpdatePatient = () => {
     gender: '',
     address: '',
     phoneNumber: '',
+    supportType: '',
     doctor: '',
     caregiver: '',
     disease: '',
@@ -63,6 +55,7 @@ const UpdatePatient = () => {
           gender: data.gender || '',
           address: data.address || '',
           phoneNumber: data.phone_number || '',
+          supportType: data.support_type || '',
           doctor: data.doctor || '',
           caregiver: data.caregiver || '',
           disease: data.health_status?.disease || '',
@@ -93,6 +86,7 @@ const UpdatePatient = () => {
         gender: formData.gender || null,
         address: formData.address || null,
         phone_number: formData.phoneNumber || null,
+        support_type: formData.supportType || null,
       });
       setSuccess('Personal information updated successfully!');
       setTimeout(() => {
@@ -168,146 +162,10 @@ const UpdatePatient = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100">
-          <div className="flex items-center mb-6 space-x-4">
-            <UserPlus className="h-10 w-10 text-teal-600" />
-            <h1 className="text-3xl font-bold text-gray-800">Edit Patient Details</h1>
-          </div>
-
-          {/* Alert Messages */}
-          {(error || success) && (
-            <div className="fixed inset-0 z-40 bg-black/10" onClick={() => { setError(null); setSuccess(null); }}>
-              <div className="fixed top-4 right-4 z-50" onClick={(e) => e.stopPropagation()}>
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-                    <AlertCircle className="w-6 h-6 text-red-500" />
-                    <p className="font-medium">{error}</p>
-                  </div>
-                )}
-                {success && (
-                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-                    <CheckCircle className="w-6 h-6 text-green-500" />
-                    <p className="font-medium">{success}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Personal Information Section */}
-          <form onSubmit={handleUpdatePersonal} className="mb-8">
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <User className="h-6 w-6 text-teal-600" />
-                  <h2 className="text-xl font-semibold text-gray-700">Personal Information</h2>
-                </div>
-                <button
-  type="submit"
-  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
->
-  <Save className="w-4 h-4 mr-2" />
-  Update
-</button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-600 font-medium mb-2">Full Name</label>
-                  <input
-                    maxLength="30"
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 font-medium mb-2">Date of Birth</label>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <label className="block text-gray-600 font-medium mb-2">Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    min="1"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 font-medium mb-2">Gender</label>
-                  <div className="flex space-x-4 mt-2">
-                    {['Male', 'Female', 'Other'].map(gender => (
-                      <label key={gender} className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value={gender}
-                          checked={formData.gender === gender}
-                          onChange={handleInputChange}
-                          className="form-radio text-teal-600 focus:ring-teal-500"
-                        />
-                        <span className="ml-2">{gender}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber || ''}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 10) {
-                        setFormData(prevData => ({
-                          ...prevData,
-                          phoneNumber: value
-                        }));
-                      }
-                    }}
-                    placeholder="Enter 10 digit number"
-                    maxLength="10"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-gray-600 font-medium mb-2">Address</label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                ></textarea>
-              </div>
-            </div>
-          </form>
-
+  const renderSections = () => {
+    if (formData.supportType === 'medical' || formData.supportType === 'caregiver') {
+      return (
+        <>
           {/* Medical Information Section */}
           <form onSubmit={handleUpdateMedical} className="mb-8">
             <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
@@ -408,6 +266,7 @@ const UpdatePatient = () => {
                 ></textarea>
               </div>
             </div>
+          
           </form>
 
           {/* Medical Proxy Section */}
@@ -506,6 +365,169 @@ const UpdatePatient = () => {
               </div>
             </div>
           </form>
+        </>
+      );
+    }
+    return null;
+  };
+
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100">
+          <div className="flex items-center mb-6 space-x-4">
+            <UserPlus className="h-10 w-10 text-teal-600" />
+            <h1 className="text-3xl font-bold text-gray-800">Edit Patient Details</h1>
+          </div>
+
+          {/* Alert Messages */}
+          {(error || success) && (
+            <div className="fixed inset-0 z-40 bg-black/10" onClick={() => { setError(null); setSuccess(null); }}>
+              <div className="fixed top-4 right-4 z-50" onClick={(e) => e.stopPropagation()}>
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                    <AlertCircle className="w-6 h-6 text-red-500" />
+                    <p className="font-medium">{error}</p>
+                  </div>
+                )}
+                {success && (
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                    <CheckCircle className="w-6 h-6 text-green-500" />
+                    <p className="font-medium">{success}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+         {/* Personal Information Section */}
+         <form onSubmit={handleUpdatePersonal} className="mb-8">
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <User className="h-6 w-6 text-teal-600" />
+                  <h2 className="text-xl font-semibold text-gray-700">Personal Information</h2>
+                </div>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Update
+                </button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Full Name</label>
+                  <input
+                    maxLength="30"
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Support Type</label>
+                  <select
+                    name="supportType"
+                    value={formData.supportType}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  >
+                    <option value="">Select Support Type</option>
+                    <option value="medical">Medical</option>
+                    <option value="caregiver">Caregiver</option>
+                    <option value="volunteer">Volunteer</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Age</label>
+                  <input
+                    type="number"
+                    name="age"
+                    min="1"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Gender</label>
+                  <div className="flex space-x-4 mt-2">
+                    {['Male', 'Female', 'Other'].map(gender => (
+                      <label key={gender} className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value={gender}
+                          checked={formData.gender === gender}
+                          onChange={handleInputChange}
+                          className="form-radio text-teal-600 focus:ring-teal-500"
+                        />
+                        <span className="ml-2">{gender}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 10) {
+                        setFormData(prevData => ({
+                          ...prevData,
+                          phoneNumber: value
+                        }));
+                      }
+                    }}
+                    placeholder="Enter 10 digit number"
+                    maxLength="10"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-gray-600 font-medium mb-2">Address</label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                ></textarea>
+              </div>
+            </div>
+          </form>
+          {/* Render additional sections based on support type */}
+          {renderSections()}
 
           {/* Back Button */}
           <div className="mt-6">

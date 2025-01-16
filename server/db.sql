@@ -242,3 +242,33 @@ FOREIGN KEY (patient_id)
 REFERENCES patients(id)
 ON DELETE CASCADE;
 
+ALTER TABLE patients
+DROP CONSTRAINT patients_original_id_fkey,
+ADD CONSTRAINT patients_original_id_fkey
+FOREIGN KEY (original_id) REFERENCES patients_register(id) ON DELETE SET NULL;
+
+
+ALTER TABLE health_status
+DROP CONSTRAINT health_status_patient_id_fkey,
+ADD CONSTRAINT health_status_patient_id_fkey
+FOREIGN KEY (patient_id)
+REFERENCES patients(id)
+ON DELETE CASCADE;
+
+ALTER TABLE medical_history
+DROP CONSTRAINT medical_history_patient_id_fkey,
+ADD CONSTRAINT medical_history_patient_id_fkey
+FOREIGN KEY (patient_id)
+REFERENCES patients(id)
+ON DELETE CASCADE;
+
+ALTER TABLE medical_proxies
+DROP CONSTRAINT medical_proxies_patient_id_fkey;
+
+ALTER TABLE medical_proxies
+ADD CONSTRAINT medical_proxies_patient_id_fkey
+FOREIGN KEY (patient_id)
+REFERENCES patients(id)
+ON DELETE CASCADE;
+
+
