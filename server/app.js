@@ -2626,46 +2626,36 @@ app.post('/api/patients-to-add', async (req, res) => {
   }
 });
 
-app.delete('/api/patients/remove', async (req, res) => {
-  console.log('Received delete request with body:', req.body);
-  
-  const { original_id } = req.body;
-  console.log('Original ID from request:', original_id, 'Type:', typeof original_id);
-  
-  // Ensure we have a valid number
-  const patientId = Number(original_id);
+app.delete('/api/patients/remove/:id', async (req, res) => {
+  const patientId = parseInt(req.params.id);
   
   if (isNaN(patientId)) {
-    console.error('Invalid ID received:', original_id);
-    return res.status(400).json({ 
+    return res.status(400).json({
       message: 'Invalid patient ID format',
-      received: original_id,
-      type: typeof original_id
+      received: req.params.id
     });
   }
-
+  
   try {
-    console.log('Attempting to delete patient with ID:', patientId);
-    
     // First verify the patient exists
-    const checkQuery = 'SELECT id FROM patients WHERE original_id = $1';
-    const checkResult = await pool.query(checkQuery, [patientId]);
-    
-    console.log('Check query result:', checkResult.rows);
+    const checkResult = await pool.query(
+      'SELECT id FROM patients WHERE original_id = $1',
+      [patientId]
+    );
     
     if (checkResult.rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: 'Patient not found in active patients',
         queried_id: patientId
       });
     }
-
-    // Delete the patient
-    const deleteQuery = 'DELETE FROM patients WHERE original_id = $1 RETURNING *';
-    const deleteResult = await pool.query(deleteQuery, [patientId]);
     
-    console.log('Delete result:', deleteResult.rows);
-
+    // Delete the patient
+    const deleteResult = await pool.query(
+      'DELETE FROM patients WHERE original_id = $1 RETURNING *',
+      [patientId]
+    );
+    
     res.json({
       success: true,
       message: 'Patient successfully removed from active patients',
@@ -2676,8 +2666,7 @@ app.delete('/api/patients/remove', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Database error while removing patient',
-      error: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: err.message
     });
   }
 });

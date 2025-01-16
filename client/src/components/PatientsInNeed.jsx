@@ -82,22 +82,17 @@ const PatientsInNeed = () => {
 
   const handleTogglePatient = async (patient) => {
     try {
-      console.log('Toggle patient:', patient);
-      console.log('Patient ID type:', typeof patient.id);
-      console.log('Patient ID value:', patient.id);
-      console.log('Current active patients:', Array.from(activePatients));
-      
       // Ensure we have a valid number ID
-      const patientId = Number(patient.id);
+      const patientId = parseInt(patient.id);
       
       if (isNaN(patientId)) {
         setError('Invalid patient ID');
         return;
       }
-
+  
+      // Check if patient is currently active
       const isActive = activePatients.has(patientId);
-      console.log('Is patient active?', isActive);
-
+  
       if (!isActive) {
         // Add to patients table
         const response = await axios.post('http://localhost:5000/api/patients-to-add', {
@@ -111,15 +106,8 @@ const PatientsInNeed = () => {
         setActivePatients(prev => new Set([...prev, patientId]));
         setSuccess('Patient added to active patients!');
       } else {
-        console.log('Attempting to remove patient with ID:', patientId);
-        const response = await axios.delete('http://localhost:5000/api/patients/remove', {
-          data: {
-            original_id: patientId
-          },
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        // Remove from patients table
+        const response = await axios.delete(`http://localhost:5000/api/patients/remove/${patientId}`);
         
         if (response.status === 200) {
           setActivePatients(prev => {
@@ -131,7 +119,7 @@ const PatientsInNeed = () => {
         }
       }
     } catch (error) {
-      console.error('Toggle error details:', error.response?.data || error.message);
+      console.error('Toggle error:', error);
       setError(error.response?.data?.message || 'Failed to update patient status');
     }
   };
