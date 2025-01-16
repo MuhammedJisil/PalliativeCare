@@ -164,7 +164,9 @@ app.post("/api/vcm-login", async (req, res) => {
 
 
 
-// pa// Add patient route
+// patient management
+
+// Add patient route
 app.post('/api/patients', async (req, res) => {
   const {
     original_id,

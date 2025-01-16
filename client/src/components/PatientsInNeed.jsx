@@ -210,7 +210,7 @@ const PatientsInNeed = () => {
     <CheckCircle 
       size={20} 
       className={`mr-1.5 ${
-        activePatients.has(patient.id) ? 'fill-green-700' : ''
+        activePatients.has(patient.id) ? 'fill-white-700' : ''
       }`}
     />
     <span>{activePatients.has(patient.id) ? 'Active' : 'Make Active'}</span>
@@ -227,7 +227,7 @@ const PatientsInNeed = () => {
   >
     <CheckCircle 
       size={20}
-      className={activePatients.has(patient.id) ? 'fill-green-700' : ''}
+      className={activePatients.has(patient.id) ? 'fill-white-700' : ''}
     />
   </button>
 

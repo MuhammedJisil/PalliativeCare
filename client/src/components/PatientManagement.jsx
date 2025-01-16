@@ -11,20 +11,32 @@ import {
   UserPlus,
   RefreshCw,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Filter
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog'
 
+const supportTypes = [
+  { value: '', label: 'All Support Types' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'caregiver', label: 'Caregiver' },
+  { value: 'medical', label: 'Medical' },
+  { value: 'others', label: 'Others' }
+];
+
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [supportTypeFilter, setSupportTypeFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+
+ 
 
   useEffect(() => {
     fetchPatients();
@@ -41,6 +53,7 @@ const PatientManagement = () => {
       setIsLoading(false);
     }
   };
+
 
   const handleView = (id) => {
     navigate(`/admin/patients/view/${id}`);
@@ -67,11 +80,16 @@ const handleDelete = async (id) => {
   }
   setShowConfirm(false);
  };
- 
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.first_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+ 
+ // Filter patients based on both search query and support type
+ const filteredPatients = patients.filter((patient) => {
+  const matchesSearch = patient.first_name.toLowerCase().includes(searchQuery.toLowerCase());
+  const matchesSupportType = supportTypeFilter === '' || patient.support_type === supportTypeFilter;
+  return matchesSearch && matchesSupportType;
+});
+
+ 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,9 +130,10 @@ const handleDelete = async (id) => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
+         {/* Search and Filter Section */}
+         <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
+          {/* Search Bar */}
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
@@ -123,6 +142,21 @@ const handleDelete = async (id) => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
+          </div>
+        {/* Support Type Filter */}
+        <div className="relative min-w-[200px]">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <select
+              value={supportTypeFilter}
+              onChange={(e) => setSupportTypeFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent appearance-none bg-white"
+            >
+              {supportTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
