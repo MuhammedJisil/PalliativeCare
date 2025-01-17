@@ -2710,6 +2710,104 @@ app.delete('/api/patients/remove/:id', async (req, res) => {
 
 
 
+// Modified notifications/counts endpoint
+app.get('/api/notifications/counts', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        entity_type,
+        COUNT(*) as count
+      FROM notifications
+      WHERE is_read = false
+      GROUP BY entity_type
+    `;
+    
+    const result = await pool.query(query);
+    
+    // Initialize default counts
+    const counts = {
+      volunteer: 0,
+      medical_professional: 0,
+      caregiver: 0,
+      patient: 0
+    };
+    
+    // Update with actual counts
+    result.rows.forEach(row => {
+      if (counts.hasOwnProperty(row.entity_type)) {
+        counts[row.entity_type] = parseInt(row.count);
+      }
+    });
+    
+    console.log('Sending notification counts:', counts); // Debug log
+    res.json(counts);
+  } catch (error) {
+    console.error('Error fetching notification counts:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Modified recent notifications endpoint
+app.get('/api/notifications/recent', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        id,
+        entity_type,
+        entity_id,
+        entity_name,
+        message,
+        is_read,
+        created_at
+      FROM notifications
+      ORDER BY created_at DESC
+      LIMIT 20
+    `;
+    
+    const result = await pool.query(query);
+    console.log('Sending recent notifications:', result.rows); // Debug log
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching recent notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Mark specific notification as read
+app.post('/api/notifications/:id/mark-read', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    await pool.query(
+      'UPDATE notifications SET is_read = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [id]
+    );
+    
+    res.json({ message: 'Notification marked as read' });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Mark all notifications of a type as read
+app.post('/api/notifications/mark-read', async (req, res) => {
+  const { entity_type } = req.body;
+  
+  try {
+    await pool.query(
+      'UPDATE notifications SET is_read = true, updated_at = CURRENT_TIMESTAMP WHERE entity_type = $1 AND is_read = false',
+      [entity_type]
+    );
+    
+    res.json({ message: 'Notifications marked as read' });
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
