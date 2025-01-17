@@ -272,3 +272,149 @@ REFERENCES patients(id)
 ON DELETE CASCADE;
 
 
+-- Create notifications table
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    entity_type VARCHAR(50) NOT NULL, -- 'volunteer', 'medical_professional', 'caregiver', 'patient'
+    entity_id INTEGER NOT NULL,
+    entity_name VARCHAR(255) NOT NULL, -- Store the name for better notification messages
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION create_notification_on_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_ARGV[0] = 'patient' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.patient_name,
+            'New patient ' || NEW.patient_name || ' registered requiring ' || NEW.support_type || ' support'
+        );
+    ELSIF TG_ARGV[0] = 'volunteer' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New volunteer ' || NEW.name || ' registered with skills: ' || COALESCE(NEW.skills, 'Not specified')
+        );
+    ELSIF TG_ARGV[0] = 'medical_professional' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New medical professional ' || NEW.name || ' registered. Specialization: ' || COALESCE(NEW.specialization, 'Not specified')
+        );
+    ELSIF TG_ARGV[0] = 'caregiver' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New caregiver ' || NEW.name || ' registered with experience: ' || COALESCE(NEW.experience, 'Not specified')
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Drop existing triggers
+DROP TRIGGER IF EXISTS notify_new_volunteer ON volunteers;
+DROP TRIGGER IF EXISTS notify_new_medical_professional ON medical_professionals;
+DROP TRIGGER IF EXISTS notify_new_caregiver ON caregivers;
+DROP TRIGGER IF EXISTS notify_new_patient ON patients_register;
+
+-- Recreate triggers
+CREATE TRIGGER notify_new_volunteer
+    AFTER INSERT ON volunteers
+    FOR EACH ROW
+    EXECUTE FUNCTION create_notification_on_insert('volunteer');
+
+CREATE TRIGGER notify_new_medical_professional
+    AFTER INSERT ON medical_professionals
+    FOR EACH ROW
+    EXECUTE FUNCTION create_notification_on_insert('medical_professional');
+
+CREATE TRIGGER notify_new_caregiver
+    AFTER INSERT ON caregivers
+    FOR EACH ROW
+    EXECUTE FUNCTION create_notification_on_insert('caregiver');
+
+CREATE TRIGGER notify_new_patient
+    AFTER INSERT ON patients_register
+    FOR EACH ROW
+    EXECUTE FUNCTION create_notification_on_insert('patient');
+
+    -- Then modify the table to prevent future duplicates
+ALTER TABLE notifications DROP CONSTRAINT IF EXISTS unique_recent_notification;
+ALTER TABLE notifications ADD CONSTRAINT unique_notification_entry 
+UNIQUE (entity_type, entity_id);
+
+-- Update the trigger function to handle duplicates
+CREATE OR REPLACE FUNCTION create_notification_on_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update existing notification if exists, otherwise insert new one
+    IF TG_ARGV[0] = 'patient' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.patient_name,
+            'New patient ' || NEW.patient_name || ' registered requiring ' || NEW.support_type || ' support'
+        )
+        ON CONFLICT (entity_type, entity_id) 
+        DO UPDATE SET 
+            message = EXCLUDED.message,
+            created_at = CURRENT_TIMESTAMP,
+            is_read = false;
+    ELSIF TG_ARGV[0] = 'volunteer' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New volunteer ' || NEW.name || ' registered with skills: ' || COALESCE(NEW.skills, 'Not specified')
+        )
+        ON CONFLICT (entity_type, entity_id) 
+        DO UPDATE SET 
+            message = EXCLUDED.message,
+            created_at = CURRENT_TIMESTAMP,
+            is_read = false;
+    ELSIF TG_ARGV[0] = 'medical_professional' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New medical professional ' || NEW.name || ' registered. Specialization: ' || COALESCE(NEW.specialization, 'Not specified')
+        )
+        ON CONFLICT (entity_type, entity_id) 
+        DO UPDATE SET 
+            message = EXCLUDED.message,
+            created_at = CURRENT_TIMESTAMP,
+            is_read = false;
+    ELSIF TG_ARGV[0] = 'caregiver' THEN
+        INSERT INTO notifications (entity_type, entity_id, entity_name, message)
+        VALUES (
+            TG_ARGV[0],
+            NEW.id,
+            NEW.name,
+            'New caregiver ' || NEW.name || ' registered with experience: ' || COALESCE(NEW.experience, 'Not specified')
+        )
+        ON CONFLICT (entity_type, entity_id) 
+        DO UPDATE SET 
+            message = EXCLUDED.message,
+            created_at = CURRENT_TIMESTAMP,
+            is_read = false;
+    END IF;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';

@@ -14,7 +14,8 @@ import {
   HeartHandshake,
   Bell,
   X,
-  CheckCircle
+  CheckCircle,
+  Trash2
 } from 'lucide-react';
 import axios from 'axios';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -31,23 +32,8 @@ const NotificationBadge = ({ count }) => {
 };
 
 // Notification Panel Component
-const NotificationPanel = ({ isOpen, onClose, notifications, onMarkRead }) => {
+const NotificationPanel = ({ isOpen, onClose, notifications, onMarkRead, onNotificationClick, onDelete }) => {
   if (!isOpen) return null;
-
-  const getEntityIcon = (entityType) => {
-    switch (entityType) {
-      case 'volunteer':
-        return <Users className="h-5 w-5 text-teal-600" />;
-      case 'medical_professional':
-        return <BriefcaseMedical className="h-5 w-5 text-teal-600" />;
-      case 'caregiver':
-        return <HeartHandshake className="h-5 w-5 text-teal-600" />;
-      case 'patient':
-        return <Activity className="h-5 w-5 text-teal-600" />;
-      default:
-        return <Bell className="h-5 w-5 text-teal-600" />;
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -75,21 +61,39 @@ const NotificationPanel = ({ isOpen, onClose, notifications, onMarkRead }) => {
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  {getEntityIcon(notification.entity_type)}
-                  <div className="flex-1">
+                  {/* Existing notification content */}
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => onNotificationClick(notification)}
+                  >
                     <p className="text-sm text-gray-900">{notification.message}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                     </p>
                   </div>
-                  {!notification.is_read && (
+                  <div className="flex space-x-2">
+                    {!notification.is_read && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMarkRead(notification.id);
+                        }}
+                        className="p-1 hover:bg-gray-200 rounded-full"
+                      >
+                        <CheckCircle className="h-4 w-4 text-teal-600" />
+                      </button>
+                    )}
                     <button
-                      onClick={() => onMarkRead(notification.id)}
-                      className="p-1 hover:bg-gray-200 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(notification.id);
+                      }}
+                      className="p-1 hover:bg-red-100 rounded-full"
+                      aria-label="Delete notification"
                     >
-                      <CheckCircle className="h-4 w-4 text-teal-600" />
+                      <Trash2 className="h-4 w-4 text-red-500" />
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             ))
@@ -112,6 +116,34 @@ const AdminDashboard = () => {
   });
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+
+  const getPathForEntityType = (entityType) => {
+    switch (entityType) {
+      case 'volunteer':
+        return '/admin/volunteers';
+      case 'medical_professional':
+        return '/admin/medical-professionals';
+      case 'caregiver':
+        return '/admin/caregivers';
+      case 'patient':
+        return '/admin/patients-in-need';
+      default:
+        return '/admin/dashboard';
+    }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    // Mark as read if unread
+    if (!notification.is_read) {
+      await handleMarkRead(notification.id);
+    }
+    
+    // Navigate to corresponding page
+    const path = getPathForEntityType(notification.entity_type);
+    setIsNotificationPanelOpen(false);
+    navigate(path);
+  };
+
 
   // Fetch notification counts
   const fetchNotificationCounts = async () => {
@@ -147,6 +179,28 @@ const AdminDashboard = () => {
       fetchNotifications();
     }
   }, [isNotificationPanelOpen]);
+
+  const handleDeleteNotification = async (id) => {
+    try {
+      await axios.delete(`/api/notifications/${id}`);
+      
+      // Update local state
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      
+      // Find the notification type that was deleted
+      const deletedNotification = notifications.find(n => n.id === id);
+      if (deletedNotification && !deletedNotification.is_read) {
+        // Update counts only if the notification was unread
+        setNotificationCounts(prev => ({
+          ...prev,
+          [deletedNotification.entity_type]: Math.max(0, prev[deletedNotification.entity_type] - 1)
+        }));
+        setTotalUnread(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
 
   // Handle marking individual notification as read
   const handleMarkRead = async (id) => {
@@ -360,11 +414,13 @@ const AdminDashboard = () => {
       </div>
 
       <NotificationPanel
-        isOpen={isNotificationPanelOpen}
-        onClose={() => setIsNotificationPanelOpen(false)}
-        notifications={notifications}
-        onMarkRead={handleMarkRead}
-      />
+      isOpen={isNotificationPanelOpen}
+      onClose={() => setIsNotificationPanelOpen(false)}
+      notifications={notifications}
+      onMarkRead={handleMarkRead}
+      onNotificationClick={handleNotificationClick}
+      onDelete={handleDeleteNotification}
+    />
     </div>
   );
 };

@@ -2807,6 +2807,33 @@ app.post('/api/notifications/mark-read', async (req, res) => {
   }
 });
 
+// Add delete endpoint
+app.delete('/api/notifications/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // First check if notification exists and get its read status
+    const checkResult = await pool.query(
+      'SELECT is_read FROM notifications WHERE id = $1',
+      [id]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+    
+    // Delete the notification
+    await pool.query('DELETE FROM notifications WHERE id = $1', [id]);
+    
+    res.json({ 
+      message: 'Notification deleted successfully',
+      was_read: checkResult.rows[0].is_read
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
