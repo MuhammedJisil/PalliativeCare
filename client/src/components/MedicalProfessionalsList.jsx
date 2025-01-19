@@ -291,8 +291,19 @@ const MedicalProfessionalsList = () => {
       }
     };
   
-    const handleView = (id) => {
-      navigate(`/admin/medical-professionals/view/${id}`);
+    const handleView = async (id) => {
+      try {
+        // Mark the professional as viewed
+        await axios.put(`http://localhost:5000/api/medical-professionals/${id}/view`);
+        // Update the local state to remove the NEW tag
+        setProfessionals(professionals.map(professional => 
+          professional.id === id ? { ...professional, is_new: false } : professional
+        ));
+        // Navigate to the view page
+        navigate(`/admin/medical-professionals/view/${id}`);
+      } catch (error) {
+        console.error('Error marking professional as viewed:', error);
+      }
     };
   
     const handleDelete = async (id) => {
@@ -416,15 +427,22 @@ const MedicalProfessionalsList = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Name</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Specialization</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredProfessionals.map((prof) => (
-                      <tr key={prof.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">{prof.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">{prof.specialization}</td>
+                  {filteredProfessionals.map((prof) => (
+        <tr key={prof.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+            <div className="flex items-center space-x-2">
+              <span>{prof.name}</span>
+              {prof.is_new && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-200 text-red-700">
+                  NEW
+                </span>
+              )}
+            </div>
+          </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex justify-end space-x-2">
                             <button

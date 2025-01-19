@@ -298,10 +298,20 @@ const VolunteerList = () => {
     }
   };
 
-  const handleView = (id) => {
-    navigate(`/admin/volunteers/view/${id}`);
+  const handleView = async (id) => {
+    try {
+      // Mark the volunteer as viewed
+      await axios.put(`http://localhost:5000/api/volunteers/${id}/view`);
+      // Update the local state to remove the NEW tag
+      setVolunteers(volunteers.map(volunteer => 
+        volunteer.id === id ? { ...volunteer, is_new: false } : volunteer
+      ));
+      // Navigate to the view page
+      navigate(`/admin/volunteers/view/${id}`);
+    } catch (error) {
+      console.error('Error marking volunteer as viewed:', error);
+    }
   };
-
 
   const handleDelete = async (id) => {
     setDeleteId(id);
@@ -439,11 +449,18 @@ const VolunteerList = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {filteredVolunteers.map((volunteer) => (
-            <tr key={volunteer.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {volunteer.name}
-              </td>
+      {filteredVolunteers.map((volunteer) => (
+        <tr key={volunteer.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+            <div className="flex items-center space-x-2">
+              <span>{volunteer.name}</span>
+              {volunteer.is_new && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-200 text-red-700">
+                  NEW
+                </span>
+              )}
+            </div>
+          </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end space-x-2">
                   {/* View Button - Desktop */}

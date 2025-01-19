@@ -57,10 +57,20 @@ const PatientsInNeed = () => {
     }
   };
 
-  const handleView = (id) => {
-    navigate(`/admin/patients-in-need/view/${id}`);
+  const handleView = async (id) => {
+    try {
+      // Mark the patient as viewed
+      await axios.put(`http://localhost:5000/api/patients-in-need/${id}/view`);
+      // Update the local state to remove the NEW tag
+      setPatients(patients.map(patient => 
+        patient.id === id ? { ...patient, is_new: false } : patient
+      ));
+      // Navigate to the view page
+      navigate(`/admin/patients-in-need/view/${id}`);
+    } catch (error) {
+      console.error('Error marking patient as viewed:', error);
+    }
   };
-
   const handleDelete = async (id) => {
     setDeleteId(id);
     setShowConfirm(true);
@@ -191,10 +201,17 @@ const PatientsInNeed = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredPatients.map((patient) => (
-                    <tr key={patient.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {patient.patient_name}
-                      </td>
+        <tr key={patient.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+            <div className="flex items-center space-x-2">
+              <span>{patient.patient_name}</span>
+              {patient.is_new && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-200 text-red-700">
+                  NEW
+                </span>
+              )}
+            </div>
+          </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex justify-end space-x-2">
                           {/* Toggle Button - Desktop */}

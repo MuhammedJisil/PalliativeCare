@@ -307,8 +307,19 @@ const CaregiverList = () => {
     }
   };
 
-  const handleView = (id) => {
-    navigate(`/admin/caregivers/view/${id}`);
+  const handleView = async (id) => {
+    try {
+      // Mark the caregiver as viewed
+      await axios.put(`http://localhost:5000/api/caregivers/${id}/view`);
+      // Update the local state to remove the NEW tag
+      setCaregivers(caregivers.map(caregiver => 
+        caregiver.id === id ? { ...caregiver, is_new: false } : caregiver
+      ));
+      // Navigate to the view page
+      navigate(`/admin/caregivers/view/${id}`);
+    } catch (error) {
+      console.error('Error marking caregiver as viewed:', error);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -415,10 +426,17 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {filteredCaregivers.map((caregiver) => (
-            <tr key={caregiver.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {caregiver.name}
-              </td>
+        <tr key={caregiver.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+            <div className="flex items-center space-x-2">
+              <span>{caregiver.name}</span>
+              {caregiver.is_new && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-200 text-red-700">
+                  NEW
+                </span>
+              )}
+            </div>
+          </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end space-x-2">
                   {/* View Button - Desktop */}

@@ -645,14 +645,23 @@ app.post('/api/register', async (req, res) => {
   } = req.body;
 
   try {
+    // Basic validation
     if (!name || !email || !phone_number) {
       return res.status(400).json({
         error: 'Name, email, and phone number are required'
       });
     }
 
+    // Additional validation for medical professionals
+    if (userType === 'medical' && !license_number) {
+      return res.status(400).json({
+        error: 'License number is required for medical professionals'
+      });
+    }
+
     let existingEntry;
 
+    // Check for existing entries based on user type
     if (userType === 'volunteer') {
       existingEntry = await pool.query(
         'SELECT 1 FROM volunteers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
@@ -668,6 +677,10 @@ app.post('/api/register', async (req, res) => {
         'SELECT 1 FROM medical_professionals WHERE LOWER(name) = LOWER($1) AND email = $2 OR license_number = $3',
         [name.trim(), email.trim(), license_number.trim()]
       );
+    } else {
+      return res.status(400).json({
+        error: 'Invalid user type'
+      });
     }
 
     if (existingEntry && existingEntry.rows.length > 0) {
@@ -676,19 +689,31 @@ app.post('/api/register', async (req, res) => {
       });
     }
 
+    let result;
+
+    // Insert new entry based on user type with is_new flag
     if (userType === 'volunteer') {
-      await pool.query(
-        'INSERT INTO volunteers (name, email, phone_number, address, availability, skills, notes) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      result = await pool.query(
+        `INSERT INTO volunteers 
+        (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL) 
+        RETURNING *`,
         [name.trim(), email.trim(), phone_number.trim(), address, availability, skills, notes]
       );
     } else if (userType === 'caregiver') {
-      await pool.query(
-        'INSERT INTO caregivers (name, email, phone_number, address, availability, experience, certifications, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      result = await pool.query(
+        `INSERT INTO caregivers 
+        (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL) 
+        RETURNING *`,
         [name.trim(), email.trim(), phone_number.trim(), address, availability, experience, certifications, notes]
       );
     } else if (userType === 'medical') {
-      await pool.query(
-        'INSERT INTO medical_professionals (name, email, phone_number, address, availability, specialization, license_number, experience, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      result = await pool.query(
+        `INSERT INTO medical_professionals 
+        (name, email, phone_number, address, availability, specialization, license_number, experience, notes, is_new, last_viewed_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NULL) 
+        RETURNING *`,
         [
           name.trim(),
           email.trim(),
@@ -703,9 +728,20 @@ app.post('/api/register', async (req, res) => {
       );
     }
 
-    res.status(201).json({ message: 'Registration successful' });
+    res.status(201).json({
+      message: 'Registration successful',
+      data: result.rows[0]
+    });
   } catch (err) {
     console.error('Error during registration:', err);
+    
+    // Handle unique constraint violations
+    if (err.code === '23505') {
+      return res.status(409).json({
+        error: `A ${userType} with this email or license number already exists`
+      });
+    }
+    
     res.status(500).json({
       error: 'Server error'
     });
@@ -750,18 +786,27 @@ app.post('/api/patients-in-need', async (req, res) => {
       return res.status(400).json({ message: 'Care details are required for caregiver support type' });
     }
 
-    // Insert new patient if no duplicate exists
-    await pool.query(
-      'INSERT INTO patients_register (patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-      [patient_name, contact_name, contact_email, contact_phone_number, place, address, support_type, health_condition, care_details, notes]
+    // Insert new patient with is_new flag
+    const result = await pool.query(
+      `INSERT INTO patients_register 
+      (patient_name, contact_name, contact_email, contact_phone_number, place, address, 
+       support_type, health_condition, care_details, notes, is_new, last_viewed_at) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, NULL) 
+      RETURNING *`,
+      [patient_name, contact_name, contact_email, contact_phone_number, place, address, 
+       support_type, health_condition, care_details, notes]
     );
 
-    res.status(201).json({ message: 'Patient in need registered successfully!' });
+    res.status(201).json({ 
+      message: 'Patient in need registered successfully!',
+      patient: result.rows[0]
+    });
   } catch (error) {
     console.error('Error registering patient:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 
@@ -791,11 +836,17 @@ app.get('/api/volunteers', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
-// select volunteer by id
+// Select volunteer by id and mark as viewed
 app.get('/api/volunteers/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    // Update the viewed status first
+    await pool.query(
+      'UPDATE volunteers SET is_new = false, last_viewed_at = NOW() WHERE id = $1',
+      [id]
+    );
+    
+    // Then get the updated volunteer data
     const result = await pool.query('SELECT * FROM volunteers WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Volunteer not found' });
@@ -807,8 +858,7 @@ app.get('/api/volunteers/:id', async (req, res) => {
   }
 });
 
-// delete volunteer by id
-
+// Delete volunteer by id
 app.delete('/api/volunteers/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -840,7 +890,7 @@ app.post('/api/volunteers', async (req, res) => {
       });
     }
 
-    // SQL query to check if the volunteer already exists
+    // Check for existing volunteer
     const checkQuery = `
       SELECT * 
       FROM volunteers 
@@ -849,17 +899,16 @@ app.post('/api/volunteers', async (req, res) => {
     const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
 
     if (checkResult.rows.length > 0) {
-      // Volunteer already exists
       return res.status(409).json({ 
         error: 'A volunteer with this name, email, and phone number already exists' 
       });
     }
 
-    // SQL query to insert new volunteer
+    // Insert new volunteer with is_new flag
     const query = `
       INSERT INTO volunteers 
-      (name, email, phone_number, address, availability, skills, notes) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL) 
       RETURNING *
     `;
     const values = [
@@ -872,29 +921,22 @@ app.post('/api/volunteers', async (req, res) => {
       notes || null
     ];
 
-    // Execute the query
     const result = await pool.query(query, values);
-
-    // Return the newly created volunteer
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding volunteer:', error);
-
-    // Handle unique constraint violations (e.g., duplicate email)
     if (error.code === '23505') {
       return res.status(409).json({ 
         error: 'A volunteer with this email already exists' 
       });
     }
-
-    // Generic error handler
     res.status(500).json({ 
       error: 'An error occurred while adding the volunteer' 
     });
   }
 });
 
-// update a volunteer
+// Update a volunteer
 app.put('/api/volunteers/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -917,7 +959,7 @@ app.put('/api/volunteers/:id', async (req, res) => {
          address = $4, 
          availability = $5, 
          skills = $6, 
-         notes = $7 
+         notes = $7
        WHERE id = $8 
        RETURNING *`,
       [
@@ -943,6 +985,27 @@ app.put('/api/volunteers/:id', async (req, res) => {
   }
 });
 
+// New endpoint to explicitly mark a volunteer as viewed
+app.put('/api/volunteers/:id/view', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'UPDATE volunteers SET is_new = false, last_viewed_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Volunteer not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error marking volunteer as viewed:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 // Endpoint to get all caregivers
 app.get('/api/caregivers', async (req, res) => {
@@ -955,7 +1018,7 @@ app.get('/api/caregivers', async (req, res) => {
   }
 });
 
-// Route to get all volunteers or filtered by search query
+// Route to get all caregiver or filtered by search query
 app.get('/api/caregivers', async (req, res) => {
   try {
     const { search } = req.query;
@@ -970,13 +1033,17 @@ app.get('/api/caregivers', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
-
-
-// Endpoint to get a single caregiver by ID
+// Get a single caregiver by ID and mark as viewed
 app.get('/api/caregivers/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    // Update the viewed status
+    await pool.query(
+      'UPDATE caregivers SET is_new = false, last_viewed_at = NOW() WHERE id = $1',
+      [id]
+    );
+    
+    // Get the updated caregiver data
     const caregiver = await pool.query('SELECT * FROM caregivers WHERE id = $1', [id]);
     if (caregiver.rows.length === 0) {
       return res.status(404).json({ error: 'Caregiver not found' });
@@ -988,7 +1055,7 @@ app.get('/api/caregivers/:id', async (req, res) => {
   }
 });
 
-// Route to add a new caregiver
+// Add a new caregiver
 app.post('/api/caregivers', async (req, res) => {
   try {
     const { 
@@ -1009,7 +1076,7 @@ app.post('/api/caregivers', async (req, res) => {
       });
     }
 
-    // SQL query to check if the caregiver already exists
+    // Check if caregiver exists
     const checkQuery = `
       SELECT * 
       FROM caregivers 
@@ -1018,17 +1085,16 @@ app.post('/api/caregivers', async (req, res) => {
     const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
 
     if (checkResult.rows.length > 0) {
-      // Caregiver already exists
       return res.status(409).json({ 
         error: 'A caregiver with this name, email, and phone number already exists' 
       });
     }
 
-    // SQL query to insert new caregiver
+    // Insert new caregiver with is_new flag
     const query = `
       INSERT INTO caregivers 
-      (name, email, phone_number, address, availability, experience, certifications, notes) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL) 
       RETURNING *
     `;
     const values = [
@@ -1042,29 +1108,22 @@ app.post('/api/caregivers', async (req, res) => {
       notes || null
     ];
 
-    // Execute the query
     const result = await pool.query(query, values);
-
-    // Return the newly created caregiver
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding caregiver:', error);
-
-    // Handle unique constraint violations (e.g., duplicate email)
     if (error.code === '23505') {
       return res.status(409).json({ 
         error: 'A caregiver with this email already exists' 
       });
     }
-
-    // Generic error handler
     res.status(500).json({ 
       error: 'An error occurred while adding the caregiver' 
     });
   }
 });
 
-// UPDATE caregiver
+// Update caregiver
 app.put('/api/caregivers/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1089,7 +1148,7 @@ app.put('/api/caregivers/:id', async (req, res) => {
         availability = $5, 
         experience = $6, 
         certifications = $7, 
-        notes = $8 
+        notes = $8
       WHERE id = $9 
       RETURNING *
     `;
@@ -1119,8 +1178,7 @@ app.put('/api/caregivers/:id', async (req, res) => {
   }
 });
 
-
-// Endpoint to delete a caregiver by ID
+// Delete caregiver
 app.delete('/api/caregivers/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -1135,18 +1193,129 @@ app.delete('/api/caregivers/:id', async (req, res) => {
   }
 });
 
+// New endpoint to explicitly mark a caregiver as viewed
+app.put('/api/caregivers/:id/view', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'UPDATE caregivers SET is_new = false, last_viewed_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Caregiver not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error marking caregiver as viewed:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-// Get all patients in need
+
+// Endpoint to get all patients in need
 app.get('/api/patients-in-need', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM patients_register ORDER BY id DESC');
-    res.json(result.rows);
+    const caregivers = await pool.query('SELECT * FROM patients_register');
+    res.json(caregivers.rows);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// Route to get all patients in need or filtered by search query
+app.get('/api/patients-in-need', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT * FROM patients_register';
+    if (search) {
+      query += ` WHERE LOWER(patient_name) LIKE LOWER('%${search}%')`;
+    }
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// Add a patient to the patients table
+app.post('/api/patients-to-add', async (req, res) => {
+  const {
+    original_id,
+    first_name,
+    phone_number,
+    address,
+    support_type
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO patients (
+        original_id,
+        first_name,
+        phone_number,
+        address,
+        support_type,
+        initial_treatment_date
+      ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE) 
+      RETURNING *`,
+      [original_id, first_name, phone_number, address, support_type]
+    );
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/patients/remove/:id', async (req, res) => {
+  const patientId = parseInt(req.params.id);
+  
+  if (isNaN(patientId)) {
+    return res.status(400).json({
+      message: 'Invalid patient ID format',
+      received: req.params.id
+    });
+  }
+  
+  try {
+    // First verify the patient exists
+    const checkResult = await pool.query(
+      'SELECT id FROM patients WHERE original_id = $1',
+      [patientId]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Patient not found in active patients',
+        queried_id: patientId
+      });
+    }
+    
+    // Delete the patient
+    const deleteResult = await pool.query(
+      'DELETE FROM patients WHERE original_id = $1 RETURNING *',
+      [patientId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Patient successfully removed from active patients',
+      removed_id: patientId
+    });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Database error while removing patient',
+      error: err.message
+    });
+  }
+});
 
 
 // Update patient in need
@@ -1222,26 +1391,18 @@ app.put('/api/patients-in-need/:id', async (req, res) => {
 });
 
 
-// Route to get all patients in need or filtered by search query
-app.get('/api/patients-in-need', async (req, res) => {
-  try {
-    const { search } = req.query;
-    let query = 'SELECT * FROM patients_register';
-    if (search) {
-      query += ` WHERE LOWER(patient_name) LIKE LOWER('%${search}%')`;
-    }
-    const result = await pool.query(query);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching patients:', error);
-    res.status(500).send('Server error');
-  }
-});
 
-// Get a single patient by ID
+// Get a single patient by ID and mark as viewed
 app.get('/api/patients-in-need/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    // Update the viewed status first
+    await pool.query(
+      'UPDATE patients_register SET is_new = false, last_viewed_at = NOW() WHERE id = $1',
+      [id]
+    );
+    
+    // Then get the updated patient data
     const result = await pool.query('SELECT * FROM patients_register WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Patient not found' });
@@ -1253,6 +1414,25 @@ app.get('/api/patients-in-need/:id', async (req, res) => {
   }
 });
 
+// New endpoint to explicitly mark a patient as viewed
+app.put('/api/patients-in-need/:id/view', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'UPDATE patients_register SET is_new = false, last_viewed_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error marking patient as viewed:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 
 
@@ -1283,37 +1463,7 @@ app.get('/api/medical-professionals', async (req, res) => {
   }
 });
 
-// Endpoint to delete a medical professional  by ID
-app.delete('/api/medical-professionals/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('DELETE FROM medical_professionals WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'medical professional not found' });
-    }
-    res.json({ message: 'medical professional deleted successfully' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get a single medical professional by ID
-app.get('/api/medical-professionals/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('SELECT * FROM medical_professionals WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'medical professional not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Route to get all volunteers or filtered by search query
+// Get all medical professionals
 app.get('/api/medical-professionals', async (req, res) => {
   try {
     const { search } = req.query;
@@ -1329,37 +1479,44 @@ app.get('/api/medical-professionals', async (req, res) => {
   }
 });
 
-
-// Route to add a medical professional
-app.post('/api/medical-professionals', async (req, res) => {
-  const {
-    name,
-    email,
-    phone_number,
-    address,
-    availability,
-    specialization,
-    license_number,
-    experience,
-    notes,
-  } = req.body;
-
+// Get a single medical professional by ID and mark as viewed
+app.get('/api/medical-professionals/:id', async (req, res) => {
+  const { id } = req.params;
   try {
-    const result = await pool.query(
-      `INSERT INTO medical_professionals 
-        (name, email, phone_number, address, availability, specialization, license_number, experience, notes) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-       RETURNING *`,
-      [name, email, phone_number, address, availability, specialization, license_number, experience, notes]
+    // Update the viewed status first
+    await pool.query(
+      'UPDATE medical_professionals SET is_new = false, last_viewed_at = NOW() WHERE id = $1',
+      [id]
     );
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error adding medical professional:', error);
-    res.status(500).json({ error: 'Failed to add medical professional.' });
+    
+    // Then get the updated medical professional data
+    const result = await pool.query('SELECT * FROM medical_professionals WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Medical professional not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Route to add a medical professional
+// Delete medical professional by ID
+app.delete('/api/medical-professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM medical_professionals WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Medical professional not found' });
+    }
+    res.json({ message: 'Medical professional deleted successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Route to add a new medical professional
 app.post('/api/medical-professionals', async (req, res) => {
   try {
     const {
@@ -1395,12 +1552,12 @@ app.post('/api/medical-professionals', async (req, res) => {
       });
     }
 
-    // Insert new medical professional
+    // Insert new medical professional with is_new flag
     const query = `
       INSERT INTO medical_professionals
       (name, email, phone_number, address, availability, specialization, 
-       license_number, experience, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       license_number, experience, notes, is_new, last_viewed_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NULL)
       RETURNING *
     `;
     const values = [
@@ -1509,6 +1666,25 @@ app.put('/api/medical-professionals/:id', async (req, res) => {
   }
 });
 
+// New endpoint to explicitly mark a medical professional as viewed
+app.put('/api/medical-professionals/:id/view', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'UPDATE medical_professionals SET is_new = false, last_viewed_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Medical professional not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error marking medical professional as viewed:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // ToDoList Component
 
@@ -2631,81 +2807,6 @@ app.get('/api/active-patients', async (req, res) => {
   }
 });
 
-// Add a patient to the patients table
-app.post('/api/patients-to-add', async (req, res) => {
-  const {
-    original_id,
-    first_name,
-    phone_number,
-    address,
-    support_type
-  } = req.body;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO patients (
-        original_id,
-        first_name,
-        phone_number,
-        address,
-        support_type,
-        initial_treatment_date
-      ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE) 
-      RETURNING *`,
-      [original_id, first_name, phone_number, address, support_type]
-    );
-    
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-app.delete('/api/patients/remove/:id', async (req, res) => {
-  const patientId = parseInt(req.params.id);
-  
-  if (isNaN(patientId)) {
-    return res.status(400).json({
-      message: 'Invalid patient ID format',
-      received: req.params.id
-    });
-  }
-  
-  try {
-    // First verify the patient exists
-    const checkResult = await pool.query(
-      'SELECT id FROM patients WHERE original_id = $1',
-      [patientId]
-    );
-    
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({
-        message: 'Patient not found in active patients',
-        queried_id: patientId
-      });
-    }
-    
-    // Delete the patient
-    const deleteResult = await pool.query(
-      'DELETE FROM patients WHERE original_id = $1 RETURNING *',
-      [patientId]
-    );
-    
-    res.json({
-      success: true,
-      message: 'Patient successfully removed from active patients',
-      removed_id: patientId
-    });
-  } catch (err) {
-    console.error('Database error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Database error while removing patient',
-      error: err.message
-    });
-  }
-});
 
 
 
