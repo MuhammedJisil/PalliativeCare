@@ -169,7 +169,6 @@ app.post("/api/vcm-login", async (req, res) => {
 // Add patient route
 app.post('/api/patients', async (req, res) => {
   const {
-    original_id,
     first_name,
     initial_treatment_date,
     dob,
@@ -177,12 +176,14 @@ app.post('/api/patients', async (req, res) => {
     gender,
     address,
     phone_number,
-    support_type = 'medical', // Default value if not provided
+    support_type,
     doctor,
     caregiver,
+    place,
     health_status,
     medical_proxy,
-    medical_history
+    medical_history,
+    additional_notes
   } = req.body;
 
   const client = await pool.connect();
@@ -194,57 +195,91 @@ app.post('/api/patients', async (req, res) => {
       SELECT * 
       FROM patients 
       WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1)) 
-        AND phone_number = $2 
-        AND LOWER(TRIM(address)) = LOWER(TRIM($3)) 
-        AND dob = $4 
-        AND gender = $5 
-        AND age = $6
+        AND phone_number = $2
     `;
-    const checkResult = await client.query(checkPatientQuery, [first_name, phone_number, address, dob, gender, age]);
-
+    const checkResult = await client.query(checkPatientQuery, [first_name, phone_number]);
+    
     if (checkResult.rows.length > 0) {
       await client.query('ROLLBACK');
       return res.status(409).json({
-        message: 'A patient with this personal information already exists'
+        message: 'A patient with same personal information already exists'
       });
     }
 
+    // Insert into patients table
     const insertPatientQuery = `
       INSERT INTO patients (
-        original_id, first_name, initial_treatment_date, dob, age, gender, 
-        address, phone_number, support_type, doctor, caregiver
+        first_name, initial_treatment_date, dob, age, gender, 
+        address, phone_number, support_type, doctor, caregiver, place,
+        additional_notes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
       RETURNING id
     `;
+    
     const patientResult = await client.query(insertPatientQuery, [
-      original_id, first_name, initial_treatment_date, dob, age, gender,
-      address, phone_number, support_type, doctor, caregiver
+      first_name,
+      initial_treatment_date || null,
+      dob || null,
+      age || null,
+      gender || null,
+      address || null,
+      phone_number,
+      support_type,
+      doctor || null,
+      caregiver || null,
+      place || null,
+      additional_notes || null
     ]);
+
     const patientId = patientResult.rows[0].id;
 
-    if (health_status) {
+    // Insert health status if support type is medical or caregiver
+    if ((support_type === 'medical' || support_type === 'caregiver') && health_status) {
       const insertHealthStatusQuery = `
-        INSERT INTO health_status (patient_id, disease, medication, note, note_date)
+        INSERT INTO health_status (
+          patient_id, disease, medication, note, note_date
+        )
         VALUES ($1, $2, $3, $4, $5)
       `;
-      await client.query(insertHealthStatusQuery, [patientId, health_status.disease, health_status.medication, health_status.note, health_status.note_date]);
+      
+      await client.query(insertHealthStatusQuery, [
+        patientId,
+        health_status.disease || null,
+        health_status.medication || null,
+        health_status.note || null,
+        health_status.note_date || null
+      ]);
     }
 
-    if (medical_proxy) {
+    // Insert medical proxy if support type is medical or caregiver
+    if ((support_type === 'medical' || support_type === 'caregiver') && medical_proxy) {
       const insertMedicalProxyQuery = `
-        INSERT INTO medical_proxies (patient_id, name, relation, phone_number)
+        INSERT INTO medical_proxies (
+          patient_id, name, relation, phone_number
+        )
         VALUES ($1, $2, $3, $4)
       `;
-      await client.query(insertMedicalProxyQuery, [patientId, medical_proxy.name, medical_proxy.relation, medical_proxy.phone_number]);
+      
+      await client.query(insertMedicalProxyQuery, [
+        patientId,
+        medical_proxy.name || null,
+        medical_proxy.relation || null,
+        medical_proxy.phone_number || null
+      ]);
     }
 
-    if (medical_history) {
+    // Insert medical history if support type is medical or caregiver
+    if ((support_type === 'medical' || support_type === 'caregiver') && medical_history) {
       const insertMedicalHistoryQuery = `
         INSERT INTO medical_history (patient_id, history)
         VALUES ($1, $2)
       `;
-      await client.query(insertMedicalHistoryQuery, [patientId, medical_history]);
+      
+      await client.query(insertMedicalHistoryQuery, [
+        patientId,
+        medical_history
+      ]);
     }
 
     await client.query('COMMIT');
@@ -252,7 +287,7 @@ app.post('/api/patients', async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error adding patient:', error);
-    res.status(500).json({ message: 'Error adding patient' });
+    res.status(500).json({ message: 'Failed to add patient. Please try again.' });
   } finally {
     client.release();
   }
@@ -361,18 +396,19 @@ app.get('/api/patients/:id', async (req, res) => {
   }
 });
 
-// Update personal information
+// Update personal information endpoint including place field
 app.put('/api/patients/:id/personal', async (req, res) => {
   const { id } = req.params;
-  const { 
+  const {
     original_id,
-    first_name, 
-    dob, 
-    age, 
-    gender, 
-    address, 
+    first_name,
+    dob,
+    age,
+    gender,
+    address,
     phone_number,
-    support_type 
+    support_type,
+    place // Added place field
   } = req.body;
 
   try {
@@ -385,14 +421,15 @@ app.put('/api/patients/:id/personal', async (req, res) => {
     // Check for duplicate details
     const duplicateCheckQuery = `
       SELECT * 
-      FROM patients 
+      FROM patients
       WHERE LOWER(first_name) = LOWER($1)
         AND phone_number = $2
         AND LOWER(address) = LOWER($3)
         AND dob = $4
         AND gender = $5
         AND age = $6
-        AND id != $7
+        AND LOWER(place) = LOWER($7)
+        AND id != $8
     `;
     const duplicateResult = await pool.query(duplicateCheckQuery, [
       first_name,
@@ -401,6 +438,7 @@ app.put('/api/patients/:id/personal', async (req, res) => {
       dob,
       gender,
       age,
+      place,
       id,
     ]);
 
@@ -414,30 +452,74 @@ app.put('/api/patients/:id/personal', async (req, res) => {
     const updateQuery = `
       UPDATE patients SET 
         original_id = COALESCE($1, original_id),
-        first_name = COALESCE($2, first_name), 
-        dob = COALESCE($3, dob), 
-        age = COALESCE($4, age), 
-        gender = COALESCE($5, gender), 
-        address = COALESCE($6, address), 
+        first_name = COALESCE($2, first_name),
+        dob = COALESCE($3, dob),
+        age = COALESCE($4, age),
+        gender = COALESCE($5, gender),
+        address = COALESCE($6, address),
         phone_number = COALESCE($7, phone_number),
-        support_type = COALESCE($8, support_type)
-      WHERE id = $9`;
+        support_type = COALESCE($8, support_type),
+        place = COALESCE($9, place)
+      WHERE id = $10
+      RETURNING *`;
 
-    await pool.query(updateQuery, [
+    const result = await pool.query(updateQuery, [
       original_id,
-      first_name, 
-      dob, 
-      age, 
-      gender, 
-      address, 
+      first_name,
+      dob,
+      age,
+      gender,
+      address,
       phone_number,
-      support_type, 
+      support_type,
+      place,
       id
     ]);
 
-    res.status(200).json({ message: 'Personal information updated successfully' });
+    res.status(200).json({
+      message: 'Personal information updated successfully',
+      patient: result.rows[0]
+    });
   } catch (error) {
     console.error('Error updating personal information:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// New endpoint for updating additional notes
+app.put('/api/patients/:id/notes', async (req, res) => {
+  const { id } = req.params;
+  const { additional_notes } = req.body;
+
+  try {
+    // Check if patient exists
+    const patientResult = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Check if patient is volunteer or other type
+    if (!['volunteer', 'other'].includes(patientResult.rows[0].support_type)) {
+      return res.status(400).json({
+        message: 'Additional notes can only be updated for volunteer or other support types'
+      });
+    }
+
+    // Update additional notes
+    const updateQuery = `
+      UPDATE patients SET 
+        additional_notes = COALESCE($1, additional_notes)
+      WHERE id = $2
+      RETURNING *`;
+
+    const result = await pool.query(updateQuery, [additional_notes, id]);
+
+    res.status(200).json({
+      message: 'Additional notes updated successfully',
+      patient: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating additional notes:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -1248,7 +1330,9 @@ app.post('/api/patients-to-add', async (req, res) => {
     first_name,
     phone_number,
     address,
-    support_type
+    support_type,
+    place,
+    additional_notes
   } = req.body;
 
   try {
@@ -1259,10 +1343,20 @@ app.post('/api/patients-to-add', async (req, res) => {
         phone_number,
         address,
         support_type,
-        initial_treatment_date
-      ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE) 
+        initial_treatment_date,
+        place,
+        additional_notes
+      ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6, $7)
       RETURNING *`,
-      [original_id, first_name, phone_number, address, support_type]
+      [
+        original_id,
+        first_name,
+        phone_number,
+        address,
+        support_type,
+        place || 'Not Specified',
+        additional_notes || null
+      ]
     );
     
     res.json(result.rows[0]);

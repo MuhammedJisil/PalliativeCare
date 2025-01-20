@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UserPlus, Save, ArrowLeft, User, Stethoscope, UserCheck, CheckCircle } from 'lucide-react';
+import { UserPlus, Save, ArrowLeft, User, Stethoscope, UserCheck, CheckCircle, StickyNote, AlertCircle } from 'lucide-react';
 
 const UpdatePatient = () => {
   const { id } = useParams();
@@ -26,7 +26,9 @@ const UpdatePatient = () => {
     proxyName: '',
     relation: '',
     proxyPhoneNumber: '',
-    history: ''
+    history: '',
+    place: '',           // Add new place field
+    additionalNotes: ''  // Add new additional notes field
   });
   const navigate = useNavigate();
 
@@ -65,7 +67,9 @@ const UpdatePatient = () => {
           proxyName: data.medical_proxy?.name || '',
           relation: data.medical_proxy?.relation || '',
           proxyPhoneNumber: data.medical_proxy?.phone_number || '',
-          history: data.medical_history || ''
+          history: data.medical_history || '',
+          place: data.place || '',
+        additionalNotes: data.additional_notes || ''
         });
         setPatient(data);
       } catch (error) {
@@ -87,6 +91,7 @@ const UpdatePatient = () => {
         address: formData.address || null,
         phone_number: formData.phoneNumber || null,
         support_type: formData.supportType || null,
+        place: formData.place || null, // Add place to personal info update
       });
       setSuccess('Personal information updated successfully!');
       setTimeout(() => {
@@ -98,6 +103,24 @@ const UpdatePatient = () => {
       setTimeout(() => setError(null), 3000);
     }
   };
+
+  const handleUpdateNotes = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:5000/api/patients/${id}/notes`, {
+        additional_notes: formData.additionalNotes || null
+      });
+      setSuccess('Additional notes updated successfully!');
+      setTimeout(() => {
+        setSuccess(null);
+        navigate('/admin/patient-management');
+      }, 1000);
+    } catch (error) {
+      setError('Failed to update additional notes');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+  
 
   const handleUpdateMedical = async (e) => {
     e.preventDefault();
@@ -367,6 +390,37 @@ const UpdatePatient = () => {
           </form>
         </>
       );
+    }else if (formData.supportType === 'volunteer' || formData.supportType === 'other') {
+      return (
+        <form onSubmit={handleUpdateNotes} className="mb-8">
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <StickyNote className="h-6 w-6 text-teal-600" />
+                <h2 className="text-xl font-semibold text-gray-700">Additional Notes</h2>
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Update
+              </button>
+            </div>
+  
+            <div>
+              <textarea
+                name="additionalNotes"
+                value={formData.additionalNotes}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                rows="4"
+                placeholder="Enter any additional information"
+              ></textarea>
+            </div>
+          </div>
+        </form>
+      );
     }
     return null;
   };
@@ -514,6 +568,18 @@ const UpdatePatient = () => {
                   />
                 </div>
               </div>
+
+              <div>
+          <label className="block text-gray-600 font-medium mb-2">Place</label>
+          <input
+            type="text"
+            name="place"
+            value={formData.place}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="Enter location or place"
+          />
+        </div>
 
               <div className="mt-4">
                 <label className="block text-gray-600 font-medium mb-2">Address</label>

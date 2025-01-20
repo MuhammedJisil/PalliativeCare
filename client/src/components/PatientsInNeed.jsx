@@ -111,6 +111,9 @@ const PatientsInNeed = () => {
           phone_number: patient.contact_phone_number,
           address: patient.address,
           support_type: patient.support_type,
+          // New fields with default values
+          place: patient.place || 'Not Specified',
+          additional_notes: patient.additional_notes || null
         });
         
         setActivePatients(prev => new Set([...prev, patientId]));
@@ -133,6 +136,7 @@ const PatientsInNeed = () => {
       setError(error.response?.data?.message || 'Failed to update patient status');
     }
   };
+  
 
   
   const filteredPatients = patients.filter((patient) =>

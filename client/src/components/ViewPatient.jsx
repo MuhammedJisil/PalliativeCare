@@ -9,7 +9,8 @@ import {
   Stethoscope, 
   ClipboardList, 
   HeartPulse,
-  Tag
+  MapPin,
+  StickyNote
 } from 'lucide-react';
 import axios from 'axios';
 import { HealthStatusModal, MedicalHistoryModal } from './DetailModal';
@@ -74,6 +75,17 @@ const ViewPatient = () => {
         <Field label="Phone Number" value={patient.phone_number} />
         <Field label="Address" value={patient.address} />
       </InfoSection>
+
+      <InfoSection icon={MapPin} title="Location Details">
+        <Field label="Place" value={patient.place} />
+      </InfoSection>
+
+      <InfoSection icon={StickyNote} title="Additional Information">
+        <Field 
+          label="Notes" 
+          value={patient.additional_notes || 'No additional notes'} 
+        />
+      </InfoSection>
     </>
   );
 
@@ -90,6 +102,10 @@ const ViewPatient = () => {
       <InfoSection icon={Phone} title="Contact Details">
         <Field label="Phone Number" value={patient.phone_number} />
         <Field label="Address" value={patient.address} />
+      </InfoSection>
+
+      <InfoSection icon={MapPin} title="Location Details">
+        <Field label="Place" value={patient.place} />
       </InfoSection>
 
       <InfoSection icon={UserPlus} title="Care Team">
@@ -140,6 +156,7 @@ const ViewPatient = () => {
           </button>
         </div>
       </div>
+
     </>
   );
 
@@ -158,6 +175,7 @@ const ViewPatient = () => {
       );
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
