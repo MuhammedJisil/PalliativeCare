@@ -2207,7 +2207,20 @@ app.delete('/api/emergency-fund/:id', async (req, res) => {
 
 // patient assignment component
 
+const isValidHelperTypeForSupport = (supportType, helperType) => {
+  switch (helperType) {
+    case 'volunteer':
+      return ['volunteer', 'other'].includes(supportType);
+    case 'caregiver':
+    case 'medical_professional':
+      return ['caregiver', 'medical'].includes(supportType);
+    default:
+      return false;
+  }
+};
+
 // Get all assignments with related information
+
 app.get('/api/assignments', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2219,7 +2232,8 @@ app.get('/api/assignments', async (req, res) => {
         a.assigned_date,
         a.status,
         p.first_name as patient_name,
-        CASE 
+        p.support_type as patient_support_type,
+        CASE
           WHEN a.helper_type = 'volunteer' THEN (SELECT name FROM volunteers WHERE id = a.helper_id)
           WHEN a.helper_type = 'caregiver' THEN (SELECT name FROM caregivers WHERE id = a.helper_id)
           WHEN a.helper_type = 'medical_professional' THEN (SELECT name FROM medical_professionals WHERE id = a.helper_id)
@@ -2228,16 +2242,20 @@ app.get('/api/assignments', async (req, res) => {
       JOIN patients p ON a.patient_id = p.id
       ORDER BY a.assigned_date DESC
     `);
-    
+
     const formattedAssignments = result.rows.map(row => ({
       _id: row.id,
-      patient: { _id: row.patient_id, name: row.patient_name },
+      patient: { 
+        _id: row.patient_id, 
+        name: row.patient_name,
+        support_type: row.patient_support_type
+      },
       helper: { _id: row.helper_id, name: row.helper_name },
       helperType: row.helper_type,
       assigned_date: row.assigned_date,
       status: row.status
     }));
-    
+
     res.json(formattedAssignments);
   } catch (error) {
     console.error('Error fetching assignments:', error);
@@ -2248,19 +2266,39 @@ app.get('/api/assignments', async (req, res) => {
 // Create new assignment
 app.post('/api/assignments', async (req, res) => {
   const { patientId, helperId, helperType } = req.body;
-  
+
   try {
+    // First, get the patient's support type
+    const patientResult = await pool.query(
+      'SELECT support_type FROM patients WHERE id = $1',
+      [patientId]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const patientSupportType = patientResult.rows[0].support_type;
+
+    // Validate helper type against support type
+    if (!isValidHelperTypeForSupport(patientSupportType, helperType)) {
+      return res.status(400).json({
+        error: `Invalid assignment: ${helperType} cannot be assigned to a patient with ${patientSupportType} support type`
+      });
+    }
+
+    // If validation passes, create the assignment
     const result = await pool.query(
-      `INSERT INTO assignments (patient_id, helper_id, helper_type) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO assignments (patient_id, helper_id, helper_type)
+       VALUES ($1, $2, $3)
        RETURNING *`,
       [patientId, helperId, helperType]
     );
+    
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating assignment:', error);
-
-    // Check if the error is a duplicate key violation
+    
     if (error.code === '23505') {
       res.status(400).json({ error: 'Assignment already exists for this patient and helper type' });
     } else {
