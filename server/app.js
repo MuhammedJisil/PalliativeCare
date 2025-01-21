@@ -1791,33 +1791,34 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
-// Create a new task
 app.post('/api/tasks', async (req, res) => {
-  const { 
-    title, 
-    description, 
-    category, 
-    priority, 
-    assignedTo, 
-    dueDate, 
-    dueTime 
+  const {
+    title,
+    description,
+    category,
+    priority,
+    assignedTo,
+    assignedMember,
+    dueDate,
+    dueTime
   } = req.body;
 
   try {
     const result = await pool.query(
-      `INSERT INTO tasks 
-      (title, description, category, priority, assigned_to, due_date, due_time, status) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-      RETURNING *`, 
+      `INSERT INTO tasks
+        (title, description, category, priority, assigned_to, assigned_member, due_date, due_time, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *`,
       [
-        title, 
-        description, 
-        category, 
-        priority, 
-        assignedTo || null, 
-        dueDate || null, 
+        title,
+        description,
+        category,
+        priority,
+        assignedTo || null,
+        assignedMember || null,
+        dueDate || null,
         dueTime || null,
-        'pending'  // Explicitly set status
+        'pending'
       ]
     );
     res.status(201).json(result.rows[0]);
@@ -1826,43 +1827,46 @@ app.post('/api/tasks', async (req, res) => {
   }
 });
 
-// Update a task
+// Modified update task route
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
-  const { 
-    title, 
-    description, 
-    category, 
-    priority, 
-    assignedTo, 
-    dueDate, 
+  const {
+    title,
+    description,
+    category,
+    priority,
+    assignedTo,
+    assignedMember,
+    dueDate,
     dueTime,
-    status 
+    status
   } = req.body;
 
   try {
     const result = await pool.query(
-      `UPDATE tasks 
-      SET 
-        title = COALESCE($1, title), 
-        description = COALESCE($2, description), 
-        category = COALESCE($3, category), 
-        priority = COALESCE($4, priority), 
-        assigned_to = COALESCE($5, assigned_to), 
-        due_date = COALESCE($6, due_date), 
-        due_time = COALESCE($7, due_time),
-        status = COALESCE($8, status)
-      WHERE id = $9 
-      RETURNING *`, 
+      `UPDATE tasks
+        SET
+          title = COALESCE($1, title),
+          description = COALESCE($2, description),
+          category = COALESCE($3, category),
+          priority = COALESCE($4, priority),
+          assigned_to = COALESCE($5, assigned_to),
+          assigned_member = COALESCE($6, assigned_member),
+          due_date = COALESCE($7, due_date),
+          due_time = COALESCE($8, due_time),
+          status = COALESCE($9, status)
+        WHERE id = $10
+        RETURNING *`,
       [
-        title, 
-        description, 
-        category, 
-        priority, 
-        assignedTo, 
-        dueDate, 
-        dueTime, 
-        status, 
+        title,
+        description,
+        category,
+        priority,
+        assignedTo,
+        assignedMember,
+        dueDate,
+        dueTime,
+        status,
         id
       ]
     );

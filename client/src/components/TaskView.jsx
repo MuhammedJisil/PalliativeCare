@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, CheckCircle, Circle, ChevronDown, ChevronUp} from 'lucide-react';
+import { Calendar, CheckCircle, Circle, ChevronDown, ChevronUp, Users } from 'lucide-react';
 
 const TaskFilters = ({ dueDateSort, setDueDateSort, priorityFilter, setPriorityFilter, statusFilter, setStatusFilter }) => {
   const selectClass = "w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white text-gray-700";
@@ -46,6 +46,7 @@ const TaskFilters = ({ dueDateSort, setDueDateSort, priorityFilter, setPriorityF
     </div>
   );
 };
+
 const TaskCard = ({ task, toggleTaskStatus, isLoading, expandedTasks, toggleDescription }) => {
   return (
     <div className={`bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${
@@ -114,6 +115,12 @@ const TaskCard = ({ task, toggleTaskStatus, isLoading, expandedTasks, toggleDesc
                 <Calendar className="w-4 h-4 mr-1 flex-shrink-0" />
                 {new Date(task.due_date).toLocaleDateString()}
               </span>
+              {task.assigned_to && (
+                <span className="inline-flex items-center text-sm text-gray-600">
+                  <Users className="w-4 h-4 mr-1 flex-shrink-0" />
+                  {task.assigned_to} {task.assigned_member && `- ${task.assigned_member}`}
+                </span>
+              )}
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 task.priority === 'high' ? 'bg-red-100 text-red-800' :
                 task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :

@@ -5,11 +5,26 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog'
+import TaskModal from './TaskModel';
 
 const taskService = {
   async getTasks() {
     const response = await fetch('http://localhost:5000/api/tasks');
     if (!response.ok) throw new Error('Failed to fetch tasks');
+    return response.json();
+  },
+  async getMembers(role) {
+    const roleEndpoints = {
+      'Volunteer': '/api/volunteers',
+      'Caregiver': '/api/caregivers',
+      'Medical Professional': '/api/medical-professionals'
+    };
+    
+    const endpoint = roleEndpoints[role];
+    if (!endpoint) return [];
+    
+    const response = await fetch(`http://localhost:5000${endpoint}`);
+    if (!response.ok) throw new Error(`Failed to fetch ${role}s`);
     return response.json();
   },
 
@@ -78,15 +93,18 @@ const Tasks = () => {
   const navigate = useNavigate();
   const [showTaskConfirm, setShowTaskConfirm] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState(null);
+  const [availableMembers, setAvailableMembers] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'medical',
     priority: 'medium',
-    assignedTo: '',
+    assignedTo: '', // This will store the role
+    assignedMember: '', // This will store the member name
     dueDate: '',
     dueTime: ''
   });
+
 
   const categories = {
     medical: { label: 'Medical Care', color: 'bg-red-100 text-red-800' },
@@ -115,18 +133,39 @@ const Tasks = () => {
     fetchTasks();
   }, []);
 
+   // New effect to fetch members when role changes
+   useEffect(() => {
+    const fetchMembers = async () => {
+      if (formData.assignedTo) {
+        try {
+          const members = await taskService.getMembers(formData.assignedTo);
+          setAvailableMembers(members);
+        } catch (error) {
+          setError(error.message);
+        }
+      } else {
+        setAvailableMembers([]);
+      }
+    };
+
+    fetchMembers();
+  }, [formData.assignedTo]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setSuccess(editingTask ? 'Task updated successfully!' : 'Task added successfully!');
       const taskData = { ...formData };
+      
       if (editingTask) {
         const updatedTask = await taskService.updateTask(editingTask.id, taskData);
         setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+        setSuccess('Task updated successfully!');
       } else {
         const newTask = await taskService.createTask(taskData);
         setTasks([...tasks, newTask]);
+        setSuccess('Task added successfully!');
       }
+      
       setIsModalOpen(false);
       setEditingTask(null);
       setFormData({
@@ -135,6 +174,7 @@ const Tasks = () => {
         category: 'medical',
         priority: 'medium',
         assignedTo: '',
+        assignedMember: '',
         dueDate: '',
         dueTime: ''
       });
@@ -394,11 +434,11 @@ const Tasks = () => {
                             {priorities[task.priority].label}
                           </span>
                           {task.assigned_to && (
-                            <span className="flex items-center text-xs text-gray-600">
-                              <Users className="w-4 h-4 mr-1" />
-                              {task.assigned_to}
-                            </span>
-                          )}
+                <span className="flex items-center text-xs text-gray-600">
+                  <Users className="w-4 h-4 mr-1" />
+                  {task.assigned_to} {task.assigned_member && `- ${task.assigned_member}`}
+                </span>
+              )}
                           {task.due_date && (
                             <span className="text-xs text-gray-600">
                               Due: {new Date(task.due_date).toLocaleDateString()} {task.due_time}
@@ -413,126 +453,6 @@ const Tasks = () => {
             </div>
           )}
         </div>
-{isModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-      <div className="bg-teal-600 text-white px-6 py-4 rounded-t-lg">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
-            {editingTask ? 'Edit Task' : 'Create New Task'}
-          </h2>
-          <button
-            onClick={() => {
-              setIsModalOpen(false);
-              setEditingTask(null);
-            }}
-            className="text-white hover:text-teal-200 transition-colors"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Title</label>
-          <input
-            className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={formData.title}
-            onChange={(e) => setFormData({...formData, title: e.target.value})}
-            required
-            placeholder="Enter task title"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={formData.description}
-            onChange={(e) => setFormData({...formData, description: e.target.value})}
-            rows={3}
-            placeholder="Enter task description"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select
-              className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              required
-            >
-              {Object.entries(categories).map(([value, { label }]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Priority</label>
-            <select
-              className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={formData.priority}
-              onChange={(e) => setFormData({...formData, priority: e.target.value})}
-              required
-            >
-              {Object.entries(priorities).map(([value, { label }]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-  <select
-    className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-    value={formData.assignedTo}
-    onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-  >
-    <option value="" disabled>Select a role</option>
-    <option value="Volunteer">Volunteer</option>
-    <option value="Caregiver">Caregiver</option>
-    <option value="Medical Professional">Medical Professional</option>
-  </select>
-</div>
-
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Due Date</label>
-            <input
-              type="date"
-              className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={formData.dueDate}
-              onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Due Time</label>
-            <input
-              type="time"
-              className="w-full border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={formData.dueTime}
-              onChange={(e) => setFormData({...formData, dueTime: e.target.value})}
-            />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-full mt-4 transition-colors transform hover:-translate-y-0.5 duration-200 shadow-md hover:shadow-lg"
-        >
-          {editingTask ? 'Update Task' : 'Add Task'}
-        </button>
-      </form>
-    </div>
-  </div>
-)}
           {/* Back Button */}
         <div className="mt-6">
           <button
@@ -551,6 +471,21 @@ const Tasks = () => {
  onConfirm={confirmTaskDelete}
  onCancel={() => setShowTaskConfirm(false)}
 />
+
+{isModalOpen && (
+  <TaskModal
+    isOpen={isModalOpen}
+    onClose={() => {
+      setIsModalOpen(false);
+      setEditingTask(null);
+    }}
+    onSubmit={handleSubmit}
+    editingTask={editingTask}
+    formData={formData}
+    setFormData={setFormData}
+    availableMembers={availableMembers}
+  />
+)}
       <ScrollToBottomButton/>
     </div>
   );

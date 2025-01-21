@@ -176,6 +176,7 @@ const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) =
                   </label>
                   <input
                     type="text"
+                    required
                     name="license_number"
                     value={formData.license_number}
                     onChange={handleChange}

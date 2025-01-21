@@ -361,7 +361,7 @@ const filteredCaregivers = caregivers.filter((caregiver) =>
               <Users className="h-8 w-8 text-teal-600" />
               <Link to="/admin/dashboard" className="text-gray-800">
               <h1 className="text-xl font-semibold tracking-tight text-gray-800">
-                Caregives
+                Caregivers
               </h1>
             </Link>
             </div>
