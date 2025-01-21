@@ -1791,6 +1791,7 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
+// create task route
 app.post('/api/tasks', async (req, res) => {
   const {
     title,
@@ -1827,7 +1828,7 @@ app.post('/api/tasks', async (req, res) => {
   }
 });
 
-// Modified update task route
+//  update task route
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
   const {

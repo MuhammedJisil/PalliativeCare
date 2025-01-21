@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Users, Calendar, Phone, MapPin, FileText, 
-  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle
+  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned
 } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -58,6 +58,8 @@ const AssignmentDetails = ({
     : medicalHistory || { history: 'No medical history available' };
   const safeAssignment = selectedAssignment || {};
 
+  const isVolunteerView = safeAssignment.helper_type === 'volunteer';
+
   const [isEditingHealth, setIsEditingHealth] = useState(false);
   const [editedHealthStatus, setEditedHealthStatus] = useState({
     disease: '',
@@ -70,6 +72,11 @@ const AssignmentDetails = ({
 
   const [isHealthStatusModalOpen, setIsHealthStatusModalOpen] = useState(false);
   const [isMedicalHistoryModalOpen, setIsMedicalHistoryModalOpen] = useState(false);
+
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [additionalNotes, setAdditionalNotes] = useState('');
+  const [isViewingNotes, setIsViewingNotes] = useState(false);
+
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -102,7 +109,6 @@ const AssignmentDetails = ({
       console.error('Error updating health status:', error);
       setError(error.message || 'Failed to update health status');
     } finally {
-      // Clear alerts after 3 seconds
       setTimeout(() => {
         setError(null);
         setSuccess(null);
@@ -136,7 +142,6 @@ const AssignmentDetails = ({
       console.error('Error updating medical history:', error);
       setError(error.message || 'Failed to update medical history');
     } finally {
-      // Clear alerts after 3 seconds
       setTimeout(() => {
         setError(null);
         setSuccess(null);
@@ -144,6 +149,38 @@ const AssignmentDetails = ({
     }
   };
 
+  const handleUpdateNotes = async (e) => {
+    e.preventDefault();
+    try {
+      if (!safeAssignment.patient_id) {
+        setError('Patient ID is missing');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/patients/${safeAssignment.patient_id}/notes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ additional_notes: additionalNotes })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update additional notes');
+      }
+
+      setSuccess('Additional notes updated successfully');
+      onUpdate && onUpdate();
+      setIsEditingNotes(false);
+      setAdditionalNotes('');
+    } catch (error) {
+      console.error('Error updating additional notes:', error);
+      setError(error.message || 'Failed to update additional notes');
+    } finally {
+      setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -180,6 +217,18 @@ const AssignmentDetails = ({
         <div className="prose max-w-none">
           <p className="whitespace-pre-wrap text-gray-900 leading-relaxed">
             {safeMedicalHistory.history || 'No detailed medical history available'}
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isViewingNotes}
+        onClose={() => setIsViewingNotes(false)}
+        title="Additional Notes"
+      >
+        <div className="prose max-w-none">
+          <p className="whitespace-pre-wrap text-gray-900 leading-relaxed">
+            {safePatientData.additional_notes || 'No additional notes available'}
           </p>
         </div>
       </Modal>
@@ -221,142 +270,204 @@ const AssignmentDetails = ({
                   label="Address"
                   value={safePatientData.address}
                 />
+                <Field 
+                  icon={MapPinned} 
+                  label="Place"
+                  value={safePatientData.place}
+                />
               </div>
             </div>
 
-           {/* Health Status Section */}
-<div className="bg-white border border-gray-200 rounded-lg p-3">
-  <div className="flex justify-between items-center mb-3">
-    <div className="flex items-center gap-2">
-      <HeartPulse className="w-4 h-4 text-teal-600" />
-      <h4 className="font-medium text-sm text-teal-700">Health Status</h4>
-    </div>
-    <div className="flex gap-1">
-      <button
-        onClick={() => setIsHealthStatusModalOpen(true)}
-        className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
-      >
-        View
-      </button>
-      <button
-        onClick={() => setIsEditingHealth(true)}
-        className="px-2 py-1 text-xs border border-teal-600 text-teal-600 rounded hover:bg-teal-50"
-      >
-        Add
-      </button>
-    </div>
-  </div>
+            {isVolunteerView ? (
+              // Additional Notes Section for Volunteers
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4 text-teal-600" />
+                    <h4 className="font-medium text-sm text-teal-700">Additional Notes</h4>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setIsViewingNotes(true)}
+                      className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => setIsEditingNotes(true)}
+                      className="px-2 py-1 text-xs border border-teal-600 text-teal-600 rounded hover:bg-teal-50"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
 
-  {isEditingHealth && (
-    <form onSubmit={handleUpdateHealthStatus} className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          type="text"
-          value={editedHealthStatus.disease}
-          onChange={(e) => setEditedHealthStatus(prev => ({
-            ...prev,
-            disease: e.target.value
-          }))}
-          placeholder="Disease"
-          className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
-          
-        />
-        <input
-          type="text"
-          value={editedHealthStatus.medication}
-          onChange={(e) => setEditedHealthStatus(prev => ({
-            ...prev,
-            medication: e.target.value
-          }))}
-          placeholder="Medication"
-          className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
-          
-        />
-      </div>
-      <textarea
-        value={editedHealthStatus.note}
-        onChange={(e) => setEditedHealthStatus(prev => ({
-          ...prev,
-          note: e.target.value
-        }))}
-        placeholder="Notes"
-        className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500 resize-vertical"
-        rows={3}
-      />
-      <div className="flex gap-1">
-        <button
-          type="submit"
-          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsEditingHealth(false)}
-          className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  )}
-</div>
+                {isEditingNotes && (
+                  <form onSubmit={handleUpdateNotes} className="space-y-2">
+                    <textarea
+                      value={additionalNotes}
+                      onChange={(e) => setAdditionalNotes(e.target.value)}
+                      placeholder="Enter additional notes"
+                      className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500 resize-vertical"
+                      rows={4}
+                      required
+                    />
+                    <div className="flex gap-1">
+                      <button
+                        type="submit"
+                        className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingNotes(false);
+                          setAdditionalNotes('');
+                        }}
+                        className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            ) : (
+              // Health Status and Medical History for Non-Volunteers
+              <>
+                {/* Health Status Section */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <HeartPulse className="w-4 h-4 text-teal-600" />
+                      <h4 className="font-medium text-sm text-teal-700">Health Status</h4>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setIsHealthStatusModalOpen(true)}
+                        className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => setIsEditingHealth(true)}
+                        className="px-2 py-1 text-xs border border-teal-600 text-teal-600 rounded hover:bg-teal-50"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
 
+                  {isEditingHealth && (
+                    <form onSubmit={handleUpdateHealthStatus} className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={editedHealthStatus.disease}
+                          onChange={(e) => setEditedHealthStatus(prev => ({
+                            ...prev,
+                            disease: e.target.value
+                          }))}
+                          placeholder="Disease"
+                          className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
+                        />
+                        <input
+                          type="text"
+                          value={editedHealthStatus.medication}
+                          onChange={(e) => setEditedHealthStatus(prev => ({
+                            ...prev,
+                            medication: e.target.value
+                          }))}
+                          placeholder="Medication"
+                          className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500"
+                        />
+                      </div>
+                      <textarea
+                        value={editedHealthStatus.note}
+                        onChange={(e) => setEditedHealthStatus(prev => ({
+                          ...prev,
+                          note: e.target.value
+                        }))}
+                        placeholder="Notes"
+                        className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500 resize-vertical"
+                        rows={3}
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          type="submit"
+                          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingHealth(false)}
+                          className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
 
-            {/* Medical History Section */}
-<div className="bg-white border border-gray-200 rounded-lg p-3">
-  <div className="flex justify-between items-center mb-3">
-    <div className="flex items-center gap-2">
-      <ClipboardList className="w-4 h-4 text-teal-600" />
-      <h4 className="font-medium text-sm text-teal-700">Medical History</h4>
-    </div>
-    <div className="flex gap-1">
-      <button
-        onClick={() => setIsMedicalHistoryModalOpen(true)}
-        className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
-      >
-        View
-      </button>
-      <button
-        onClick={() => setIsEditingMedicalHistory(true)}
-        className="px-2 py-1 text-xs border border-teal-600 text-teal-600 rounded hover:bg-teal-50"
-      >
-        Add
-      </button>
-    </div>
-  </div>
+                {/* Medical History Section */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4 text-teal-600" />
+                      <h4 className="font-medium text-sm text-teal-700">Medical History</h4>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setIsMedicalHistoryModalOpen(true)}
+                        className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => setIsEditingMedicalHistory(true)}
+                        className="px-2 py-1 text-xs border border-teal-600 text-teal-600 rounded hover:bg-teal-50"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
 
-  {isEditingMedicalHistory && (
-    <form onSubmit={handleUpdateMedicalHistory} className="space-y-2">
-      <textarea
-        value={newMedicalHistory.history}
-        onChange={(e) => setNewMedicalHistory({ history: e.target.value })}
-        placeholder="Enter new medical history"
-        className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500 resize-vertical"
-        rows={4}
-        required
-      />
-      <div className="flex gap-1">
-        <button
-          type="submit"
-          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setIsEditingMedicalHistory(false);
-            setNewMedicalHistory({ history: '' });
-          }}
-          className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  )}
-</div>
+                  {isEditingMedicalHistory && (
+                    <form onSubmit={handleUpdateMedicalHistory} className="space-y-2">
+                      <textarea
+                        value={newMedicalHistory.history}
+                        onChange={(e) => setNewMedicalHistory({ history: e.target.value })}
+                        placeholder="Enter new medical history"
+                        className="w-full p-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-teal-500 resize-vertical"
+                        rows={4}
+                        required
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          type="submit"
+                          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingMedicalHistory(false);
+                            setNewMedicalHistory({ history: '' });
+                          }}
+                          className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Helper Information */}
@@ -391,66 +502,66 @@ const AssignmentDetails = ({
                   icon={Clock} 
                   label="Availability"
                   value={safeHelperData.availability}
-                />)}
-                {safeHelperData.specialization && (
-                  <div className="mt-6 p-4 bg-white rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-5 h-5 text-teal-500" />
-                      <h4 className="font-medium text-teal-700">Specialization</h4>
-                    </div>
-                    <p className="text-gray-700 ml-7">{safeHelperData.specialization}</p>
+                />
+              )}
+              {safeHelperData.specialization && (
+                <div className="mt-6 p-4 bg-white rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="w-5 h-5 text-teal-500" />
+                    <h4 className="font-medium text-teal-700">Specialization</h4>
                   </div>
-                )}
-                {safeHelperData.experience && (
-                  <div className="mt-4 p-4 bg-white rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-5 h-5 text-teal-500" />
-                      <h4 className="font-medium text-teal-700">Experience</h4>
-                    </div>
-                    <p className="text-gray-700 ml-7">{safeHelperData.experience}</p>
+                  <p className="text-gray-700 ml-7">{safeHelperData.specialization}</p>
+                </div>
+              )}
+              {safeHelperData.experience && (
+                <div className="mt-4 p-4 bg-white rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-5 h-5 text-teal-500" />
+                    <h4 className="font-medium text-teal-700">Experience</h4>
                   </div>
-                )}
-              </div>
+                  <p className="text-gray-700 ml-7">{safeHelperData.experience}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Alert Overlay */}
-      {(error || success) && (
-        <div 
-          className="fixed inset-0 z-[60] bg-black/10"
-          onClick={() => {
-            setError(null);
-            setSuccess(null);
-          }}
-        >
+        {(error || success) && (
           <div 
-            className="fixed top-4 right-4 z-[70]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[60] bg-black/10"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+            }}
           >
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-                <AlertCircle className="w-6 h-6 text-red-500" />
-                <div>
-                  <p className="font-medium">{error}</p>
+            <div 
+              className="fixed top-4 right-4 z-[70]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-medium">{error}</p>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <div>
-                  <p className="font-medium">{success}</p>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center space-x-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <div>
+                    <p className="font-medium">{success}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      )}
-
+        )}
       </div>
-    );
-  };
-  
-  export default AssignmentDetails;
+    </div>
+  );
+};
+
+export default AssignmentDetails;
