@@ -1,6 +1,36 @@
 import React from 'react';
 import { Calendar, CalendarDays, Clock, ChevronUp, ChevronDown, ListFilter, Calendar as CalendarIcon, User, UserCircle } from 'lucide-react';
 
+// Add time formatting helper functions
+const formatTo12Hour = (timeString) => {
+  try {
+    // Handle different time string formats
+    const [hours, minutes] = timeString.split(':').map(num => parseInt(num));
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  } catch (error) {
+    console.error('Time formatting error:', error);
+    return timeString;
+  }
+};
+
+const formatDateTime = (dateTimeString) => {
+  try {
+    const date = new Date(dateTimeString);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    return `${formattedDate}, ${formattedTime}`;
+  } catch (error) {
+    console.error('DateTime formatting error:', error);
+    return dateTimeString;
+  }
+};
+
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-sm border border-gray-100">
     <CalendarIcon className="w-12 h-12 text-teal-500 mb-4" />
@@ -93,7 +123,7 @@ const ScheduleCard = ({ schedule, expandedNotes, toggleNoteExpansion }) => {
         </div>
         <div className="flex items-center bg-gray-50 p-3 rounded-lg">
           <Clock className="w-4 h-4 mr-2 text-teal-600" />
-          <span className="text-gray-700">{schedule.visit_time}</span>
+          <span className="text-gray-700">{formatTo12Hour(schedule.visit_time)}</span>
         </div>
 
         {schedule.notes && (
@@ -132,7 +162,7 @@ const ScheduleCard = ({ schedule, expandedNotes, toggleNoteExpansion }) => {
         )}
 
         <div className="text-xs text-gray-400 mt-4 pt-4 border-t">
-          Created: {new Date(schedule.created_at).toLocaleString()}
+          Created: {formatDateTime(schedule.created_at)}
         </div>
       </div>
     </div>

@@ -70,13 +70,53 @@ const Modal = ({ isOpen, onClose, children, title }) => {
 const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
     patient_name: '',
+    visit_type: '',
     member_name: '',
     visit_date: '',
     visit_time: '',
-    visit_type: '',
     notes: ''
   });
+  const [members, setMembers] = useState([]);
   const [error, setError] = useState(null);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!formData.visit_type) {
+        setMembers([]);
+        return;
+      }
+
+      setIsLoadingMembers(true);
+      try {
+        let endpoint = '';
+        switch (formData.visit_type) {
+          case 'Volunteer':
+            endpoint = '/api/volunteers';
+            break;
+          case 'Caregiver':
+            endpoint = '/api/caregivers';
+            break;
+          case 'Medical Professional':
+            endpoint = '/api/medical-professionals';
+            break;
+          default:
+            setMembers([]);
+            return;
+        }
+
+        const response = await axios.get(`http://localhost:5000${endpoint}`);
+        setMembers(response.data);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+        setError('Failed to load members list. Please try again.');
+      } finally {
+        setIsLoadingMembers(false);
+      }
+    };
+
+    fetchMembers();
+  }, [formData.visit_type]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,6 +124,14 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
       ...prevState,
       [name]: value
     }));
+
+    // Reset member selection when visit type changes
+    if (name === 'visit_type') {
+      setFormData(prevState => ({
+        ...prevState,
+        member_name: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -96,10 +144,10 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
       // Reset form after successful submission
       setFormData({
         patient_name: '',
+        visit_type: '',
         member_name: '',
         visit_date: '',
         visit_time: '',
-        visit_type: '',
         notes: ''
       });
     } catch (error) {
@@ -167,21 +215,66 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
                 />
               </div>
 
+              {/* Visit Type */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  <span>Visit Type</span>
+                </label>
+                <select
+                  name="visit_type"
+                  value={formData.visit_type}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="">Select Visit Type</option>
+                  <option value="Volunteer">Volunteer</option>
+                  <option value="Caregiver">Caregiver</option>
+                  <option value="Medical Professional">Medical Professional</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
               {/* Member Name */}
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
                   <UserPlus className="h-5 w-5 text-teal-600" />
-                  <span>Member Name (Doctor/Volunteer)</span>
+                  <span>Member Name</span>
                 </label>
-                <input
-                  type="text"
-                  name="member_name"
-                  value={formData.member_name}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="Enter member name"
-                />
+                {formData.visit_type === 'Other' ? (
+                  <input
+                    type="text"
+                    name="member_name"
+                    value={formData.member_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    placeholder="Enter member name"
+                  />
+                ) : (
+                  <select
+                    name="member_name"
+                    value={formData.member_name}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoadingMembers || !formData.visit_type}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
+                  >
+                    <option value="">
+                      {isLoadingMembers 
+                        ? 'Loading members...' 
+                        : formData.visit_type 
+                          ? 'Select member' 
+                          : 'Please select visit type first'}
+                    </option>
+                    {members.map(member => (
+                      <option key={member.id} value={member.name}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Visit Date */}
@@ -214,27 +307,6 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
                   required
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
-              </div>
-
-              {/* Visit Type */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
-                  <span>Visit Type</span>
-                </label>
-                <select
-                  name="visit_type"
-                  value={formData.visit_type}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                >
-                  <option value="">Select Visit Type</option>
-                  <option value="Volunteer">Volunteer</option>
-                  <option value="Caregiver">Caregiver</option>
-                  <option value="Medical Professional">Medical Professional</option>
-                  <option value="Other">Other</option>
-                </select>
               </div>
 
               {/* Notes */}
@@ -290,38 +362,84 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
 const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
     patient_name: '',
+    visit_type: '',
     member_name: '',
     visit_date: '',
     visit_time: '',
-    visit_type: '',
     notes: ''
   });
+  const [members, setMembers] = useState([]);
   const [error, setError] = useState(null);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
 
   useEffect(() => {
     if (schedule) {
-      // Convert the date to yyyy-MM-dd format for the date input
       const formattedDate = schedule.visit_date ? 
         new Date(schedule.visit_date).toISOString().split('T')[0] : '';
 
       setFormData({
         patient_name: schedule.patient_name,
-        member_name: schedule.member_name,
-        visit_date: formattedDate, // Use the formatted date
-        visit_time: schedule.visit_time,
         visit_type: schedule.visit_type,
+        member_name: schedule.member_name,
+        visit_date: formattedDate,
+        visit_time: schedule.visit_time,
         notes: schedule.notes || ''
       });
     }
   }, [schedule]);
 
-  
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!formData.visit_type) {
+        setMembers([]);
+        return;
+      }
+
+      setIsLoadingMembers(true);
+      try {
+        let endpoint = '';
+        switch (formData.visit_type) {
+          case 'Volunteer':
+            endpoint = '/api/volunteers';
+            break;
+          case 'Caregiver':
+            endpoint = '/api/caregivers';
+            break;
+          case 'Medical Professional':
+            endpoint = '/api/medical-professionals';
+            break;
+          default:
+            setMembers([]);
+            return;
+        }
+
+        const response = await axios.get(`http://localhost:5000${endpoint}`);
+        setMembers(response.data);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+        setError('Failed to load members list. Please try again.');
+      } finally {
+        setIsLoadingMembers(false);
+      }
+    };
+
+    fetchMembers();
+  }, [formData.visit_type]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
       [name]: value
     }));
+
+    // Reset member selection when visit type changes
+    if (name === 'visit_type') {
+      setFormData(prevState => ({
+        ...prevState,
+        member_name: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -396,21 +514,66 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
                 />
               </div>
 
+              {/* Visit Type */}
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  <span>Visit Type</span>
+                </label>
+                <select
+                  name="visit_type"
+                  value={formData.visit_type}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="">Select Visit Type</option>
+                  <option value="Volunteer">Volunteer</option>
+                  <option value="Caregiver">Caregiver</option>
+                  <option value="Medical Professional">Medical Professional</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
               {/* Member Name */}
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
                   <UserPlus className="h-5 w-5 text-teal-600" />
-                  <span>Member Name (Doctor/Volunteer)</span>
+                  <span>Member Name</span>
                 </label>
-                <input
-                  type="text"
-                  name="member_name"
-                  value={formData.member_name}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="Enter member name"
-                />
+                {formData.visit_type === 'Other' ? (
+                  <input
+                    type="text"
+                    name="member_name"
+                    value={formData.member_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    placeholder="Enter member name"
+                  />
+                ) : (
+                  <select
+                    name="member_name"
+                    value={formData.member_name}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoadingMembers || !formData.visit_type}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
+                  >
+                    <option value="">
+                      {isLoadingMembers 
+                        ? 'Loading members...' 
+                        : formData.visit_type 
+                          ? 'Select member' 
+                          : 'Please select visit type first'}
+                    </option>
+                    {members.map(member => (
+                      <option key={member.id} value={member.name}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Visit Date */}
@@ -444,28 +607,6 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
-
-              {/* Visit Type */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
-                  <span>Visit Type</span>
-                </label>
-                <select
-                  name="visit_type"
-                  value={formData.visit_type}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                >
-                  <option value="">Select Visit Type</option>                  
-                  <option value="Volunteer">Volunteer</option>
-                  <option value="Caregiver">Caregiver</option>
-                  <option value="Medical Professional">Medical Professional</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
               {/* Notes */}
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
