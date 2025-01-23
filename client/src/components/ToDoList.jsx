@@ -226,6 +226,7 @@ const Tasks = () => {
       category: task.category,
       priority: task.priority,
       assignedTo: task.assigned_to || '',
+      assignedMember: task.assigned_member || '',
       dueDate: formData.dueDate ? formData.dueDate : null, // Set to null if empty
       dueTime: formData.dueTime ? formData.dueTime : null, // Set to null if empty
     });

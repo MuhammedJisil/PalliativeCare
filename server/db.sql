@@ -136,6 +136,7 @@ CREATE TABLE tasks (
   category VARCHAR(50) NOT NULL,
   priority VARCHAR(20) NOT NULL,
   assigned_to VARCHAR(100),
+  assigned_member VARCHAR(255)
   due_date DATE,
   due_time TIME,
    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
@@ -418,3 +419,563 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+
+
+
+
+
+
+
+
+
+
+
+    -- Table: public.admins
+
+-- DROP TABLE IF EXISTS public.admins;
+
+CREATE TABLE IF NOT EXISTS public.admins
+(
+    id integer NOT NULL DEFAULT nextval('admins_id_seq'::regclass),
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT admins_pkey PRIMARY KEY (id),
+    CONSTRAINT admins_username_key UNIQUE (username)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.admins
+    OWNER to postgres;
+
+
+
+    -- Table: public.assignments
+
+-- DROP TABLE IF EXISTS public.assignments;
+
+CREATE TABLE IF NOT EXISTS public.assignments
+(
+    id integer NOT NULL DEFAULT nextval('assignments_id_seq'::regclass),
+    patient_id integer,
+    helper_id integer NOT NULL,
+    helper_type helper_type NOT NULL,
+    assigned_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying(20) COLLATE pg_catalog."default" DEFAULT 'active'::character varying,
+    CONSTRAINT assignments_pkey PRIMARY KEY (id),
+    CONSTRAINT assignments_patient_id_helper_type_key UNIQUE (patient_id, helper_type),
+    CONSTRAINT assignments_patient_id_fkey FOREIGN KEY (patient_id)
+        REFERENCES public.patients (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.assignments
+    OWNER to postgres;
+
+
+
+
+
+    -- Table: public.caregivers
+
+-- DROP TABLE IF EXISTS public.caregivers;
+
+CREATE TABLE IF NOT EXISTS public.caregivers
+(
+    id integer NOT NULL DEFAULT nextval('caregivers_id_seq'::regclass),
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    phone_number character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    address text COLLATE pg_catalog."default" NOT NULL,
+    availability text COLLATE pg_catalog."default",
+    experience text COLLATE pg_catalog."default",
+    certifications text COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    is_new boolean DEFAULT true,
+    last_viewed_at timestamp with time zone,
+    CONSTRAINT caregivers_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.caregivers
+    OWNER to postgres;
+
+-- Trigger: notify_caregiver
+
+-- DROP TRIGGER IF EXISTS notify_caregiver ON public.caregivers;
+
+CREATE OR REPLACE TRIGGER notify_caregiver
+    AFTER INSERT
+    ON public.caregivers
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('caregiver');
+
+-- Trigger: notify_new_caregiver
+
+-- DROP TRIGGER IF EXISTS notify_new_caregiver ON public.caregivers;
+
+CREATE OR REPLACE TRIGGER notify_new_caregiver
+    AFTER INSERT
+    ON public.caregivers
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('caregiver');
+
+
+
+
+-- Table: public.emergency_fund
+
+-- DROP TABLE IF EXISTS public.emergency_fund;
+
+CREATE TABLE IF NOT EXISTS public.emergency_fund
+(
+    id integer NOT NULL DEFAULT nextval('emergency_fund_id_seq'::regclass),
+    photo_url text COLLATE pg_catalog."default",
+    name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    details text COLLATE pg_catalog."default",
+    account_number character varying(20) COLLATE pg_catalog."default",
+    ifsc_code character varying(11) COLLATE pg_catalog."default",
+    upi_id character varying(50) COLLATE pg_catalog."default",
+    qr_code_url text COLLATE pg_catalog."default",
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT emergency_fund_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.emergency_fund
+    OWNER to postgres;
+
+
+
+    -- Table: public.equipment
+
+-- DROP TABLE IF EXISTS public.equipment;
+
+CREATE TABLE IF NOT EXISTS public.equipment
+(
+    id integer NOT NULL DEFAULT nextval('equipment_id_seq'::regclass),
+    name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    type character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    quantity integer NOT NULL DEFAULT 0,
+    status character varying(20) COLLATE pg_catalog."default" DEFAULT 'Available'::character varying,
+    condition character varying(50) COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    image_url character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT equipment_pkey PRIMARY KEY (id),
+    CONSTRAINT equipment_status_check CHECK (status::text = ANY (ARRAY['Available'::character varying, 'In Use'::character varying, 'Under Maintenance'::character varying, 'Out of Service'::character varying]::text[]))
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.equipment
+    OWNER to postgres;
+
+-- Trigger: update_equipment_updated_at
+
+-- DROP TRIGGER IF EXISTS update_equipment_updated_at ON public.equipment;
+
+CREATE OR REPLACE TRIGGER update_equipment_updated_at
+    BEFORE UPDATE 
+    ON public.equipment
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at_column();
+
+
+
+
+
+    -- Table: public.health_status
+
+-- DROP TABLE IF EXISTS public.health_status;
+
+CREATE TABLE IF NOT EXISTS public.health_status
+(
+    id integer NOT NULL DEFAULT nextval('health_status_id_seq'::regclass),
+    patient_id integer,
+    disease character varying(255) COLLATE pg_catalog."default",
+    medication text COLLATE pg_catalog."default",
+    note text COLLATE pg_catalog."default",
+    note_date date,
+    CONSTRAINT health_status_pkey PRIMARY KEY (id),
+    CONSTRAINT unique_patient_health_status UNIQUE (patient_id),
+    CONSTRAINT health_status_patient_id_fkey FOREIGN KEY (patient_id)
+        REFERENCES public.patients (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.health_status
+    OWNER to postgres;
+
+
+
+
+
+    -- Table: public.medical_history
+
+-- DROP TABLE IF EXISTS public.medical_history;
+
+CREATE TABLE IF NOT EXISTS public.medical_history
+(
+    id integer NOT NULL DEFAULT nextval('medical_history_id_seq'::regclass),
+    patient_id integer,
+    history text COLLATE pg_catalog."default",
+    CONSTRAINT medical_history_pkey PRIMARY KEY (id),
+    CONSTRAINT medical_history_patient_id_fkey FOREIGN KEY (patient_id)
+        REFERENCES public.patients (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.medical_history
+    OWNER to postgres;
+-- Index: unique_patient_id
+
+-- DROP INDEX IF EXISTS public.unique_patient_id;
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_patient_id
+    ON public.medical_history USING btree
+    (patient_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+
+
+
+
+    -- Table: public.medical_professionals
+
+-- DROP TABLE IF EXISTS public.medical_professionals;
+
+CREATE TABLE IF NOT EXISTS public.medical_professionals
+(
+    id integer NOT NULL DEFAULT nextval('medical_professionals_id_seq'::regclass),
+    name character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default",
+    phone_number character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    address text COLLATE pg_catalog."default" NOT NULL,
+    availability text COLLATE pg_catalog."default",
+    specialization character varying(100) COLLATE pg_catalog."default",
+    license_number character varying(50) COLLATE pg_catalog."default",
+    experience text COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    is_new boolean DEFAULT true,
+    last_viewed_at timestamp with time zone,
+    CONSTRAINT medical_professionals_pkey PRIMARY KEY (id),
+    CONSTRAINT medical_professionals_license_number_key UNIQUE (license_number)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.medical_professionals
+    OWNER to postgres;
+
+-- Trigger: notify_medical_professional
+
+-- DROP TRIGGER IF EXISTS notify_medical_professional ON public.medical_professionals;
+
+CREATE OR REPLACE TRIGGER notify_medical_professional
+    AFTER INSERT
+    ON public.medical_professionals
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('medical_professional');
+
+-- Trigger: notify_new_medical_professional
+
+-- DROP TRIGGER IF EXISTS notify_new_medical_professional ON public.medical_professionals;
+
+CREATE OR REPLACE TRIGGER notify_new_medical_professional
+    AFTER INSERT
+    ON public.medical_professionals
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('medical_professional');
+
+
+
+
+
+
+    -- Table: public.medical_proxies
+
+-- DROP TABLE IF EXISTS public.medical_proxies;
+
+CREATE TABLE IF NOT EXISTS public.medical_proxies
+(
+    id integer NOT NULL DEFAULT nextval('medical_proxies_id_seq'::regclass),
+    patient_id integer,
+    name character varying(30) COLLATE pg_catalog."default",
+    relation character varying(10) COLLATE pg_catalog."default",
+    phone_number numeric(10,0),
+    CONSTRAINT medical_proxies_pkey PRIMARY KEY (id),
+    CONSTRAINT unique_patient_proxy UNIQUE (patient_id),
+    CONSTRAINT medical_proxies_patient_id_fkey FOREIGN KEY (patient_id)
+        REFERENCES public.patients (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.medical_proxies
+    OWNER to postgres;
+
+
+
+
+
+    -- Table: public.notifications
+
+-- DROP TABLE IF EXISTS public.notifications;
+
+CREATE TABLE IF NOT EXISTS public.notifications
+(
+    id integer NOT NULL DEFAULT nextval('notifications_id_seq'::regclass),
+    entity_type character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    entity_id integer NOT NULL,
+    entity_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    message text COLLATE pg_catalog."default" NOT NULL,
+    is_read boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT notifications_pkey PRIMARY KEY (id),
+    CONSTRAINT unique_notification_entry UNIQUE (entity_type, entity_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.notifications
+    OWNER to postgres;
+
+-- Trigger: update_notifications_updated_at
+
+-- DROP TRIGGER IF EXISTS update_notifications_updated_at ON public.notifications;
+
+CREATE OR REPLACE TRIGGER update_notifications_updated_at
+    BEFORE UPDATE 
+    ON public.notifications
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at_column();
+
+
+
+    -- Table: public.patients
+
+-- DROP TABLE IF EXISTS public.patients;
+
+CREATE TABLE IF NOT EXISTS public.patients
+(
+    id integer NOT NULL DEFAULT nextval('patients_id_seq'::regclass),
+    first_name character varying(30) COLLATE pg_catalog."default",
+    initial_treatment_date date,
+    dob date,
+    age integer,
+    gender character varying(8) COLLATE pg_catalog."default",
+    address text COLLATE pg_catalog."default",
+    phone_number numeric(10,0),
+    doctor character varying(30) COLLATE pg_catalog."default",
+    caregiver character varying(30) COLLATE pg_catalog."default",
+    support_type character varying(50) COLLATE pg_catalog."default",
+    original_id integer,
+    place character varying(100) COLLATE pg_catalog."default" DEFAULT 'Not Specified'::character varying,
+    additional_notes text COLLATE pg_catalog."default",
+    CONSTRAINT patients_pkey PRIMARY KEY (id),
+    CONSTRAINT patients_original_id_fkey FOREIGN KEY (original_id)
+        REFERENCES public.patients_register (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE SET NULL
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.patients
+    OWNER to postgres;
+
+
+
+
+
+    -- Table: public.patients_register
+
+-- DROP TABLE IF EXISTS public.patients_register;
+
+CREATE TABLE IF NOT EXISTS public.patients_register
+(
+    id integer NOT NULL DEFAULT nextval('patients_register_id_seq'::regclass),
+    patient_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    contact_name character varying(255) COLLATE pg_catalog."default",
+    contact_email character varying(255) COLLATE pg_catalog."default",
+    contact_phone_number character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    place character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    address text COLLATE pg_catalog."default" NOT NULL,
+    health_condition text COLLATE pg_catalog."default",
+    care_details text COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    support_type character varying(20) COLLATE pg_catalog."default" NOT NULL DEFAULT 'others'::character varying,
+    is_new boolean DEFAULT true,
+    last_viewed_at timestamp with time zone,
+    CONSTRAINT patients_register_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.patients_register
+    OWNER to postgres;
+
+-- Trigger: notify_new_patient
+
+-- DROP TRIGGER IF EXISTS notify_new_patient ON public.patients_register;
+
+CREATE OR REPLACE TRIGGER notify_new_patient
+    AFTER INSERT
+    ON public.patients_register
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('patient');
+
+-- Trigger: notify_patient
+
+-- DROP TRIGGER IF EXISTS notify_patient ON public.patients_register;
+
+CREATE OR REPLACE TRIGGER notify_patient
+    AFTER INSERT
+    ON public.patients_register
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('patient');
+
+
+
+
+
+    -- Table: public.schedules
+
+-- DROP TABLE IF EXISTS public.schedules;
+
+CREATE TABLE IF NOT EXISTS public.schedules
+(
+    id integer NOT NULL DEFAULT nextval('schedules_id_seq'::regclass),
+    patient_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    member_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    visit_date date NOT NULL,
+    visit_time time without time zone NOT NULL,
+    visit_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    notes text COLLATE pg_catalog."default",
+    CONSTRAINT schedules_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.schedules
+    OWNER to postgres;
+
+
+
+
+    -- Table: public.tasks
+
+-- DROP TABLE IF EXISTS public.tasks;
+
+CREATE TABLE IF NOT EXISTS public.tasks
+(
+    id integer NOT NULL DEFAULT nextval('tasks_id_seq'::regclass),
+    title character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    description text COLLATE pg_catalog."default",
+    category character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    priority character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    assigned_to character varying(100) COLLATE pg_catalog."default",
+    due_date date,
+    due_time time without time zone,
+    status character varying(20) COLLATE pg_catalog."default" DEFAULT 'pending'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    assigned_member character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT tasks_pkey PRIMARY KEY (id),
+    CONSTRAINT tasks_status_check CHECK (status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying]::text[]))
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.tasks
+    OWNER to postgres;
+
+
+
+
+
+
+    -- Table: public.vcm
+
+-- DROP TABLE IF EXISTS public.vcm;
+
+CREATE TABLE IF NOT EXISTS public.vcm
+(
+    id integer NOT NULL DEFAULT nextval('vcm_id_seq'::regclass),
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    password_hash character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT vcm_pkey PRIMARY KEY (id),
+    CONSTRAINT vcm_username_key UNIQUE (username)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.vcm
+    OWNER to postgres;
+
+
+
+
+
+
+
+    -- Table: public.volunteers
+
+-- DROP TABLE IF EXISTS public.volunteers;
+
+CREATE TABLE IF NOT EXISTS public.volunteers
+(
+    id integer NOT NULL DEFAULT nextval('volunteers_id_seq'::regclass),
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    phone_number character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    address text COLLATE pg_catalog."default" NOT NULL,
+    availability text COLLATE pg_catalog."default",
+    skills text COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    is_new boolean DEFAULT true,
+    last_viewed_at timestamp with time zone,
+    CONSTRAINT volunteers_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.volunteers
+    OWNER to postgres;
+
+-- Trigger: notify_new_volunteer
+
+-- DROP TRIGGER IF EXISTS notify_new_volunteer ON public.volunteers;
+
+CREATE OR REPLACE TRIGGER notify_new_volunteer
+    AFTER INSERT
+    ON public.volunteers
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('volunteer');
+
+-- Trigger: notify_volunteer
+
+-- DROP TRIGGER IF EXISTS notify_volunteer ON public.volunteers;
+
+CREATE OR REPLACE TRIGGER notify_volunteer
+    AFTER INSERT
+    ON public.volunteers
+    FOR EACH ROW
+    EXECUTE FUNCTION public.create_notification_on_insert('volunteer');
