@@ -769,7 +769,9 @@ CREATE OR REPLACE TRIGGER update_notifications_updated_at
 
 
 
-    -- Table: public.patients
+
+
+-- Table: public.patients
 
 -- DROP TABLE IF EXISTS public.patients;
 
@@ -789,6 +791,8 @@ CREATE TABLE IF NOT EXISTS public.patients
     original_id integer,
     place character varying(100) COLLATE pg_catalog."default" DEFAULT 'Not Specified'::character varying,
     additional_notes text COLLATE pg_catalog."default",
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    viewed_at timestamp without time zone,
     CONSTRAINT patients_pkey PRIMARY KEY (id),
     CONSTRAINT patients_original_id_fkey FOREIGN KEY (original_id)
         REFERENCES public.patients_register (id) MATCH SIMPLE
@@ -800,6 +804,16 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.patients
     OWNER to postgres;
+
+-- Trigger: patients_created_at_trigger
+
+-- DROP TRIGGER IF EXISTS patients_created_at_trigger ON public.patients;
+
+CREATE OR REPLACE TRIGGER patients_created_at_trigger
+    BEFORE INSERT
+    ON public.patients
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_created_at();
 
 
 

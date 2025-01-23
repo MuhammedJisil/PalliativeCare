@@ -12,7 +12,8 @@ import {
   RefreshCw,
   CheckCircle,
   AlertCircle,
-  Filter
+  Filter,
+  Star
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog'
@@ -37,6 +38,12 @@ const PatientManagement = () => {
   const [deleteId, setDeleteId] = useState(null);
 
  
+  
+  const isNewPatient = (createdAt, viewedAt) => {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    return new Date(createdAt) > threeDaysAgo && !viewedAt;
+  };
 
   useEffect(() => {
     fetchPatients();
@@ -226,11 +233,17 @@ const handleDelete = async (id) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {filteredPatients.map((patient) => (
-            <tr key={patient.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {patient.first_name}
-              </td>
+        {filteredPatients.map((patient) => (
+          <tr key={patient.id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap text-gray-700 flex items-center">
+              {patient.first_name}
+              {isNewPatient(patient.created_at, patient.viewed_at) && (
+  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full flex items-center">
+    <Star size={12} className="mr-1 text-yellow-500" />
+    New
+  </span>
+)}
+            </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end space-x-2">
                   {/* View Button - Desktop */}

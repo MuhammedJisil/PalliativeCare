@@ -211,9 +211,9 @@ app.post('/api/patients', async (req, res) => {
       INSERT INTO patients (
         first_name, initial_treatment_date, dob, age, gender, 
         address, phone_number, support_type, doctor, caregiver, place,
-        additional_notes
+        additional_notes,  created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP) 
       RETURNING id
     `;
     
@@ -371,6 +371,8 @@ app.delete('/api/patients/:id', async (req, res) => {
 app.get('/api/patients/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    await pool.query('UPDATE patients SET viewed_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+
     const patient = await pool.query('SELECT * FROM patients WHERE id = $1', [id]);
 
     if (patient.rows.length === 0) {
