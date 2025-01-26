@@ -146,31 +146,31 @@ const PatientAssignment = () => {
   };
 
   const getHelperDetails = (assignment) => {
-    // First, let's log the data to see what we're working with
-    console.log('Assignment:', assignment);
-    console.log('Helper Type:', assignment.helperType);
-    console.log('Helper ID:', assignment.helperId);
-    
-    let helper;
+    // First, check if helper is directly available in the assignment
+    if (assignment.helper) {
+      return assignment.helper;
+    }
+  
+    let helperList;
     switch (assignment.helperType) {
       case 'volunteer':
-        console.log('Volunteers:', volunteers);
-        helper = volunteers.find(v => v.id === assignment.helperId || v._id === assignment.helperId);
+        helperList = volunteers;
         break;
       case 'caregiver':
-        console.log('Caregivers:', caregivers);
-        helper = caregivers.find(c => c.id === assignment.helperId || c._id === assignment.helperId);
+        helperList = caregivers;
         break;
       case 'medical_professional':
-        console.log('Medical Professionals:', medicalProfessionals);
-        helper = medicalProfessionals.find(m => m.id === assignment.helperId || m._id === assignment.helperId);
+        helperList = medicalProfessionals;
         break;
       default:
-        helper = null;
+        return null;
     }
-    
-    console.log('Found Helper:', helper);
-    return helper;
+  
+    return helperList.find(
+      h => h.id === assignment.helperId || 
+           h._id === assignment.helperId || 
+           h.id === parseInt(assignment.helperId)
+    );
   };
 
   const handleHelperTypeChange = (e) => {

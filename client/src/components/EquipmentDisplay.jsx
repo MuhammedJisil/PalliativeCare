@@ -3,14 +3,13 @@ import { BadgeCheck, Box, Loader, ImageIcon } from 'lucide-react';
 
 const EquipmentCard = ({ item }) => {
   const [imageError, setImageError] = useState(false);
-  
+
   const getImageUrl = (url) => {
     if (!url) return null;
     // Ensure URL does not have double slashes
     return `http://localhost:5000${url.startsWith('/') ? url : `/${url}`}`;
   };
   
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
       <div className="aspect-video relative bg-gray-100">
@@ -64,11 +63,11 @@ const EquipmentDisplay = () => {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   useEffect(() => {
     fetchEquipment();
   }, []);
-
+  
   const fetchEquipment = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/equipment/available');
@@ -84,7 +83,7 @@ const EquipmentDisplay = () => {
       setLoading(false);
     }
   };
-
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -92,11 +91,31 @@ const EquipmentDisplay = () => {
       </div>
     );
   }
-
+  
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>;
   }
-
+  
+  // Added condition for no equipment
+  if (equipment.length === 0) {
+    return (
+      <div className="container mx-auto p-6 text-center">
+        <h2 className="text-2xl font-bold mb-6 text-teal-700 flex items-center justify-center">
+          <Box className="mr-2" />
+          Available Equipment
+        </h2>
+        <div className="bg-gray-100 p-8 rounded-lg">
+          <p className="text-gray-600 text-lg">
+            No equipment is currently available.
+          </p>
+          <p className="text-gray-500 mt-2">
+            Please check back later or contact care management.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6 text-teal-700 flex items-center">

@@ -290,7 +290,7 @@ const AdminDashboard = () => {
       hoverColor: 'hover:bg-gray-50'
     },
     {
-      title: "Patients in Need",
+      title: "Registered Patients",
       description: "Manage and view patients who need support",
       icon: <Activity className="h-8 w-8 text-teal-600" />,
       path: '/admin/patients-in-need',

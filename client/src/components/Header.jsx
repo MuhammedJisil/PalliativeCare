@@ -44,7 +44,7 @@ const Header = () => {
             <div>
               <Link to="/" className="text-gray-800">
                 <h1 className="text-xl font-semibold tracking-tight">
-                  Pain & Palliative Care
+                  Palliative Care Clinic
                 </h1>
                 <p className="text-sm text-teal-600">Pookkottumpadam</p>
               </Link>
