@@ -732,84 +732,148 @@ app.post('/api/register', async (req, res) => {
     // Basic validation
     if (!name || !email || !phone_number) {
       return res.status(400).json({
-        error: 'Name, email, and phone number are required'
+        error: 'Name, email, and phone number are required',
+        field: 'basic_fields'
       });
     }
 
     // Additional validation for medical professionals
     if (userType === 'medical' && !license_number) {
       return res.status(400).json({
-        error: 'License number is required for medical professionals'
+        error: 'License number is required for medical professionals',
+        field: 'license_number'
       });
     }
 
-    let existingEntry;
+    let emailExistsQuery, phoneExistsQuery, licenseExistsQuery;
 
-    // Check for existing entries based on user type
-    if (userType === 'volunteer') {
-      existingEntry = await pool.query(
-        'SELECT 1 FROM volunteers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
-        [name.trim(), email.trim(), phone_number.trim()]
-      );
-    } else if (userType === 'caregiver') {
-      existingEntry = await pool.query(
-        'SELECT 1 FROM caregivers WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3',
-        [name.trim(), email.trim(), phone_number.trim()]
-      );
-    } else if (userType === 'medical') {
-      existingEntry = await pool.query(
-        'SELECT 1 FROM medical_professionals WHERE LOWER(name) = LOWER($1) AND email = $2 OR license_number = $3',
-        [name.trim(), email.trim(), license_number.trim()]
-      );
-    } else {
-      return res.status(400).json({
-        error: 'Invalid user type'
-      });
+    // Detailed existence checks
+    switch (userType) {
+      case 'volunteer':
+        emailExistsQuery = await pool.query(
+          'SELECT 1 FROM volunteers WHERE email = $1', 
+          [email.trim()]
+        );
+        phoneExistsQuery = await pool.query(
+          'SELECT 1 FROM volunteers WHERE phone_number = $1', 
+          [phone_number.trim()]
+        );
+        break;
+
+      case 'caregiver':
+        emailExistsQuery = await pool.query(
+          'SELECT 1 FROM caregivers WHERE email = $1', 
+          [email.trim()]
+        );
+        phoneExistsQuery = await pool.query(
+          'SELECT 1 FROM caregivers WHERE phone_number = $1', 
+          [phone_number.trim()]
+        );
+        break;
+
+      case 'medical':
+        emailExistsQuery = await pool.query(
+          'SELECT 1 FROM medical_professionals WHERE email = $1', 
+          [email.trim()]
+        );
+        phoneExistsQuery = await pool.query(
+          'SELECT 1 FROM medical_professionals WHERE phone_number = $1', 
+          [phone_number.trim()]
+        );
+        licenseExistsQuery = await pool.query(
+          'SELECT 1 FROM medical_professionals WHERE license_number = $1', 
+          [license_number.trim()]
+        );
+        break;
+
+      default:
+        return res.status(400).json({
+          error: 'Invalid user type',
+          field: 'user_type'
+        });
     }
 
-    if (existingEntry && existingEntry.rows.length > 0) {
+    // Check for specific conflicts
+    if (emailExistsQuery.rows.length > 0) {
       return res.status(409).json({
-        error: `A ${userType} with the same details already exists`
+        error: 'Email already exists',
+        field: 'email'
       });
     }
 
-    let result;
+    if (phoneExistsQuery.rows.length > 0) {
+      return res.status(409).json({
+        error: 'Phone number already exists',
+        field: 'phone_number'
+      });
+    }
 
-    // Insert new entry based on user type with is_new flag
-    if (userType === 'volunteer') {
-      result = await pool.query(
-        `INSERT INTO volunteers 
-        (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL) 
-        RETURNING *`,
-        [name.trim(), email.trim(), phone_number.trim(), address, availability, skills, notes]
-      );
-    } else if (userType === 'caregiver') {
-      result = await pool.query(
-        `INSERT INTO caregivers 
-        (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL) 
-        RETURNING *`,
-        [name.trim(), email.trim(), phone_number.trim(), address, availability, experience, certifications, notes]
-      );
-    } else if (userType === 'medical') {
-      result = await pool.query(
-        `INSERT INTO medical_professionals 
-        (name, email, phone_number, address, availability, specialization, license_number, experience, notes, is_new, last_viewed_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NULL) 
-        RETURNING *`,
-        [
-          name.trim(),
-          email.trim(),
-          phone_number.trim(),
-          address,
-          availability,
-          specialization,
-          license_number,
-          experience,
-          notes
-        ]
-      );
+    if (userType === 'medical' && licenseExistsQuery.rows.length > 0) {
+      return res.status(409).json({
+        error: 'License number already exists',
+        field: 'license_number'
+      });
+    }
+
+    // Insert new entry based on user type
+    let result;
+    switch (userType) {
+      case 'volunteer':
+        result = await pool.query(
+          `INSERT INTO volunteers 
+           (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL)
+           RETURNING *`,
+          [
+            name.trim(), 
+            email.trim(), 
+            phone_number.trim(), 
+            address, 
+            availability, 
+            skills, 
+            notes
+          ]
+        );
+        break;
+
+      case 'caregiver':
+        result = await pool.query(
+          `INSERT INTO caregivers 
+           (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL)
+           RETURNING *`,
+          [
+            name.trim(), 
+            email.trim(), 
+            phone_number.trim(), 
+            address, 
+            availability, 
+            experience, 
+            certifications, 
+            notes
+          ]
+        );
+        break;
+
+      case 'medical':
+        result = await pool.query(
+          `INSERT INTO medical_professionals 
+           (name, email, phone_number, address, availability, specialization, license_number, experience, notes, is_new, last_viewed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NULL)
+           RETURNING *`,
+          [
+            name.trim(),
+            email.trim(),
+            phone_number.trim(),
+            address,
+            availability,
+            specialization,
+            license_number,
+            experience,
+            notes
+          ]
+        );
+        break;
     }
 
     res.status(201).json({
@@ -818,16 +882,18 @@ app.post('/api/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Error during registration:', err);
-    
+
     // Handle unique constraint violations
     if (err.code === '23505') {
       return res.status(409).json({
-        error: `A ${userType} with this email or license number already exists`
+        error: `A ${userType} with this email or unique identifier already exists`,
+        field: 'unique_constraint'
       });
     }
-    
+
     res.status(500).json({
-      error: 'Server error'
+      error: 'Server error',
+      field: 'server_error'
     });
   }
 });
@@ -851,37 +917,75 @@ app.post('/api/patients-in-need', async (req, res) => {
   } = req.body;
 
   try {
-    // Check if the patient already exists
-    const existingPatient = await pool.query(
-      'SELECT * FROM patients_register WHERE LOWER(TRIM(patient_name)) = LOWER(TRIM($1)) AND LOWER(TRIM(contact_name)) = LOWER(TRIM($2)) AND TRIM(contact_email) = TRIM($3) AND contact_phone_number = $4',
+    // Separate checks for unique constraints
+    const phoneExistsQuery = await pool.query(
+      'SELECT * FROM patients_register WHERE contact_phone_number = $1',
+      [contact_phone_number]
+    );
+
+    const emailExistsQuery = await pool.query(
+      'SELECT * FROM patients_register WHERE TRIM(contact_email) = TRIM($1)',
+      [contact_email]
+    );
+
+    const fullDetailsExistsQuery = await pool.query(
+      `SELECT * FROM patients_register 
+       WHERE LOWER(TRIM(patient_name)) = LOWER(TRIM($1)) 
+       AND LOWER(TRIM(contact_name)) = LOWER(TRIM($2)) 
+       AND TRIM(contact_email) = TRIM($3) 
+       AND contact_phone_number = $4`,
       [patient_name, contact_name, contact_email, contact_phone_number]
     );
 
-    if (existingPatient.rows.length > 0) {
-      return res.status(409).json({ message: 'Patient with the same details already exists!' });
+    // Error handling for specific unique constraints
+    if (phoneExistsQuery.rows.length > 0) {
+      return res.status(409).json({ 
+        message: 'Phone number already exists',
+        field: 'contact_phone_number'
+      });
+    }
+
+    if (emailExistsQuery.rows.length > 0) {
+      return res.status(409).json({ 
+        message: 'Email already exists',
+        field: 'contact_email'
+      });
+    }
+
+    if (fullDetailsExistsQuery.rows.length > 0) {
+      return res.status(409).json({ 
+        message: 'Patient with the same details already exists',
+        field: 'full_details'
+      });
     }
 
     // Validate required fields based on support_type
     if (support_type === 'medical' && !health_condition) {
-      return res.status(400).json({ message: 'Health condition is required for medical support type' });
+      return res.status(400).json({ 
+        message: 'Health condition is required for medical support type',
+        field: 'health_condition'
+      });
     }
 
     if (support_type === 'caregiver' && !care_details) {
-      return res.status(400).json({ message: 'Care details are required for caregiver support type' });
+      return res.status(400).json({ 
+        message: 'Care details are required for caregiver support type',
+        field: 'care_details'
+      });
     }
 
     // Insert new patient with is_new flag
     const result = await pool.query(
       `INSERT INTO patients_register 
-      (patient_name, contact_name, contact_email, contact_phone_number, place, address, 
-       support_type, health_condition, care_details, notes, is_new, last_viewed_at) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, NULL) 
-      RETURNING *`,
-      [patient_name, contact_name, contact_email, contact_phone_number, place, address, 
+       (patient_name, contact_name, contact_email, contact_phone_number, place, address,
+        support_type, health_condition, care_details, notes, is_new, last_viewed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, NULL)
+       RETURNING *`,
+      [patient_name, contact_name, contact_email, contact_phone_number, place, address,
        support_type, health_condition, care_details, notes]
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Patient in need registered successfully!',
       patient: result.rows[0]
     });
@@ -890,7 +994,6 @@ app.post('/api/patients-in-need', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 
 
 

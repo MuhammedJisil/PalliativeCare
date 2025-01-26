@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle, Stethoscope } from 'lucide-react';
+import PhoneNumberInput from "./PhoneNumberInput";
 
 const VCMregistration = () => {
   const [success, setSuccess] = useState(null);
@@ -49,20 +50,31 @@ const VCMregistration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validate phone number before submission
+  if (formData.phone_number.length !== 10) {
+    setError('Phone number must be exactly 10 digits');
+    return; // Stop submission
+  }
     try {
       const url = 'http://localhost:5000/api/register';
       await axios.post(url, { ...formData, userType: role });
+      
       setSuccess('Registration Successful');
       setTimeout(() => navigate('/'), 1000);
     } catch (error) {
-      console.error(error);
       if (error.response) {
-        if (error.response.status === 409) {
-          setError('A user with the same details already exists. Please try again.');
-        } else if (error.response.status === 400) {
-          setError('Required fields are missing. Please fill out all fields.');
-        } else {
-          setError('Registration failed. Please try again.');
+        switch(error.response.data.field) {
+          case 'email':
+            setError('Email is already registered');
+            break;
+          case 'phone_number':
+            setError('Phone number is already registered');
+            break;
+          case 'license_number':
+            setError('License number is already in use');
+            break;
+          default:
+            setError('Registration failed. Please try again.');
         }
       } else {
         setError('An unexpected error occurred. Please try again later.');
@@ -153,35 +165,10 @@ const VCMregistration = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                    <Phone className="h-5 w-5 text-teal-600" />
-                    <span>Phone Number</span>
-                  </label>
-                  <input
-                    placeholder="Phone number"
-                    maxLength="10"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    type="tel"
-                    name="phone_number"
-                    value={formData.phone_number}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 10) {
-                        handleChange({
-                          ...e,
-                          target: {
-                            name: 'phone_number',
-                            value: value
-                          }
-                        });
-                      }
-                    }}
-                    required
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
+                <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
 
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Heart, User, Mail, Phone, MapPin, Home, AlertCircle, CheckCircle, Stethoscope, Activity, ClipboardList } from 'lucide-react';
+import PhoneNumberInput from './PhoneNumberInput';
 
 const PatientRegistration = () => {
   const [success, setSuccess] = useState(null);
@@ -38,18 +39,38 @@ const PatientRegistration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.contact_phone_number.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       const response = await axios.post('http://localhost:5000/api/patients-in-need', formData);
-
-      if (response.status === 201) {
-        setSuccess('Patient registered successfully!');
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
-      }
+      
+      setSuccess('Patient registered successfully!');
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     } catch (error) {
-      if (error.response && error.response.status === 409) {
-        setError('Patient already exists. Please check the details.');
+      if (error.response) {
+        switch(error.response.data.field) {
+          case 'contact_phone_number':
+            setError('Phone number is already registered');
+            break;
+          case 'contact_email':
+            setError('Email is already registered');
+            break;
+          case 'full_details':
+            setError('Patient with these exact details already exists');
+            break;
+          case 'health_condition':
+            setError('Health condition is required for medical support');
+            break;
+          case 'care_details':
+            setError('Care details are required for caregiver support');
+            break;
+          default:
+            setError('Registration failed. Please try again.');
+        }
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -112,34 +133,10 @@ const PatientRegistration = () => {
                 />
               </div>
 
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Phone className="h-5 w-5 text-teal-600" />
-                  <span>Contact Phone Number</span>
-                </label>
-                <input
-                  maxLength="10"
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                  type="tel"
-                  name="contact_phone_number"
-                  value={formData.contact_phone_number}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    if (value.length <= 10) {
-                      handleChange({
-                        ...e,
-                        target: {
-                          name: 'contact_phone_number',
-                          value: value
-                        }
-                      });
-                    }
-                  }}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
+              <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
 
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
