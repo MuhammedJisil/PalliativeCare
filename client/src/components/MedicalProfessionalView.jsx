@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Mail, Phone, MapPin, X, Calendar, Star, Clock, Award, FileText, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, Loader2, Stethoscope } from 'lucide-react';
+import PhoneNumberInput from './PhoneNumberInput';
+import LicenseNumberInput from './LicenceNumberInput';
+import ErrorNotification from './ErrorNotification';
 
 // update medical professional component
 const UpdateMedicalProfessionalModal = ({ 
@@ -46,8 +49,22 @@ const UpdateMedicalProfessionalModal = ({
       });
     };
   
+    const [error, setError] = useState(null);
+
     const handleSubmit = async (e) => {
       e.preventDefault();
+      // Validate phone number before submission
+      if (formData.phone_number.length !== 10) {
+        setError('Phone number must be exactly 10 digits');
+        return; // Stop submission
+      }
+ 
+      // Validate license number before submission
+     const licenseRegex = /^[A-Z]{2,3}\d{6,10}$/;
+     if (formData.license_number && !licenseRegex.test(formData.license_number)) {
+       setError('Invalid license number format.');
+       return; // Stop submission
+     }
       try {
         const response = await axios.put(`http://localhost:5000/api/medical-professionals/${professionalId}`, formData);
         onProfessionalUpdated(response.data);
@@ -115,35 +132,11 @@ const UpdateMedicalProfessionalModal = ({
                   />
                 </div>
   
-                <div>
-                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                    <Phone className="h-5 w-5 text-teal-600" />
-                    <span>Phone Number</span>
-                  </label>
-                  <input
-                    placeholder="Enter 10 digit number"
-                    maxLength="10"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    type="tel"
-                    name="phone_number"
-                    value={formData.phone_number}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 10) {
-                        handleChange({
-                          ...e,
-                          target: {
-                            name: 'phone_number',
-                            value: value
-                          }
-                        });
-                      }
-                    }}
-                    required
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
+                {/* Phone Number Input */}
+              <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
   
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -160,20 +153,11 @@ const UpdateMedicalProfessionalModal = ({
                   ></textarea>
                 </div>
   
-                <div>
-                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                    <Award className="h-5 w-5 text-teal-600" />
-                    <span>License Number</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="license_number"
-                    value={formData.license_number}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
+                <LicenseNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
+  
   
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -250,6 +234,8 @@ const UpdateMedicalProfessionalModal = ({
             </div>
           </div>
         </div>
+        {/* Error component */}
+      <ErrorNotification error={error} onClose={() => setError(null)} />
       </div>
     );
   };

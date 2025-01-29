@@ -19,6 +19,8 @@ import {
   Heart, 
   CheckCircle
 } from 'lucide-react';
+import PhoneNumberInput from './PhoneNumberInput';
+import ErrorNotification from './ErrorNotification';
 
 const UpdateCaregiverModal = ({ 
   isOpen, 
@@ -61,8 +63,15 @@ const UpdateCaregiverModal = ({
     });
   };
 
+   const [error, setError] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+     // Validate phone number before submission
+     if (formData.phone_number.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       const url = `http://localhost:5000/api/caregivers/${caregiverId}`;
       const response = await axios.put(url, formData);
@@ -73,7 +82,7 @@ const UpdateCaregiverModal = ({
 
     } catch (error) {
       console.error('Error updating caregiver:', error);
-      alert('Failed to update caregiver. Please try again.');
+      setError('Failed to update caregiver. Please try again.');
     }
   };
 
@@ -152,36 +161,11 @@ const UpdateCaregiverModal = ({
                 />
               </div>
 
-              {/* Phone Number Input */}
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Phone className="h-5 w-5 text-teal-600" />
-                  <span>Phone Number</span>
-                </label>
-                <input
-                   placeholder="Enter 10 digit number"
-                   maxLength="10"
-                   pattern="[0-9]*"
-                   inputMode="numeric"
-                  type="tel"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                    if (value.length <= 10) { // Limit to 10 digits
-                      handleChange({
-                        ...e,
-                        target: {
-                          name: 'phone_number',
-                          value: value
-                        }
-                      });
-                    }
-                  }}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
+             {/* Phone Number Input */}
+             <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
 
               {/* Address Input */}
               <div>
@@ -279,6 +263,8 @@ const UpdateCaregiverModal = ({
           </div>
         </div>
       </div>
+      {/* Error component */}
+      <ErrorNotification error={error} onClose={() => setError(null)} />
     </div>
   );
 };

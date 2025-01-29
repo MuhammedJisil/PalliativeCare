@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle, Stethoscope } from 'lucide-react';
 import PhoneNumberInput from "./PhoneNumberInput";
+import LicenseNumberInput from './LicenceNumberInput';
+
 
 const VCMregistration = () => {
   const [success, setSuccess] = useState(null);
@@ -50,11 +52,20 @@ const VCMregistration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     // Validate phone number before submission
-  if (formData.phone_number.length !== 10) {
-    setError('Phone number must be exactly 10 digits');
-    return; // Stop submission
-  }
+    if (formData.phone_number.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
+  
+    // Validate license number before submission
+    const licenseRegex = /^[A-Z]{2,3}\d{6,10}$/;
+    if (formData.license_number && !licenseRegex.test(formData.license_number)) {
+      setError('Invalid license number format.');
+      return; // Stop submission
+    }
+  
     try {
       const url = 'http://localhost:5000/api/register';
       await axios.post(url, { ...formData, userType: role });
@@ -272,21 +283,10 @@ const VCMregistration = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                        <Award className="h-5 w-5 text-teal-600" />
-                        <span>License Number</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="license_number"
-                        value={formData.license_number}
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        placeholder="Enter your medical license number"
-                      />
-                    </div>
+                    <LicenseNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
 
                     <div>
                       <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">

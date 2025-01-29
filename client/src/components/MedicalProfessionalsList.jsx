@@ -5,6 +5,8 @@ import { Users, UserPlus, RefreshCw, Search, Heart, Eye, Trash2, ArrowLeft, X, U
 import ConfirmDialog from './ConfrmDialog';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ErrorNotification from './ErrorNotification';
+import PhoneNumberInput from './PhoneNumberInput';
+import LicenseNumberInput from './LicenceNumberInput';
 
 const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) => {
     const [formData, setFormData] = useState({
@@ -30,6 +32,18 @@ const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) =
   
     const handleSubmit = async (e) => {
       e.preventDefault();
+      // Validate phone number before submission
+      if (formData.phone_number.length !== 10) {
+       setError('Phone number must be exactly 10 digits');
+       return; // Stop submission
+     }
+
+     // Validate license number before submission
+    const licenseRegex = /^[A-Z]{2,3}\d{6,10}$/;
+    if (formData.license_number && !licenseRegex.test(formData.license_number)) {
+      setError('Invalid license number format.');
+      return; // Stop submission
+    }
       try {
         const response = await axios.post('http://localhost:5000/api/medical-professionals', {
           ...formData,
@@ -125,35 +139,11 @@ const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) =
                   />
                 </div>
   
-                <div>
-                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                    <Phone className="h-5 w-5 text-teal-600" />
-                    <span>Phone Number</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone_number"
-                    placeholder="Enter 10 digit number"
-                    maxLength="10"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    required
-                    value={formData.phone_number}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 10) {
-                        handleChange({
-                          ...e,
-                          target: {
-                            name: 'phone_number',
-                            value: value
-                          }
-                        });
-                      }
-                    }}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
+                {/* Phone Number Input */}
+              <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
   
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -169,20 +159,10 @@ const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) =
                   />
                 </div>
   
-                <div>
-                  <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                    <FileText className="h-5 w-5 text-teal-600" />
-                    <span>License Number</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    name="license_number"
-                    value={formData.license_number}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
+                <LicenseNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
   
                 <div>
                   <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">

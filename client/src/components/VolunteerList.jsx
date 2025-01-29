@@ -23,6 +23,7 @@ import {
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ErrorNotification from './ErrorNotification';
 import ConfirmDialog from './ConfrmDialog';
+import PhoneNumberInput from './PhoneNumberInput';
 
 // AddVolunteerModal Component
 const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
@@ -47,6 +48,11 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+     // Validate phone number before submission
+     if (formData.phone_number.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       const url = 'http://localhost:5000/api/volunteers';
       const response = await axios.post(url, { 
@@ -156,35 +162,10 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
                 />
               </div>
 
-              <div>
-                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                  <Phone className="h-5 w-5 text-teal-600" />
-                  <span>Phone Number</span>
-                </label>
-                <input
-                  placeholder="Enter 10 digit number"
-                  maxLength="10"
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                  type="tel"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                    if (value.length <= 10) { // Limit to 10 digits
-                      handleChange({
-                        ...e,
-                        target: {
-                          name: 'phone_number',
-                          value: value
-                        }
-                      });
-                    }
-                  }}
-                  required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
+              <PhoneNumberInput 
+    formData={formData} 
+    handleChange={handleChange} 
+  />
 
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
