@@ -10,7 +10,8 @@ import {
   ClipboardList, 
   HeartPulse,
   MapPin,
-  StickyNote
+  StickyNote,
+  ExternalLink
 } from 'lucide-react';
 import axios from 'axios';
 import { HealthStatusModal, MedicalHistoryModal } from './DetailModal';
@@ -43,6 +44,28 @@ const ViewPatient = () => {
     );
   }
 
+  const PlaceField = ({ value }) => {
+    if (!value) return <p className="text-gray-900">N/A</p>;
+
+    const [placeName, placeLink] = value.split('|');
+
+    if (placeLink) {
+      return (
+        <a 
+          href={placeLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-900 hover:text-teal-600 inline-flex items-center gap-1"
+        >
+          {placeName}
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      );
+    }
+
+    return <p className="text-gray-900">{placeName}</p>;
+  };
+
   const InfoSection = ({ icon: Icon, title, children }) => (
     <div className="bg-white rounded-lg shadow-sm p-6 w-full">
       <div className="mb-4">
@@ -55,12 +78,26 @@ const ViewPatient = () => {
     </div>
   );
 
-  const Field = ({ label, value }) => (
+  const Field = ({ label, value, isPlace }) => (
     <div className="mb-2">
       <span className="text-sm font-medium text-gray-500">{label}</span>
-      <p className="text-gray-900">{value || 'N/A'}</p>
+      {isPlace ? (
+        <PlaceField value={value} />
+      ) : (
+        <p className="text-gray-900">{value || 'N/A'}</p>
+      )}
     </div>
   );
+ // Update the Location Details section in both renderBasicInfo and renderFullInfo
+ const LocationSection = () => (
+  <InfoSection icon={MapPin} title="Location Details">
+    <Field 
+      label="Place: " 
+      value={patient.place} 
+      isPlace={true}
+    />
+  </InfoSection>
+);
 
   const renderBasicInfo = () => (
     <>
@@ -76,9 +113,7 @@ const ViewPatient = () => {
         <Field label="Address" value={patient.address} />
       </InfoSection>
 
-      <InfoSection icon={MapPin} title="Location Details">
-        <Field label="Place" value={patient.place} />
-      </InfoSection>
+      <LocationSection />
 
       <InfoSection icon={StickyNote} title="Additional Information">
         <Field 
@@ -104,9 +139,7 @@ const ViewPatient = () => {
         <Field label="Address" value={patient.address} />
       </InfoSection>
 
-      <InfoSection icon={MapPin} title="Location Details">
-        <Field label="Place" value={patient.place} />
-      </InfoSection>
+      <LocationSection />
 
       <InfoSection icon={UserPlus} title="Care Team">
         <Field label="Doctor" value={patient.doctor} />

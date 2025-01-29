@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, User, Stethoscope, UserCheck, LayoutList, ArrowLeft, CheckCircle, AlertCircle, StickyNote } from 'lucide-react';
+import { UserPlus, User, MapPin, Stethoscope, UserCheck, LayoutList, ArrowLeft, CheckCircle, AlertCircle, StickyNote } from 'lucide-react';
 
 const AddPatient = () => {
   const [success, setSuccess] = useState(null);
@@ -26,9 +26,31 @@ const AddPatient = () => {
     proxyPhoneNumber: '',
     history: '',
     place: '',
+    placeLink: '',
     additionalNotes: ''
   });
 
+
+  const handlePlaceChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+
+   // When component mounts or place data is loaded
+   useEffect(() => {
+    if (formData.place && formData.place.includes('|')) {
+      const [placeName, link] = formData.place.split('|');
+      setFormData(prev => ({
+        ...prev,
+        place: placeName,
+        placeLink: link || ''
+      }));
+    }
+  }, []);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -41,6 +63,10 @@ const AddPatient = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.phoneNumber.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       const patientData = {
         first_name: formData.firstName,
@@ -50,7 +76,9 @@ const AddPatient = () => {
         gender: formData.gender || null,
         address: formData.address || null,
         phone_number: formData.phoneNumber || null,
-        place: formData.place || null
+        place: formData.placeLink 
+        ? `${formData.place}|${formData.placeLink}`.trim()
+        : formData.place || null,
       };
 
       if (formData.supportType === 'medical' || formData.supportType === 'caregiver') {
@@ -415,23 +443,38 @@ const AddPatient = () => {
                   maxLength="10"
                   pattern="[0-9]*"
                   inputMode="numeric"
-                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-gray-600 font-medium mb-2">Place</label>
-              <input
-                type="text"
-                name="place"
-                value={formData.place}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="Enter location or place"
-              />
-            </div>
+            <div className="mt-4 space-y-4">
+      <label className="block text-gray-600 font-medium mb-2">Place</label>
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <MapPin className="w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            name="place"
+            value={formData.place}
+            onChange={handlePlaceChange}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="Enter location or place"
+          />
+        </div>
+        
+        <div className="pl-7">
+          <input
+            type="url"
+            name="placeLink"
+            value={formData.placeLink}
+            onChange={handlePlaceChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="Add location link (optional)"
+          />
+        </div>
+      </div>
+    </div>
             
             <div className="mt-4">
               <label className="block text-gray-600 font-medium mb-2">Address</label>

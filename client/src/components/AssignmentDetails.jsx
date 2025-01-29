@@ -31,15 +31,44 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-const Field = ({ icon: Icon, label, value }) => (
-  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50">
-    <Icon className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
-    <div className="flex-1">
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="text-gray-900">{value || 'N/A'}</p>
+// Update the Field component to handle place links
+const Field = ({ icon: Icon, label, value, isPlace = false }) => {
+  if (isPlace && value) {
+    // Split the place value if it contains the separator
+    const [placeName, placeLink] = value.includes('|') ? value.split('|') : [value, ''];
+    
+    return (
+      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50">
+        <Icon className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-500">{label}</p>
+          {placeLink ? (
+            <a 
+              href={placeLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-teal-600 hover:text-teal-700 hover:underline cursor-pointer"
+            >
+              {placeName || 'View Location'}
+            </a>
+          ) : (
+            <p className="text-gray-900">{placeName || 'N/A'}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50">
+      <Icon className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-500">{label}</p>
+        <p className="text-gray-900">{value || 'N/A'}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AssignmentDetails = ({
   selectedAssignment,
@@ -271,10 +300,11 @@ const AssignmentDetails = ({
                   value={safePatientData.address}
                 />
                 <Field 
-                  icon={MapPinned} 
-                  label="Place"
-                  value={safePatientData.place}
-                />
+  icon={MapPinned} 
+  label="Place"
+  value={safePatientData.place}
+  isPlace={true}
+/>
               </div>
             </div>
 

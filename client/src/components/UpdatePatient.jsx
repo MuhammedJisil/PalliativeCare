@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UserPlus, Save, ArrowLeft, User, Stethoscope, UserCheck, CheckCircle, StickyNote, AlertCircle } from 'lucide-react';
+import { UserPlus, Save, ArrowLeft, MapPin,  User, Stethoscope, UserCheck, CheckCircle, StickyNote, AlertCircle } from 'lucide-react';
 
 const UpdatePatient = () => {
   const { id } = useParams();
@@ -27,9 +27,32 @@ const UpdatePatient = () => {
     relation: '',
     proxyPhoneNumber: '',
     history: '',
-    place: '',           // Add new place field
+    place: '',   // Add new place field
+    placeLink: '',        
     additionalNotes: ''  // Add new additional notes field
   });
+
+const handlePlaceChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+
+   // When component mounts or place data is loaded
+   useEffect(() => {
+    if (formData.place && formData.place.includes('|')) {
+      const [placeName, link] = formData.place.split('|');
+      setFormData(prev => ({
+        ...prev,
+        place: placeName,
+        placeLink: link || ''
+      }));
+    }
+  }, []);
+
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
@@ -49,6 +72,16 @@ const UpdatePatient = () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/patients/${id}`);
         const data = response.data;
+
+        // Split place data if it contains a separator
+        let placeValue = '';
+        let placeLinkValue = '';
+        
+        if (data.place && data.place.includes('|')) {
+          [placeValue, placeLinkValue] = data.place.split('|');
+        } else {
+          placeValue = data.place || '';
+        }
         setFormData({
           firstName: data.first_name,
           initialTreatmentDate: formatDate(data.initial_treatment_date),
@@ -68,7 +101,8 @@ const UpdatePatient = () => {
           relation: data.medical_proxy?.relation || '',
           proxyPhoneNumber: data.medical_proxy?.phone_number || '',
           history: data.medical_history || '',
-          place: data.place || '',
+          place: placeValue,
+          placeLink: placeLinkValue,
         additionalNotes: data.additional_notes || ''
         });
         setPatient(data);
@@ -82,6 +116,10 @@ const UpdatePatient = () => {
 
   const handleUpdatePersonal = async (e) => {
     e.preventDefault();
+    if (formData.phoneNumber.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       await axios.put(`http://localhost:5000/api/patients/${id}/personal`, {
         first_name: formData.firstName,
@@ -91,7 +129,9 @@ const UpdatePatient = () => {
         address: formData.address || null,
         phone_number: formData.phoneNumber || null,
         support_type: formData.supportType || null,
-        place: formData.place || null, // Add place to personal info update
+        place: formData.placeLink 
+        ? `${formData.place}|${formData.placeLink}`.trim()
+        : formData.place || null, // Add place to personal info update
       });
       setSuccess('Personal information updated successfully!');
       setTimeout(() => {
@@ -149,6 +189,10 @@ const UpdatePatient = () => {
 
   const handleUpdateProxy = async (e) => {
     e.preventDefault();
+    if (formData.proxyPhoneNumber.length !== 10) {
+      setError('Proxy phone number must be exactly 10 digits');
+      return; // Stop submission
+    }
     try {
       await axios.put(`http://localhost:5000/api/patients/${id}/proxy`, {
         medical_proxy: {
@@ -184,6 +228,36 @@ const UpdatePatient = () => {
       setTimeout(() => setError(null), 3000);
     }
   };
+
+  const renderPlaceInputs = () => (
+    <div className="mt-4 space-y-4">
+      <label className="block text-gray-600 font-medium mb-2">Place</label>
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <MapPin className="w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            name="place"
+            value={formData.place}
+            onChange={handleInputChange}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="Enter location or place"
+          />
+        </div>
+        
+        <div className="pl-7">
+          <input
+            type="url"
+            name="placeLink"
+            value={formData.placeLink}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="Add location link (optional)"
+          />
+        </div>
+      </div>
+    </div>
+  );
 
   const renderSections = () => {
     if (formData.supportType === 'medical' || formData.supportType === 'caregiver') {
@@ -569,17 +643,7 @@ const UpdatePatient = () => {
                 </div>
               </div>
 
-              <div>
-          <label className="block text-gray-600 font-medium mb-2">Place</label>
-          <input
-            type="text"
-            name="place"
-            value={formData.place}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-            placeholder="Enter location or place"
-          />
-        </div>
+              {renderPlaceInputs()}
 
               <div className="mt-4">
                 <label className="block text-gray-600 font-medium mb-2">Address</label>
