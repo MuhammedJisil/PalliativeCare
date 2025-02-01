@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Users, Calendar, Phone, MapPin, FileText, 
-  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned
+  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned, IdCard
 } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -284,6 +284,11 @@ const AssignmentDetails = ({
                   label="Name"
                   value={`${safePatientData.first_name || ''} ${safePatientData.last_name || ''}`.trim() || 'N/A'}
                 />
+                 <Field                    
+        icon={IdCard}                    
+        label="Register Number"                   
+        value={safePatientData.register_number || 'N/A'}                 
+      />   
                 <Field 
                   icon={Calendar} 
                   label="Age"

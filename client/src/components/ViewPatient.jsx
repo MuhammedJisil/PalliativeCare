@@ -227,11 +227,11 @@ const ViewPatient = () => {
               <User className="h-8 w-8 text-teal-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {patient.first_name}
-              </h1>
-              <p className="text-gray-500">Patient ID: {id}</p>
-            </div>
+  <h1 className="text-2xl font-bold text-gray-900">
+    {patient.first_name}
+  </h1>
+  <p className="text-gray-500">Register Number: {patient.register_number}</p>
+</div>
           </div>
 
           {renderContent()}

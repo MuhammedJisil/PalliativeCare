@@ -36,6 +36,8 @@ const PatientManagement = () => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
  
   
@@ -48,6 +50,31 @@ const PatientManagement = () => {
   useEffect(() => {
     fetchPatients();
   }, []);
+
+   // Debounced search effect
+   useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (searchQuery) {
+        performSearch();
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  const performSearch = async () => {
+    setIsSearching(true);
+    try {
+      const response = await axios.get(`http://localhost:5000/patients?search=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error('Error during search:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const fetchPatients = async () => {
     setIsLoading(true);
@@ -89,11 +116,9 @@ const handleDelete = async (id) => {
  };
 
  
- // Filter patients based on both search query and support type
- const filteredPatients = patients.filter((patient) => {
-  const matchesSearch = patient.first_name.toLowerCase().includes(searchQuery.toLowerCase());
+ const filteredPatients = (searchQuery ? searchResults : patients).filter((patient) => {
   const matchesSupportType = supportTypeFilter === '' || patient.support_type === supportTypeFilter;
-  return matchesSearch && matchesSupportType;
+  return matchesSupportType;
 });
 
  
@@ -138,17 +163,22 @@ const handleDelete = async (id) => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
          {/* Search and Filter Section */}
-         <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
+        <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
           {/* Search Bar */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search patients..."
+              placeholder="Search by name, register number, or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <RefreshCw className="animate-spin h-4 w-4 text-teal-500" />
+              </div>
+            )}
           </div>
         {/* Support Type Filter */}
         <div className="relative min-w-[200px]">
