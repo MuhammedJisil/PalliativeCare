@@ -15,7 +15,8 @@ import {
   Bell,
   X,
   CheckCircle,
-  Trash2
+  Trash2,
+  FileEdit
 } from 'lucide-react';
 import axios from 'axios';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -292,7 +293,7 @@ const AdminDashboard = () => {
     {
       title: "Registered Patients",
       description: "Manage and view patients who need support",
-      icon: <Activity className="h-8 w-8 text-teal-600" />,
+      icon: <FileEdit className="h-8 w-8 text-teal-600" />,
       path: '/admin/patients-in-need',
       entityType: 'patient',
       bgColor: 'bg-white',
@@ -335,6 +336,14 @@ const AdminDashboard = () => {
     description: "Assign patients to volunteers,caregivers and medical professionals",
     icon: <UserPlus className="h-8 w-8 text-teal-600" />,
     path: '/admin/patient-assignment',
+    bgColor: 'bg-white',
+    hoverColor: 'hover:bg-gray-50'
+  },
+  {
+    title: "Patient Statistics",
+  description: "View and manage detailed patient health metrics",
+  icon: <Activity className="h-8 w-8 text-teal-600" />,
+    path: '/admin/statistics',
     bgColor: 'bg-white',
     hoverColor: 'hover:bg-gray-50'
   },

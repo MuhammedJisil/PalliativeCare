@@ -29,6 +29,7 @@ import VCMDashboard from './components/VCMDashboard';
 import EquipmentList from './components/EquipmentList';
 import EquipmentView from './components/EquipmentView';
 import EquipmentDisplay from './components/EquipmentDisplay';
+import PatientStatistics from './components/PatientStatistics';
 
 
 
@@ -67,6 +68,7 @@ const App = () => {
           <Route path="/admin/equipments" element={<EquipmentList/>} />
           <Route path="/admin/equipments/view/:id" element={<EquipmentView />} />
           <Route path="/equipment-display" element={<EquipmentDisplay />} />
+          <Route path="admin/statistics" element={<PatientStatistics />} />
           
         </Routes>
       </main>

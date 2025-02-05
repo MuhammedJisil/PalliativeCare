@@ -3180,6 +3180,100 @@ app.delete('/api/notifications/:id', async (req, res) => {
   }
 });
 
+
+
+// Fetch the single row
+app.get("/api/statistics", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM patient_statistics WHERE id = 1");
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// Update the single row
+app.put("/api/statistics", async (req, res) => {
+  try {
+    const {
+      date,
+      total_patients_cumulative,
+      total_patients_current_month,
+      home_care_patients,
+      dropout_patients,
+      physiotherapy_patients,
+      psychiatric_patients,
+      psychiatric_dropout_patients,
+      psychiatric_transfer_out,
+      transfer_out_patients,
+      care_comprises,
+      active_psychiatric_patients,
+      cancer_patients,
+      peripheral_vascular_disease,
+      chronic_kidney_disease,
+      cerebrovascular_accident,
+      paraplegia_patients,
+      other_patients,
+      total_deaths_cumulative,
+      patients_above_80,
+      patients_below_18,
+    } = req.body;
+
+    await pool.query(
+      `UPDATE patient_statistics SET
+        date = $1,
+        total_patients_cumulative = $2,
+        total_patients_current_month = $3,
+        home_care_patients = $4,
+        dropout_patients = $5,
+        physiotherapy_patients = $6,
+        psychiatric_patients = $7,
+        psychiatric_dropout_patients = $8,
+        psychiatric_transfer_out = $9,
+        transfer_out_patients = $10,
+        care_comprises = $11,
+        active_psychiatric_patients = $12,
+        cancer_patients = $13,
+        peripheral_vascular_disease = $14,
+        chronic_kidney_disease = $15,
+        cerebrovascular_accident = $16,
+        paraplegia_patients = $17,
+        other_patients = $18,
+        total_deaths_cumulative = $19,
+        patients_above_80 = $20,
+        patients_below_18 = $21
+      WHERE id = 1`,
+      [
+        date,
+        total_patients_cumulative,
+        total_patients_current_month,
+        home_care_patients,
+        dropout_patients,
+        physiotherapy_patients,
+        psychiatric_patients,
+        psychiatric_dropout_patients,
+        psychiatric_transfer_out,
+        transfer_out_patients,
+        care_comprises,
+        active_psychiatric_patients,
+        cancer_patients,
+        peripheral_vascular_disease,
+        chronic_kidney_disease,
+        cerebrovascular_accident,
+        paraplegia_patients,
+        other_patients,
+        total_deaths_cumulative,
+        patients_above_80,
+        patients_below_18,
+      ]
+    );
+
+    res.json({ message: "Statistics updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
