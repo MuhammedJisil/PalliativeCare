@@ -2,23 +2,26 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
-const cors = require('cors'); // Import cors
+const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+require('dotenv').config();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
+// Database configuration
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'palliative_care',
-  password: '#jisil1234',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
-app.use(cors()); // Use cors middleware
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
@@ -33,13 +36,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-
-// Function to delete existing file
+// File deletion utility
 const deleteExistingFile = async (filePath) => {
   if (filePath) {
     try {
       const fullPath = path.join(process.cwd(), filePath);
-      await fs.unlink(fullPath); // Promise-based unlink
+      await fs.unlink(fullPath);
       console.log(`Successfully deleted file: ${fullPath}`);
     } catch (err) {
       if (err.code === 'ENOENT') {
@@ -51,116 +53,146 @@ const deleteExistingFile = async (filePath) => {
   }
 };
 
-//admin login
+// Admin user seeding
+async function seedAdminUsers() {
+  const adminUsers = process.env.ADMIN_USERS.split(',');
+  const adminPasswords = process.env.ADMIN_PASSWORDS.split(',');
 
-// Seed database with users
-async function seedUsers() {
-  const users = [
-    { username: 'admin1', password: 'password1' },
-    { username: 'admin2', password: 'password2' },
-    { username: 'admin3', password: 'password3' },
-  ];
+  const adminCredentials = {};
+  adminUsers.forEach((username, index) => {
+    adminCredentials[username.trim()] = adminPasswords[index].trim();
+  });
 
-  for (const user of users) {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+  for (const [username, password] of Object.entries(adminCredentials)) {
+    const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      'INSERT INTO admins (username, password) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING',
-      [user.username, hashedPassword]
+      'INSERT INTO admins (username, password) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password = $2',
+      [username, hashedPassword]
     );
   }
 }
 
-// Seed users if the table is empty
-async function initializeDatabase() {
-  const result = await pool.query('SELECT COUNT(*) FROM admins');
-  const count = parseInt(result.rows[0].count, 10);
+// VCM user seeding
+async function seedVCMUsers() {
+  const vcmUsers = process.env.VCM_USERS.split(',');
+  const vcmPasswords = process.env.VCM_PASSWORDS.split(',');
 
-  if (count === 0) {
-    await seedUsers();
+  const vcmCredentials = {};
+  vcmUsers.forEach((username, index) => {
+    vcmCredentials[username.trim()] = vcmPasswords[index].trim();
+  });
+
+  for (const [username, password] of Object.entries(vcmCredentials)) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      'INSERT INTO vcm (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password_hash = $2',
+      [username, hashedPassword]
+    );
   }
 }
 
-initializeDatabase();
+// Database initialization
+async function initializeDatabase() {
+  // Check and seed admin users
+  const adminResult = await pool.query('SELECT COUNT(*) FROM admins');
+  const adminCount = parseInt(adminResult.rows[0].count, 10);
+  if (adminCount === 0) {
+    await seedAdminUsers();
+  }
 
-// Login endpoint
+  // Check and seed VCM users
+  const vcmResult = await pool.query('SELECT COUNT(*) FROM vcm');
+  const vcmCount = parseInt(vcmResult.rows[0].count, 10);
+  if (vcmCount === 0) {
+    await seedVCMUsers();
+  }
+}
+
+// Initialize the database
+initializeDatabase().catch(console.error);
+
+// Admin Login Route
 app.post('/api/admin-login', async (req, res) => {
   const { username, password } = req.body;
 
-  const userResult = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
+  try {
+    const userResult = await pool.query(
+      'SELECT username, password FROM admins WHERE username = $1',
+      [username]
+    );
 
-  if (userResult.rows.length === 0) {
-    return res.status(401).json({ message: 'Your username or password is incorrect' });
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ message: 'Your username or password is incorrect' });
+    }
+
+    const user = userResult.rows[0];
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Your username or password is incorrect' });
+    }
+
+    const token = jwt.sign(
+      { username: user.username, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'An error occurred during login' });
   }
-
-  const user = userResult.rows[0];
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: 'Your username or password is incorrect' });
-  }
-
-  const token = jwt.sign({ username: user.username }, 'your_jwt_secret', { expiresIn: '1h' });
-
-  res.json({ token });
 });
 
-// Seed database with users
-async function seedUsers() {
-  const users = [
-    { username: 'user1', password: 'password1' },
-    { username: 'user2', password: 'password2' },
-    { username: 'user3', password: 'password3' },
-    { username: 'user4', password: 'password4' },
-  ];
-
-  for (const user of users) {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
-    await pool.query(
-      'INSERT INTO vcm (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING',
-      [user.username, hashedPassword]
-    );
-  }
-}
-
-// volunteer caregiver and medical professional login
-
-// Seed users if the table is empty
-async function initializeDatabase() {
-  const result = await pool.query('SELECT COUNT(*) FROM vcm');
-  const count = parseInt(result.rows[0].count, 10);
-
-  if (count === 0) {
-    await seedUsers();
-  }
-}
-
-initializeDatabase();
-
-// Login route
+// VCM Login Route
 app.post("/api/vcm-login", async (req, res) => {
   const { username, password } = req.body;
+
   try {
-    const user = await pool.query(`SELECT * FROM vcm WHERE username = $1`, [
-      username,
-    ]);
-    if (user.rows.length === 0) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const validPassword = await bcrypt.compare(
-      password,
-      user.rows[0].password_hash
+    const userResult = await pool.query(
+      'SELECT username, password_hash FROM vcm WHERE username = $1',
+      [username]
     );
-    if (!validPassword) {
-      return res.status(401).json({ message: "Invalid username or password" });
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ 
+        message: "Invalid username or password" 
+      });
     }
 
-    res.json({ message: "Login successful" });
+    const user = userResult.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ 
+        message: "Invalid username or password" 
+      });
+    }
+
+    const token = jwt.sign(
+      { 
+        username: user.username,
+        role: 'vcm'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ 
+      message: "Login successful", 
+      token 
+    });
+
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Server error" });
+    console.error('VCM Login error:', err.message);
+    res.status(500).json({ 
+      message: "Server error" 
+    });
   }
 });
+
+
 
 
 
