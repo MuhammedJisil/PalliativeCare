@@ -1059,72 +1059,80 @@ app.delete('/api/volunteers/:id', async (req, res) => {
   }
 });
 
-// Route to add a new volunteer
+// Add new volunteer
 app.post('/api/volunteers', async (req, res) => {
   try {
-    const { 
-      name, 
-      email, 
-      phone_number, 
-      address, 
-      availability, 
-      skills, 
-      notes 
-    } = req.body;
+    const {
+       name,
+       email,
+       phone_number,
+       address,
+       availability,
+       skills,
+       notes
+     } = req.body;
 
-    // Input validation
-    if (!name || !email || !phone_number || !address) {
-      return res.status(400).json({ 
-        error: 'Name, email, phone number, and address are required' 
-      });
+     // Input validation
+     if (!name || !email || !phone_number || !address) {
+      return res.status(400).json({
+         error: 'Name, email, phone number, and address are required'
+       });
     }
 
-    // Check for existing volunteer
-    const checkQuery = `
+     // Check for existing email
+     const emailQuery = `
       SELECT * 
       FROM volunteers 
-      WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3
+      WHERE LOWER(email) = LOWER($1)
     `;
-    const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
-
-    if (checkResult.rows.length > 0) {
-      return res.status(409).json({ 
-        error: 'A volunteer with this name, email, and phone number already exists' 
-      });
+    const emailResult = await pool.query(emailQuery, [email]);
+    
+    if (emailResult.rows.length > 0) {
+      return res.status(409).json({
+         error: 'A volunteer with this email already exists'
+       });
     }
 
-    // Insert new volunteer with is_new flag
-    const query = `
-      INSERT INTO volunteers 
-      (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL) 
-      RETURNING *
+    // Check for existing phone number
+    const phoneQuery = `
+      SELECT * 
+      FROM volunteers 
+      WHERE phone_number = $1
+    `;
+    const phoneResult = await pool.query(phoneQuery, [phone_number]);
+    
+    if (phoneResult.rows.length > 0) {
+      return res.status(409).json({
+         error: 'A volunteer with this phone number already exists'
+       });
+    }
+
+     // Insert new volunteer with is_new flag
+     const query = `
+      INSERT INTO volunteers
+       (name, email, phone_number, address, availability, skills, notes, is_new, last_viewed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, NULL)
+       RETURNING *
     `;
     const values = [
-      name, 
-      email, 
-      phone_number, 
-      address, 
-      availability || null, 
-      skills || null, 
+      name,
+      email,
+      phone_number,
+      address,
+      availability || null,
+      skills || null,
       notes || null
     ];
 
-    const result = await pool.query(query, values);
+     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding volunteer:', error);
-    if (error.code === '23505') {
-      return res.status(409).json({ 
-        error: 'A volunteer with this email already exists' 
-      });
-    }
-    res.status(500).json({ 
-      error: 'An error occurred while adding the volunteer' 
-    });
+    res.status(500).json({
+       error: 'An error occurred while adding the volunteer'
+     });
   }
 });
-
 // Update a volunteer
 app.put('/api/volunteers/:id', async (req, res) => {
   try {
@@ -1244,74 +1252,82 @@ app.get('/api/caregivers/:id', async (req, res) => {
   }
 });
 
-// Add a new caregiver
+// Add new caregiver
 app.post('/api/caregivers', async (req, res) => {
   try {
-    const { 
-      name, 
-      email, 
-      phone_number, 
-      address, 
-      availability, 
-      experience, 
-      certifications, 
-      notes 
-    } = req.body;
+    const {
+       name,
+       email,
+       phone_number,
+       address,
+       availability,
+       experience,
+       certifications,
+       notes
+     } = req.body;
 
-    // Input validation
-    if (!name || !email || !phone_number || !address) {
-      return res.status(400).json({ 
-        error: 'Name, email, phone number, and address are required' 
-      });
+     // Input validation
+     if (!name || !email || !phone_number || !address) {
+      return res.status(400).json({
+         error: 'Name, email, phone number, and address are required'
+       });
     }
 
-    // Check if caregiver exists
-    const checkQuery = `
+     // Check for existing email
+     const emailQuery = `
       SELECT * 
       FROM caregivers 
-      WHERE LOWER(name) = LOWER($1) AND email = $2 AND phone_number = $3
+      WHERE LOWER(email) = LOWER($1)
     `;
-    const checkResult = await pool.query(checkQuery, [name, email, phone_number]);
-
-    if (checkResult.rows.length > 0) {
-      return res.status(409).json({ 
-        error: 'A caregiver with this name, email, and phone number already exists' 
-      });
+    const emailResult = await pool.query(emailQuery, [email]);
+    
+    if (emailResult.rows.length > 0) {
+      return res.status(409).json({
+         error: 'A caregiver with this email already exists'
+       });
     }
 
-    // Insert new caregiver with is_new flag
-    const query = `
-      INSERT INTO caregivers 
-      (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL) 
-      RETURNING *
+    // Check for existing phone number
+    const phoneQuery = `
+      SELECT * 
+      FROM caregivers 
+      WHERE phone_number = $1
+    `;
+    const phoneResult = await pool.query(phoneQuery, [phone_number]);
+    
+    if (phoneResult.rows.length > 0) {
+      return res.status(409).json({
+         error: 'A caregiver with this phone number already exists'
+       });
+    }
+
+     // Insert new caregiver with is_new flag
+     const query = `
+      INSERT INTO caregivers
+       (name, email, phone_number, address, availability, experience, certifications, notes, is_new, last_viewed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NULL)
+       RETURNING *
     `;
     const values = [
-      name, 
-      email, 
-      phone_number, 
-      address, 
-      availability || null, 
-      experience || null, 
-      certifications || null, 
+      name,
+      email,
+      phone_number,
+      address,
+      availability || null,
+      experience || null,
+      certifications || null,
       notes || null
     ];
 
-    const result = await pool.query(query, values);
+     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding caregiver:', error);
-    if (error.code === '23505') {
-      return res.status(409).json({ 
-        error: 'A caregiver with this email already exists' 
-      });
-    }
-    res.status(500).json({ 
-      error: 'An error occurred while adding the caregiver' 
-    });
+    res.status(500).json({
+       error: 'An error occurred while adding the caregiver'
+     });
   }
 });
-
 // Update caregiver
 app.put('/api/caregivers/:id', async (req, res) => {
   try {
@@ -1739,24 +1755,52 @@ app.post('/api/medical-professionals', async (req, res) => {
       });
     }
 
-    // Check if medical professional already exists
-    const checkQuery = `
+    // Check for existing email
+    const emailQuery = `
       SELECT * 
       FROM medical_professionals 
-      WHERE LOWER(name) = LOWER($1) AND email = $2 AND license_number = $3 AND phone_number = $4
+      WHERE LOWER(email) = LOWER($1)
     `;
-    const checkResult = await pool.query(checkQuery, [name, email, license_number, phone_number]);
-
-    if (checkResult.rows.length > 0) {
+    const emailResult = await pool.query(emailQuery, [email]);
+    
+    if (emailResult.rows.length > 0) {
       return res.status(409).json({
-        error: 'A medical professional with these credentials already exists'
+        error: 'A medical professional with this email already exists'
+      });
+    }
+
+    // Check for existing phone number
+    const phoneQuery = `
+      SELECT * 
+      FROM medical_professionals 
+      WHERE phone_number = $1
+    `;
+    const phoneResult = await pool.query(phoneQuery, [phone_number]);
+    
+    if (phoneResult.rows.length > 0) {
+      return res.status(409).json({
+        error: 'A medical professional with this phone number already exists'
+      });
+    }
+
+    // Check for existing license number
+    const licenseQuery = `
+      SELECT * 
+      FROM medical_professionals 
+      WHERE license_number = $1
+    `;
+    const licenseResult = await pool.query(licenseQuery, [license_number]);
+    
+    if (licenseResult.rows.length > 0) {
+      return res.status(409).json({
+        error: 'A medical professional with this license number already exists'
       });
     }
 
     // Insert new medical professional with is_new flag
     const query = `
       INSERT INTO medical_professionals
-      (name, email, phone_number, address, availability, specialization, 
+      (name, email, phone_number, address, availability, specialization,
        license_number, experience, notes, is_new, last_viewed_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NULL)
       RETURNING *
@@ -1775,16 +1819,8 @@ app.post('/api/medical-professionals', async (req, res) => {
 
     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
-
   } catch (error) {
     console.error('Error adding medical professional:', error);
-
-    if (error.code === '23505') {
-      return res.status(409).json({
-        error: 'A medical professional with this license number already exists'
-      });
-    }
-
     res.status(500).json({
       error: 'An error occurred while adding the medical professional'
     });
@@ -3181,7 +3217,7 @@ app.delete('/api/notifications/:id', async (req, res) => {
 });
 
 
-
+//Patient Statistics display and management
 // Fetch the single row
 app.get("/api/statistics", async (req, res) => {
   try {

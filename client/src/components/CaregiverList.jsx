@@ -48,14 +48,17 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+ 
+    // Validate phone number before submission
     if (formData.phone_number.length !== 10) {
       setError('Phone number must be exactly 10 digits');
-      return; // Stop submission
+      return;
     }
+ 
     try {
       const url = 'http://localhost:5000/api/caregivers';
       const response = await axios.post(url, formData);
-      
+ 
       // Clear form after successful submission
       setFormData({
         name: '',
@@ -67,20 +70,33 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
         certifications: '',
         notes: ''
       });
-  
+ 
       // Notify parent component and close modal
       onCaregiverAdded(response.data);
       onClose();
-    
     } catch (error) {
-      if (error.response && error.response.status === 409) {
-        setError('Caregiver already exists.');
+      console.error('Error adding caregiver:', error);
+ 
+      // Handle specific error scenarios
+      if (error.response) {
+        switch(error.response.status) {
+          case 409:
+            if (error.response.data.error.includes('email')) {
+              setError('A caregiver with this email already exists.');
+            } else if (error.response.data.error.includes('phone number')) {
+              setError('A caregiver with this phone number already exists.');
+            } else {
+              setError('Caregiver already exists.');
+            }
+            break;
+          default:
+            setError('Failed to add caregiver. Please try again.');
+        }
       } else {
-        console.error('Error adding caregiver:', error);
-        setError('Failed to add caregiver. Please try again.');
+        setError('Network error. Please try again.');
       }
     }
-  };
+ };
   
 
   if (!isOpen) return null;

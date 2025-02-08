@@ -30,46 +30,68 @@ const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) =
       });
     };
   
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      // Validate phone number before submission
-      if (formData.phone_number.length !== 10) {
-       setError('Phone number must be exactly 10 digits');
-       return; // Stop submission
-     }
+    
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-     // Validate license number before submission
-    const licenseRegex = /^[A-Z]{2,3}\d{6,10}$/;
-    if (formData.license_number && !licenseRegex.test(formData.license_number)) {
-      setError('Invalid license number format.');
-      return; // Stop submission
-    }
-      try {
-        const response = await axios.post('http://localhost:5000/api/medical-professionals', {
-          ...formData,
-          userType: 'medical_professional'
-        });
-        setFormData({
-          name: '',
-          email: '',
-          phone_number: '',
-          address: '',
-          availability: '',
-          specialization: '',
-          license_number: '',
-          experience: '',
-          notes: ''
-        });
-        onProfessionalAdded(response.data);
-        onClose();
-      } catch (error) {
-        if (error.response?.status === 409) {
-          setError('Medical professional already exists.');
-        } else {
+  // Validate phone number before submission
+  if (formData.phone_number.length !== 10) {
+    setError('Phone number must be exactly 10 digits');
+    return;
+  }
+
+  // Validate license number before submission
+  const licenseRegex = /^[A-Z]{2,3}\d{6,10}$/;
+  if (formData.license_number && !licenseRegex.test(formData.license_number)) {
+    setError('Invalid license number format.');
+    return;
+  }
+
+  try {
+    const response = await axios.post('http://localhost:5000/api/medical-professionals', {
+      ...formData,
+      userType: 'medical_professional'
+    });
+
+    setFormData({
+      name: '',
+      email: '',
+      phone_number: '',
+      address: '',
+      availability: '',
+      specialization: '',
+      license_number: '',
+      experience: '',
+      notes: ''
+    });
+
+    onProfessionalAdded(response.data);
+    onClose();
+  } catch (error) {
+    console.error('Error adding medical professional:', error);
+
+    // Handle specific error scenarios
+    if (error.response) {
+      switch(error.response.status) {
+        case 409:
+          if (error.response.data.error.includes('email')) {
+            setError('A medical professional with this email already exists.');
+          } else if (error.response.data.error.includes('phone number')) {
+            setError('A medical professional with this phone number already exists.');
+          } else if (error.response.data.error.includes('license number')) {
+            setError('A medical professional with this license number already exists.');
+          } else {
+            setError('Medical professional already exists.');
+          }
+          break;
+        default:
           setError('Failed to add medical professional. Please try again.');
-        }
       }
-    };
+    } else {
+      setError('Network error. Please try again.');
+    }
+  }
+};
   
     if (!isOpen) return null;
   

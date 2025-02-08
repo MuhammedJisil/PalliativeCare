@@ -48,18 +48,20 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-     // Validate phone number before submission
-     if (formData.phone_number.length !== 10) {
+ 
+    // Validate phone number before submission
+    if (formData.phone_number.length !== 10) {
       setError('Phone number must be exactly 10 digits');
-      return; // Stop submission
+      return;
     }
+ 
     try {
       const url = 'http://localhost:5000/api/volunteers';
-      const response = await axios.post(url, { 
-        ...formData, 
-        userType: 'volunteer' 
+      const response = await axios.post(url, {
+         ...formData,
+         userType: 'volunteer'
       });
-  
+ 
       // Clear form after successful submission
       setFormData({
         name: '',
@@ -70,23 +72,33 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
         skills: '',
         notes: ''
       });
-  
+ 
       // Notify parent component and close modal
       onVolunteerAdded(response.data);
       onClose();
-      
     } catch (error) {
       console.error('Error adding volunteer:', error);
-  
-      // Handle duplicate entry error
-      if (error.response && error.response.status === 409) {
-        setError('volunteer already exists.');
+ 
+      // Handle specific error scenarios
+      if (error.response) {
+        switch(error.response.status) {
+          case 409:
+            if (error.response.data.error.includes('email')) {
+              setError('A volunteer with this email already exists.');
+            } else if (error.response.data.error.includes('phone number')) {
+              setError('A volunteer with this phone number already exists.');
+            } else {
+              setError('Volunteer already exists.');
+            }
+            break;
+          default:
+            setError('Failed to add volunteer. Please try again.');
+        }
       } else {
-        // Generic error handling
-        setError('Failed to add volunteer. Please try again.');
+        setError('Network error. Please try again.');
       }
     }
-  };
+ };
   
 
   if (!isOpen) return null;
