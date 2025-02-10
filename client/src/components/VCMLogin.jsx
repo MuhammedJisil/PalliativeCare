@@ -1,26 +1,67 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+
 import { User, Lock } from 'lucide-react';
 
 const VCMLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already logged in and token is valid
+    const token = localStorage.getItem('vcm_token');
+    if (token) {
+      // Verify token expiration
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 > Date.now()) {
+          window.location.href = '/vcm/dashboard';
+        } else {
+          // Token expired, remove it
+          localStorage.removeItem('vcm_token');
+        }
+      } catch (error) {
+        localStorage.removeItem('vcm_token');
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/vcm-login', {
-        username,
-        password,
+      const response = await fetch('http://localhost:5000/api/vcm-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'An error occurred during login');
+      }
+
+      // Store the token and role
+      localStorage.setItem('vcm_token', data.token);
+      localStorage.setItem('userRole', 'vcm');
       window.location.href = '/vcm/dashboard';
     } catch (error) {
-      setError('Your username or password is incorrect');
+      setError(error.message);
     }
   };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

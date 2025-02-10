@@ -6,8 +6,7 @@ import {
   HelpingHand,
   Copy,
   CheckCircle2,
-  XCircle,
-  HandCoins
+  XCircle
 } from 'lucide-react';
 
 const EmergencyFundCard = () => {
@@ -93,17 +92,28 @@ const EmergencyFundCard = () => {
 
    return (
      <>
-       {/* Floating Action Button */}
+       {/* Floating Action Button with Patient Photo */}
        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
          <div className="relative">
            <button
              onClick={handleOpenModal}
-             className="bg-teal-600 text-white p-4 rounded-full z-50 shadow-2xl 
-             hover:bg-teal-700 transition duration-300 
+             className="w-16 h-16 rounded-full z-50 shadow-2xl 
+             hover:opacity-90 transition duration-300 
              animate-bounce hover:animate-none
-             flex items-center justify-center"
+             overflow-hidden border-4 border-teal-600
+             bg-teal-600"
            >
-             <HandCoins className="w-8 h-8" />
+             {patient.photo_url ? (
+               <img 
+                 src={patient.photo_url} 
+                 alt={patient.name}
+                 className="w-full h-full object-cover"
+               />
+             ) : (
+               <div className="w-full h-full bg-teal-600 flex items-center justify-center text-white text-2xl font-bold">
+                 {patient.name?.charAt(0)}
+               </div>
+             )}
            </button>
          </div>
        </div>

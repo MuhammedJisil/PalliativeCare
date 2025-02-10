@@ -53,41 +53,61 @@ const deleteExistingFile = async (filePath) => {
   }
 };
 
-// Admin user seeding
 async function seedAdminUsers() {
-  const adminUsers = process.env.ADMIN_USERS.split(',');
-  const adminPasswords = process.env.ADMIN_PASSWORDS.split(',');
+  try {
+    if (!process.env.ADMIN_USERS || !process.env.ADMIN_PASSWORDS) {
+      throw new Error('Admin environment variables are not defined');
+    }
 
-  const adminCredentials = {};
-  adminUsers.forEach((username, index) => {
-    adminCredentials[username.trim()] = adminPasswords[index].trim();
-  });
+    const adminUsers = process.env.ADMIN_USERS.split(',').map(u => u.trim());
+    const adminPasswords = process.env.ADMIN_PASSWORDS.split(',').map(p => p.trim());
 
-  for (const [username, password] of Object.entries(adminCredentials)) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO admins (username, password) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password = $2',
-      [username, hashedPassword]
-    );
+    if (adminUsers.length !== adminPasswords.length) {
+      throw new Error('Number of admin users does not match number of passwords');
+    }
+
+    console.log(`Found ${adminUsers.length} admin users to seed`);
+
+    for (let i = 0; i < adminUsers.length; i++) {
+      const hashedPassword = await bcrypt.hash(adminPasswords[i], 10);
+      await pool.query(
+        'INSERT INTO admins (username, password) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password = $2',
+        [adminUsers[i], hashedPassword]
+      );
+      console.log(`Seeded admin user: ${adminUsers[i]}`);
+    }
+  } catch (error) {
+    console.error('Error in seedAdminUsers:', error);
+    throw error;
   }
 }
 
-// VCM user seeding
 async function seedVCMUsers() {
-  const vcmUsers = process.env.VCM_USERS.split(',');
-  const vcmPasswords = process.env.VCM_PASSWORDS.split(',');
+  try {
+    if (!process.env.VCM_USERS || !process.env.VCM_PASSWORDS) {
+      throw new Error('VCM environment variables are not defined');
+    }
 
-  const vcmCredentials = {};
-  vcmUsers.forEach((username, index) => {
-    vcmCredentials[username.trim()] = vcmPasswords[index].trim();
-  });
+    const vcmUsers = process.env.VCM_USERS.split(',').map(u => u.trim());
+    const vcmPasswords = process.env.VCM_PASSWORDS.split(',').map(p => p.trim());
 
-  for (const [username, password] of Object.entries(vcmCredentials)) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO vcm (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password_hash = $2',
-      [username, hashedPassword]
-    );
+    if (vcmUsers.length !== vcmPasswords.length) {
+      throw new Error('Number of VCM users does not match number of passwords');
+    }
+
+    console.log(`Found ${vcmUsers.length} VCM users to seed`);
+
+    for (let i = 0; i < vcmUsers.length; i++) {
+      const hashedPassword = await bcrypt.hash(vcmPasswords[i], 10);
+      await pool.query(
+        'INSERT INTO vcm (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password_hash = $2',
+        [vcmUsers[i], hashedPassword]
+      );
+      console.log(`Seeded VCM user: ${vcmUsers[i]}`);
+    }
+  } catch (error) {
+    console.error('Error in seedVCMUsers:', error);
+    throw error;
   }
 }
 

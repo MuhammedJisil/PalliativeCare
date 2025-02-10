@@ -1,31 +1,67 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+
 import { User, Lock } from 'lucide-react';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already logged in and token is valid
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token expiration
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 > Date.now()) {
+          window.location.href = '/admin/dashboard';
+        } else {
+          // Token expired, remove it
+          localStorage.removeItem('token');
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin-login', {
-        username,
-        password,
+      const response = await fetch('http://localhost:5000/api/admin-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
 
-      // Store the token in localStorage
-      localStorage.setItem('token', response.data.token);
+      const data = await response.json();
 
-      // Redirect to admin page
+      if (!response.ok) {
+        throw new Error(data.message || 'An error occurred during login');
+      }
+
+      // Store the token and role
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', 'admin');
       window.location.href = '/admin/dashboard';
     } catch (error) {
-      setError('Your username or password is incorrect');
+      setError(error.message);
     }
   };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
