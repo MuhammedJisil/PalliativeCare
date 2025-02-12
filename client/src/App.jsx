@@ -31,6 +31,8 @@ import EquipmentView from './components/EquipmentView';
 import EquipmentDisplay from './components/EquipmentDisplay';
 import PatientStatistics from './components/PatientStatistics';
 import NotFound from './components/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
+
 
 
 
@@ -43,34 +45,35 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/volunteer-caregiver-registration" element={<VCMregistration />} />
-          <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
-           <Route path="/patient-registration" element={<PatientRegistration />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/vcm" element={<VCMLogin/>} />
-          <Route path="/vcm/dashboard" element={<VCMDashboard/>} />
-          <Route path="/admin/volunteers" element={<VolunteerList />} />
-          <Route path="/admin/volunteers/view/:id" element={<VolunteerView />} />
-          <Route path="/admin/caregivers" element={<CaregiverList />} />
-          <Route path="/admin/caregivers/view/:id" element={<CaregiverView />} />
-          <Route path="/admin/patients-in-need" element={<PatientsInNeed />} />
-          <Route path="/admin/patients-in-need/view/:id" element={<PatientInNeedView />} />
-          <Route path="/admin/patient-management" element={<PatientManagement />} />
-          <Route path="/admin/patients/add" element={<AddPatient />} />
-          <Route path="/admin/patients/view/:id" element={<ViewPatient />} />
-          <Route path="/admin/patients/update/:id" element={<UpdatePatient />} />
-          <Route path="admin/tasks" element={<ToDoList />} /> 
-          <Route path="/admin/schedules" element={<ScheduleList />} />
+          <Route path="/patient-registration" element={<PatientRegistration />} />
           <Route path="/about" element={<About />} />
-          <Route path="/admin/emergency-fund-management" element={<EmergencyFundManager />} />
-          <Route path="/admin/patient-assignment" element={<PatientAssignment />} />
-          <Route path="/admin/Medical-professionals" element={<MedicalProfessionalsList />} />
-          <Route path="/admin/Medical-professionals/view/:id" element={<MedicalProfessionalView/>} />
-          <Route path="/admin/equipments" element={<EquipmentList/>} />
-          <Route path="/admin/equipments/view/:id" element={<EquipmentView />} />
           <Route path="/equipment-display" element={<EquipmentDisplay />} />
-          <Route path="admin/statistics" element={<PatientStatistics />} />
           <Route path="*" element={<NotFound />} />
+
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboard />} role="admin" />} />
+          <Route path="/admin/volunteers" element={<ProtectedRoute element={<VolunteerList />} role="admin" />} /> 
+          <Route path="/admin/volunteers/view/:id" element={<ProtectedRoute element={<VolunteerView />} role="admin" />} />
+          <Route path="/admin/caregivers" element={<ProtectedRoute element={<CaregiverList />} role="admin" />} />
+          <Route path="/admin/caregivers/view/:id" element={<ProtectedRoute element={<CaregiverView />} role="admin" />} />
+          <Route path="/admin/patients-in-need" element={<ProtectedRoute element={<PatientsInNeed />} role="admin" />} />
+          <Route path="/admin/patients-in-need/view/:id" element={<ProtectedRoute element={<PatientInNeedView />} role="admin" />} />
+          <Route path="/admin/patient-management" element={<ProtectedRoute element={<PatientManagement />} role="admin" />} />
+          <Route path="/admin/patients/add" element={<ProtectedRoute element={<AddPatient />} role="admin" />} />
+          <Route path="/admin/patients/view/:id" element={<ProtectedRoute element={<ViewPatient />} role="admin" />} />
+          <Route path="/admin/patients/update/:id" element={<ProtectedRoute element={<UpdatePatient />} role="admin" />} />
+          <Route path="/admin/tasks" element={<ProtectedRoute element={<ToDoList />} role="admin" />} />
+          <Route path="/admin/schedules" element={<ProtectedRoute element={<ScheduleList />} role="admin" />} />
+          <Route path="/admin/emergency-fund-management" element={<ProtectedRoute element={<EmergencyFundManager />} role="admin" />} />
+          <Route path="/admin/patient-assignment" element={<ProtectedRoute element={<PatientAssignment />} role="admin" />} />
+          <Route path="/admin/medical-professionals" element={<ProtectedRoute element={<MedicalProfessionalsList />} role="admin" />} />
+          <Route path="/admin/medical-professionals/view/:id" element={<ProtectedRoute element={<MedicalProfessionalView />} role="admin" />} />
+          <Route path="/admin/equipments" element={<ProtectedRoute element={<EquipmentList />} role="admin" />} />
+          <Route path="/admin/equipments/view/:id" element={<ProtectedRoute element={<EquipmentView />} role="admin" />} />
+          <Route path="/admin/statistics" element={<ProtectedRoute element={<PatientStatistics />} role="admin" />} />
+
+          <Route path="/vcm" element={<VCMLogin/>} />
+          <Route path="/vcm/dashboard" element={<ProtectedRoute element={<VCMDashboard />} role="vcm" />} />
         </Routes>
       </main>
     </Router>

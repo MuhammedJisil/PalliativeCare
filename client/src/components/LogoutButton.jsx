@@ -12,32 +12,31 @@ const LogoutButton = ({ userType }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${userType === 'admin' ? localStorage.getItem('admin_token') : localStorage.getItem('vcm_token')}`
         }
       });
-
-      // Clear ALL auth-related items from storage
-      localStorage.clear(); // This will remove all localStorage items
-      sessionStorage.clear(); // This will remove all sessionStorage items
-
-      // Force a small delay to ensure cleanup is complete
+  
+      // Remove only the token related to the user type
+      if (userType === 'admin') {
+        localStorage.removeItem('admin_token');
+      } else {
+        localStorage.removeItem('vcm_token');
+      }
+  
+      // Small delay to ensure cleanup is complete
       setTimeout(() => {
-        // Redirect based on user type with replace to prevent back navigation
-        if (userType === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/vcm', { replace: true });
-        }
-        
-        // Force reload the page to clear any cached states
+        // Redirect based on user type
+        navigate(userType === 'admin' ? '/admin' : '/vcm', { replace: true });
+  
+        // Force reload the page to clear cached states
         window.location.reload();
       }, 100);
-      
+  
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
-
+  
   return (
     <button
       onClick={handleLogout}

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-import { User, Lock } from 'lucide-react';
+import { User, Lock,Eye, EyeOff } from 'lucide-react';
 
 const VCMLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,6 +21,7 @@ const VCMLogin = () => {
         } else {
           // Token expired, remove it
           localStorage.removeItem('vcm_token');
+          localStorage.setItem('userRole', 'vcm');
         }
       } catch (error) {
         localStorage.removeItem('vcm_token');
@@ -90,7 +92,7 @@ const VCMLogin = () => {
             </div>
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-gray-700">
               Password
             </label>
             <div className="relative">
@@ -98,13 +100,24 @@ const VCMLogin = () => {
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
-                className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
             </div>
           </div>
           <button

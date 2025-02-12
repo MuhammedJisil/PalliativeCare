@@ -159,7 +159,7 @@ app.post('/api/admin-login', async (req, res) => {
     const token = jwt.sign(
       { username: user.username, role: 'admin' },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     res.json({ token });
@@ -200,7 +200,7 @@ app.post("/api/vcm-login", async (req, res) => {
         role: 'vcm'
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     res.json({ 
