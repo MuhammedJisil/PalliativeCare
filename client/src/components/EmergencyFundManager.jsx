@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate, Link } from 'react-router-dom';
 import { 
@@ -13,6 +13,25 @@ import {
 } from 'lucide-react';
 import ConfirmDialog from './ConfrmDialog'
 
+// Custom scrollbar styles
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(13, 148, 136, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+  }
+`;
+
 const EmergencyFundManager = () => {
     const [patients, setPatients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -22,18 +41,38 @@ const EmergencyFundManager = () => {
      const [success, setSuccess] = useState(null);
       const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const modalRef = useRef(null);
     const [formData, setFormData] = useState({
         id: null,
-        photo: "",
         name: "",
         details: "",
         account_number: "",
         ifsc_code: "",
         upi_id: "",
-        qr_code: "",
+        photo: null,
+        qr_code: null,
+        existing_photo: "",
+        existing_qr_code: ""
     });
     const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
+
+    // Add click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (modalRef.current && !modalRef.current.contains(event.target)) {
+                setIsModalOpen(false);
+            }
+        };
+
+        if (isModalOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isModalOpen]);
 
     // Fetch patients
     const fetchPatients = async () => {
@@ -48,55 +87,102 @@ const EmergencyFundManager = () => {
         }
     };
 
-    // Handle form field changes
+     // Add styles to document
+     useEffect(() => {
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = scrollbarStyles;
+        document.head.appendChild(styleSheet);
+        return () => {
+            document.head.removeChild(styleSheet);
+        };
+    }, []);
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
         if (name === "photo" || name === "qr_code") {
-            setFormData({ ...formData, [name]: files[0] });
+            if (files && files[0]) {
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: files[0]
+                }));
+            }
+        } else if (name === "account_number") {
+            const numbersOnly = value.replace(/[^\d]/g, '');
+            setFormData(prev => ({ ...prev, [name]: numbersOnly }));
         } else {
-            setFormData({ ...formData, [name]: value });
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
-
    // Handle form submission for adding or updating     
-const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Show confirmation dialog only for adding new patient
     if (!isEditing) {
         setShowAddConfirm(true);
         return;
     }
-    
-    // If editing, proceed with submission directly
     await submitForm();
 };
 
-// Separate function to handle the actual form submission
 const submitForm = async () => {
     try {
         const data = new FormData();
-        Object.keys(formData).forEach((key) => {
-            data.append(key, formData[key]);
-        });
         
+        // Add all basic form fields
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!['photo', 'qr_code', 'existing_photo', 'existing_qr_code'].includes(key)) {
+                data.append(key, value || '');
+            }
+        });
+
+        // Handle photo
+        if (formData.photo instanceof File) {
+            data.append('photo', formData.photo);
+        } else if (formData.existing_photo) {
+            data.append('existing_photo', formData.existing_photo);
+        }
+
+        // Handle QR code
+        if (formData.qr_code instanceof File) {
+            data.append('qr_code', formData.qr_code);
+        } else if (formData.existing_qr_code) {
+            data.append('existing_qr_code', formData.existing_qr_code);
+        }
+
         if (isEditing) {
-            await axios.post("http://localhost:5000/api/emergency-fund", data);
+            await axios.put(
+                `http://localhost:5000/api/emergency-fund/${formData.id}`,
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
             setSuccess("Patient updated successfully");
         } else {
-            await axios.post("http://localhost:5000/api/emergency-fund", data);
+            await axios.post(
+                "http://localhost:5000/api/emergency-fund",
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
             setSuccess("Patient added successfully");
         }
-        
+
         setFormData({
             id: null,
-            photo: "",
             name: "",
             details: "",
             account_number: "",
             ifsc_code: "",
             upi_id: "",
-            qr_code: "",
+            photo: null,
+            qr_code: null,
+            existing_photo: "",
+            existing_qr_code: ""
         });
         setIsEditing(false);
         setIsModalOpen(false);
@@ -108,12 +194,22 @@ const submitForm = async () => {
 };
 
 
-    // Edit a patient
-    const handleEdit = (patient) => {
-        setFormData(patient);
-        setIsEditing(true);
-        setIsModalOpen(true);
-    };
+const handleEdit = (patient) => {
+    setFormData({
+        id: patient.id,
+        name: patient.name,
+        details: patient.details,
+        account_number: patient.account_number,
+        ifsc_code: patient.ifsc_code,
+        upi_id: patient.upi_id,
+        photo: null,
+        qr_code: null,
+        existing_photo: patient.photo_url,
+        existing_qr_code: patient.qr_code_url
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
+};
 
     // Delete a patient
     const handleDelete = (id) => {
@@ -137,17 +233,24 @@ const submitForm = async () => {
     const handleAddNew = () => {
         setFormData({
             id: null,
-            photo: "",
+            photo: null,
             name: "",
             details: "",
             account_number: "",
             ifsc_code: "",
             upi_id: "",
-            qr_code: "",
+            qr_code: null,
+            photoUrl: "",
+            qrCodeUrl: ""
         });
         setIsEditing(false);
         setIsModalOpen(true);
     };
+
+    useEffect(() => {
+        fetchPatients();
+    }, []);
+
 
     useEffect(() => {
         fetchPatients();
@@ -300,20 +403,23 @@ const submitForm = async () => {
 
                 {/* Add/Edit Patient Modal */}
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                            <div className="p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-lg font-semibold text-gray-800">
-                                        {isEditing ? "Update Patient" : "Add Patient"}
-                                    </h2>
-                                    <button 
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="text-gray-500 hover:text-gray-700"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div 
+                        ref={modalRef}
+                        className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] custom-scrollbar overflow-y-auto"
+                    >
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold text-gray-800">
+                                    {isEditing ? "Update Patient" : "Add Patient"}
+                                </h2>
+                                <button 
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ✕
+                                </button>
+                            </div>
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <input
                                         type="text"
@@ -335,14 +441,14 @@ const submitForm = async () => {
                                         required
                                     />
                                     <input
-                                        type="text"
-                                        maxLength="20"
-                                        name="account_number"
-                                        value={formData.account_number}
-                                        onChange={handleChange}
-                                        placeholder="Account Number"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    />
+                                    type="text"
+                                    maxLength="20"
+                                    name="account_number"
+                                    value={formData.account_number}
+                                    onChange={handleChange}
+                                    placeholder="Account Number"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
                                     <input
                                         type="text"
                                         name="ifsc_code"
@@ -365,24 +471,47 @@ const submitForm = async () => {
                                         placeholder="UPI ID"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     />
-                                    <div className="space-y-2">
-                                        <label className="block text-sm text-gray-600">Patient Photo</label>
-                                        <input
-                                            type="file"
-                                            name="photo"
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm text-gray-600">QR Code</label>
-                                        <input
-                                            type="file"
-                                            name="qr_code"
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                                        />
-                                    </div>
+                                     {/* Photo input with preview */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm text-gray-600">Patient Photo</label>
+                                    {(formData.existing_photo || formData.photo) && (
+                                        <div className="mb-2">
+                                            <img 
+                                                src={formData.photo ? URL.createObjectURL(formData.photo) : formData.existing_photo}
+                                                alt="Patient"
+                                                className="w-20 h-20 object-cover rounded-md"
+                                            />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        name="photo"
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                                    />
+                                </div>
+
+                                {/* QR Code input with preview */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm text-gray-600">QR Code</label>
+                                    {(formData.existing_qr_code || formData.qr_code) && (
+                                        <div className="mb-2">
+                                            <img 
+                                                src={formData.qr_code ? URL.createObjectURL(formData.qr_code) : formData.existing_qr_code}
+                                                alt="QR Code"
+                                                className="w-20 h-20 object-cover rounded-md"
+                                            />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        name="qr_code"
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                                    />
+                                </div>
+
+
                                     <button 
                                         type="submit" 
                                         className="w-full bg-teal-600 text-white py-2 rounded-full hover:bg-teal-700 transition-colors"

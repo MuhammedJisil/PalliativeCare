@@ -378,82 +378,89 @@ const Tasks = () => {
 
         {/* Tasks List */}
         <div className="bg-white rounded-lg shadow-md">
-          {getFilteredAndSortedTasks().length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
-              <Users size={48} className="mb-4 text-gray-400" />
-              <p>No tasks found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto space-y-4 p-4">
-              {getFilteredAndSortedTasks().map((task) => (
-                <div 
-                  key={task.id}
-                  className="border-b last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg shadow-sm bg-white"
-                >
-                  <div className="flex items-center px-6 py-4">
-                    <div className="flex-1 flex items-start gap-4">
-                      <button onClick={() => toggleTaskStatus(task.id)}>
-                        {task.status === 'completed' ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-gray-400" />
-                        )}
-                      </button>
+      {getFilteredAndSortedTasks().length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+          <Users size={48} className="mb-4 text-gray-400" />
+          <p>No tasks found</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto space-y-4 p-4">
+          {getFilteredAndSortedTasks().map((task) => (
+            <div
+              key={task.id}
+              className="border-b last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg shadow-sm bg-white"
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-4">
+                <div className="flex-1 flex items-start gap-4 w-full">
+                  <button 
+                    onClick={() => toggleTaskStatus(task.id)}
+                    className="mt-1"
+                  >
+                    {task.status === 'completed' ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
 
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <h3 className={`font-medium ${
-                            task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-700'
-                          }`}>
-                            {task.title}
-                          </h3>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => startEditTask(task)}
-                              className="text-teal-600 hover:text-teal-800 transition-colors"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => deleteTask(task.id)}
-                              className="text-red-600 hover:text-red-800 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                        
-                        <div className="flex flex-wrap items-center gap-3 mt-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${categories[task.category].color}`}>
-                            {categories[task.category].label}
-                          </span>
-                          <span className="flex items-center text-xs text-gray-600">
-                            {React.createElement(priorities[task.priority].icon, {
-                              className: `w-4 h-4 mr-1 ${priorities[task.priority].color}`
-                            })}
-                            {priorities[task.priority].label}
-                          </span>
-                          {task.assigned_to && (
-                <span className="flex items-center text-xs text-gray-600">
-                  <Users className="w-4 h-4 mr-1" />
-                  {task.assigned_to} {task.assigned_member && `- ${task.assigned_member}`}
-                </span>
-              )}
-                          {task.due_date && (
-                            <span className="text-xs text-gray-600">
-                              Due: {new Date(task.due_date).toLocaleDateString()} {task.due_time}
-                            </span>
-                          )}
-                        </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      <h3 className={`font-medium break-words ${
+                        task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-700'
+                      }`}>
+                        {task.title}
+                      </h3>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <button
+                          onClick={() => startEditTask(task)}
+                          className="text-teal-600 hover:text-teal-800 transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteTask(task.id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
+                    </div>
+
+                    <p className="text-sm text-gray-500 mt-1 break-words">{task.description}</p>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${categories[task.category].color} shrink-0`}>
+                        {categories[task.category].label}
+                      </span>
+                      
+                      <span className="flex items-center text-xs text-gray-600 shrink-0">
+                        {React.createElement(priorities[task.priority].icon, {
+                          className: `w-4 h-4 mr-1 ${priorities[task.priority].color}`
+                        })}
+                        {priorities[task.priority].label}
+                      </span>
+                      
+                      {task.assigned_to && (
+                        <span className="flex items-center text-xs text-gray-600 shrink-0">
+                          <Users className="w-4 h-4 mr-1" />
+                          {task.assigned_to} {task.assigned_member && `- ${task.assigned_member}`}
+                        </span>
+                      )}
+                      
+                      {task.due_date && (
+                        <span className="text-xs text-gray-600 shrink-0">
+                          Due: {new Date(task.due_date).toLocaleDateString()} {task.due_time}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+          ))}
         </div>
+      )}
+    </div>
           {/* Back Button */}
         <div className="mt-6">
           <button

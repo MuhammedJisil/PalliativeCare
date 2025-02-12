@@ -28,7 +28,6 @@ const parseUpdates = (note) => {
     if (dateMatch) {
       const [_, date, content] = dateMatch;
       
-      // Look for specific patterns that indicate health updates
       if (content.toLowerCase().includes('updated disease:') || 
           content.toLowerCase().includes('updated medication:')) {
         healthUpdates.push({
@@ -38,7 +37,6 @@ const parseUpdates = (note) => {
           content
         });
       } else {
-        // Everything else goes to medical history
         medicalHistory.push({ date, content });
       }
     }
@@ -46,14 +44,11 @@ const parseUpdates = (note) => {
 
   return { healthUpdates, medicalHistory };
 };
-;
 
 const formatClinicalNote = (note) => {
   if (!note) return [];
   
-  // Split the note by newlines and filter out empty lines
   return note.split('\n').filter(line => line.trim()).map(line => {
-    // Check if the line starts with a date format
     const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:.]+Z):\s*(.*)/);
     if (dateMatch) {
       return {
@@ -68,24 +63,24 @@ const formatClinicalNote = (note) => {
 };
 
 const InfoSection = ({ icon: Icon, title, children }) => (
-  <div className="mb-6 last:mb-0">
-    <div className="flex items-center gap-2 mb-3">
-      <Icon className="h-5 w-5 text-teal-600" />
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+  <div className="mb-6 last:mb-0 w-full">
+    <div className="flex flex-wrap items-center gap-2 mb-3">
+      <Icon className="h-5 w-5 text-teal-600 flex-shrink-0" />
+      <h3 className="text-lg font-semibold text-gray-900 break-words">{title}</h3>
     </div>
-    <div className="pl-7">{children}</div>
+    <div className="pl-7 w-full">{children}</div>
   </div>
 );
 
 const Field = ({ icon: Icon, label, value }) => {
   if (!value) return null;
   return (
-    <div className="mb-4 last:mb-0">
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-        {Icon && <Icon className="h-4 w-4" />}
-        <span>{label}</span>
+    <div className="mb-4 last:mb-0 w-full">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-1">
+        {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+        <span className="break-words">{label}</span>
       </div>
-      <div className="text-gray-900">{value}</div>
+      <div className="text-gray-900 break-words">{value}</div>
     </div>
   );
 };
@@ -120,7 +115,7 @@ const DetailModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
@@ -128,20 +123,20 @@ const DetailModal = ({ isOpen, onClose, title, children }) => {
       />
       
       <div
-        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+        <div className="flex flex-wrap justify-between items-center p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 break-words pr-8">{title}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-teal-600 transition-colors duration-200"
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6 flex-shrink-0" />
           </button>
         </div>
         
-        <div className="p-6 overflow-y-auto detail-modal-scrollbar flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto detail-modal-scrollbar flex-1">
           {children}
         </div>
       </div>
@@ -150,39 +145,38 @@ const DetailModal = ({ isOpen, onClose, title, children }) => {
 };
 
 const HealthStatusModal = ({ isOpen, onClose, patient }) => {
-
   return (
     <DetailModal
       isOpen={isOpen}
       onClose={onClose}
       title="Detailed Health Status"
     >
-     <div className="space-y-6">
-    <InfoSection icon={Activity} title="Current Health Status">
-      <Field icon={AlertCircle} label="Disease" value={patient?.healthStatus?.[0]?.disease} />
-      <Field icon={Pill} label="Medication" value={patient?.healthStatus?.[0]?.medication} />
-    </InfoSection>
+      <div className="space-y-6 w-full">
+        <InfoSection icon={Activity} title="Current Health Status">
+          <Field icon={AlertCircle} label="Disease" value={patient?.healthStatus?.[0]?.disease} />
+          <Field icon={Pill} label="Medication" value={patient?.healthStatus?.[0]?.medication} />
+        </InfoSection>
 
-    <InfoSection icon={FileText} title="Clinical Notes">
-      {formatClinicalNote(patient?.healthStatus?.[0]?.note).map((note, index) => (
-        <div key={index} className="border-l-4 border-teal-200 pl-4 py-2 mb-4">
-          {note.date && (
-            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500">
-              <Calendar className="h-4 w-4" />
-              <span>{formatDate(note.date)}</span>
+        <InfoSection icon={FileText} title="Clinical Notes">
+          {formatClinicalNote(patient?.healthStatus?.[0]?.note).map((note, index) => (
+            <div key={index} className="border-l-4 border-teal-200 pl-4 py-2 mb-4 w-full">
+              {note.date && (
+                <div className="flex flex-wrap items-center gap-2 mb-2 text-sm text-gray-500">
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span className="break-all">{formatDate(note.date)}</span>
+                </div>
+              )}
+              <p className="text-gray-700 break-words">{note.content}</p>
             </div>
-          )}
-          <p className="text-gray-700">{note.content}</p>
-        </div>
-      ))}
-    </InfoSection>
+          ))}
+        </InfoSection>
 
-    {patient?.healthStatus?.[0]?.additionalDetails && (
-      <InfoSection icon={FileText} title="Additional Details">
-        <p className="text-gray-700">{patient.healthStatus[0].additionalDetails}</p>
-      </InfoSection>
-    )}
-  </div>
+        {patient?.healthStatus?.[0]?.additionalDetails && (
+          <InfoSection icon={FileText} title="Additional Details">
+            <p className="text-gray-700 break-words">{patient.healthStatus[0].additionalDetails}</p>
+          </InfoSection>
+        )}
+      </div>
     </DetailModal>
   );
 };
@@ -192,26 +186,26 @@ const MedicalHistoryModal = ({ isOpen, onClose, patient }) => {
   
   return (
     <DetailModal
-    isOpen={isOpen}
-    onClose={onClose}
-    title="Comprehensive Medical History"
-  >
-    <div className="space-y-6">
-      <InfoSection icon={History} title="Past Medical Conditions">
-        <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap text-gray-900">
-            {patient?.medicalHistory?.history || 'No detailed medical history available'}
-          </p>
-        </div>
-      </InfoSection>
-
-      {patient?.medicalHistory?.additionalDetails && (
-        <InfoSection icon={FileText} title="Additional Medical Insights">
-          <p className="text-gray-700">{patient.medicalHistory.additionalDetails}</p>
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Comprehensive Medical History"
+    >
+      <div className="space-y-6 w-full">
+        <InfoSection icon={History} title="Past Medical Conditions">
+          <div className="prose max-w-none w-full">
+            <p className="whitespace-pre-wrap text-gray-900 break-words">
+              {patient?.medicalHistory?.history || 'No detailed medical history available'}
+            </p>
+          </div>
         </InfoSection>
-      )}
-    </div>
-  </DetailModal>
+
+        {patient?.medicalHistory?.additionalDetails && (
+          <InfoSection icon={FileText} title="Additional Medical Insights">
+            <p className="text-gray-700 break-words">{patient.medicalHistory.additionalDetails}</p>
+          </InfoSection>
+        )}
+      </div>
+    </DetailModal>
   );
 };
 

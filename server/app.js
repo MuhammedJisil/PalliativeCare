@@ -18,7 +18,11 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false, // Required for NeonDB SSL
+  },
 });
+
 
 // Middleware
 app.use(cors());
@@ -2145,8 +2149,6 @@ app.get('/api/schedules', async (req, res) => {
   }
 });
 
-
-
 // Add a new schedule
 app.post('/api/schedules', async (req, res) => {
   const { patient_name, member_name, visit_date, visit_time, visit_type, notes } = req.body;
@@ -2176,7 +2178,6 @@ app.get('/schedules/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 // Update schedule by ID
 app.put('/api/schedules/:id', async (req, res) => {
@@ -2229,7 +2230,6 @@ app.put('/api/schedules/:id', async (req, res) => {
   }
 });
 
-
 // Delete a schedule
 app.delete('/api/schedules/:id', async (req, res) => {
   const { id } = req.params;
@@ -2258,10 +2258,6 @@ app.get('/api/emergency-fund', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch emergency_fund' });
   }
 });
-
-
-
-
 
 // Route to add/update emergency_fund (only one emergency_fund at a time)
 app.post('/api/emergency-fund', upload.fields([
@@ -2521,6 +2517,7 @@ app.delete('/api/assignments/:id', async (req, res) => {
 });
 
 
+// VCM dashboard
 
 // Dashboard data endpoints
 app.get('/api/dashboard/:type', async (req, res) => {
@@ -2634,8 +2631,6 @@ app.get('/api/team/:type', async (req, res) => {
   }
 });
 
-
-
 // Tasks endpoint
 app.get('/api/tasks/:type', async (req, res) => {
   const { type } = req.params;
@@ -2711,10 +2706,7 @@ app.get('/api/schedules/:type', async (req, res) => {
   }
 });
 
-
-
 // assignment section
-
 app.get('/api/assignments/:type', async (req, res) => {
   const { type } = req.params;
   let helperType;
@@ -2800,8 +2792,6 @@ app.get('/api/patients/:id', async (req, res) => {
   }
 });
 
-
-
 /// Helper types endpoint
 app.get('/api/helpers/:helper_type/:id', async (req, res) => {
   const client = await pool.connect();
@@ -2825,7 +2815,6 @@ app.get('/api/helpers/:helper_type/:id', async (req, res) => {
     client.release();
   }
 });
-
 
 // Update medical history
 app.put('/api/medical-history/:patient_id', async (req, res) => {
@@ -2861,7 +2850,6 @@ app.put('/api/medical-history/:patient_id', async (req, res) => {
     client.release();
   }
 });
-
 
 // Update health status
 app.put('/api/health-status/:patient_id', async (req, res) => {
@@ -2951,7 +2939,6 @@ app.put('/api/health-status/:patient_id', async (req, res) => {
 
 // Equipment component
 
-
 // Get all equipment
 app.get('/api/equipment', async (req, res) => {
   try {
@@ -2992,8 +2979,6 @@ app.get('/api/inventory/equipment/:id', async (req, res) => {
     client.release();
   }
 });
-
-
 
 // Add new equipment with image upload
 app.post('/api/equipment', upload.single('image'), async (req, res) => {
@@ -3363,5 +3348,5 @@ app.put("/api/statistics", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on neon db`);
 });

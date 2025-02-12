@@ -910,7 +910,7 @@ const FilterHeader = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Existing header */}
-      <header className="bg-white shadow-md sticky top-0 z-10">
+      <header className="bg-white shadow-md ">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">

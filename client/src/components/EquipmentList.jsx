@@ -37,7 +37,8 @@ const EquipmentList = () => {
     status: 'Available',
     condition: '',
     notes: '',
-    image: null // Added for image handling
+    image: null,
+    image_url: ''  // Added for image handling
   });
 
   useEffect(() => {
@@ -61,14 +62,14 @@ const EquipmentList = () => {
     e.preventDefault();
     const formDataToSend = new FormData();
     
-    // Append all form fields to FormData
+    // Append all non-image form fields to FormData
     Object.keys(formData).forEach(key => {
-      if (key !== 'image') {
+      if (key !== 'image' && key !== 'image_url') {
         formDataToSend.append(key, formData[key]);
       }
     });
     
-    // Append image if it exists
+    // Only append image if a new one is selected
     if (formData.image) {
       formDataToSend.append('image', formData.image);
     }
@@ -133,7 +134,9 @@ const EquipmentList = () => {
       quantity: item.quantity,
       status: item.status,
       condition: item.condition,
-      notes: item.notes
+      notes: item.notes,
+      image: null,
+      image_url: item.image_url // Store the existing image URL
     });
     setIsModalOpen(true);
   };
@@ -147,7 +150,9 @@ const EquipmentList = () => {
       quantity: 0,
       status: 'Available',
       condition: '',
-      notes: ''
+      notes: '',
+      image: null,
+      image_url: ''
     });
   };
 

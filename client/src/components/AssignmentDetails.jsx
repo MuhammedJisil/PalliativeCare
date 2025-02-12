@@ -1,8 +1,26 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Users, Calendar, Phone, MapPin, FileText, 
-  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned, IdCard
+  Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned, IdCard, Activity
 } from 'lucide-react';
+
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(13, 148, 136, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+  }
+`;
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -23,7 +41,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             <X className="h-5 w-5 text-teal-600" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
       </div>
@@ -31,10 +49,20 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-// Update the Field component to handle place links
+const InfoSection = ({ icon: Icon, title, children, className = "" }) => {
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="h-5 w-5 text-teal-600" />}
+        <h3 className="font-medium text-gray-900">{title}</h3>
+      </div>
+      <div className="pl-2">{children}</div>
+    </div>
+  );
+};
+
 const Field = ({ icon: Icon, label, value, isPlace = false }) => {
   if (isPlace && value) {
-    // Split the place value if it contains the separator
     const [placeName, placeLink] = value.includes('|') ? value.split('|') : [value, ''];
     
     return (
@@ -69,7 +97,6 @@ const Field = ({ icon: Icon, label, value, isPlace = false }) => {
     </div>
   );
 };
-
 const AssignmentDetails = ({
   selectedAssignment,
   patientData,
@@ -145,6 +172,8 @@ const AssignmentDetails = ({
     }
   };
 
+  
+
   const handleUpdateMedicalHistory = async (e) => {
     e.preventDefault();
     try {
@@ -213,27 +242,55 @@ const AssignmentDetails = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <Modal 
+       <style>{scrollbarStyles}</style>
+       {/* Health Status Modal */}
+      <Modal
         isOpen={isHealthStatusModalOpen}
         onClose={() => setIsHealthStatusModalOpen(false)}
-        title="Health Status History"
+        title="Health Status"
       >
-        <div className="space-y-4">
+        <div className="space-y-6 w-full">
           {safeHealthStatus.length > 0 ? (
             safeHealthStatus.map((status, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-lg mb-4 last:mb-0">
-                <Field icon={HeartPulse} label="Disease" value={status?.disease} />
-                <Field icon={FileText} label="Medication" value={status?.medication} />
-                <Field icon={ClipboardList} label="Note" value={status?.note} />
-                <Field 
-                  icon={Calendar}
-                  label="Date" 
-                  value={status?.note_date ? new Date(status.note_date).toLocaleDateString() : 'N/A'} 
-                />
+              <div key={index} className="border rounded-lg bg-gray-50 p-6">
+                <InfoSection icon={Activity} title={`Status Record `}>
+                  <div className="space-y-4">
+                    <Field 
+                      icon={HeartPulse} 
+                      label="Disease" 
+                      value={status?.disease}
+                    />
+                    <Field 
+                      icon={AlertCircle} 
+                      label="Medication" 
+                      value={status?.medication}
+                    />
+                  </div>
+                </InfoSection>
+
+                {status?.note && (
+                  <InfoSection icon={FileText} title="Clinical Notes" className="mt-4">
+                    <div className="border-l-4 border-teal-200 pl-4 py-2 w-full">
+                      {status?.note_date && (
+                        <div className="flex flex-wrap items-center gap-2 mb-2 text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span className="break-all">
+                            {new Date(status.note_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-gray-700 whitespace-pre-line break-words">
+                        {status?.note}
+                      </p>
+                    </div>
+                  </InfoSection>
+                )}
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center py-4">No health status records available</p>
+            <div className="text-center py-8">
+              <p className="text-gray-500">No health status records available</p>
+            </div>
           )}
         </div>
       </Modal>
@@ -244,7 +301,7 @@ const AssignmentDetails = ({
         title="Medical History"
       >
         <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap text-gray-900 leading-relaxed">
+        <p className="text-gray-700 break-words">
             {safeMedicalHistory.history || 'No detailed medical history available'}
           </p>
         </div>
@@ -256,13 +313,16 @@ const AssignmentDetails = ({
         title="Additional Notes"
       >
         <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap text-gray-900 leading-relaxed">
+        <p className="text-gray-700 break-words">
             {safePatientData.additional_notes || 'No additional notes available'}
           </p>
         </div>
       </Modal>
 
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div 
+        className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-teal-700">Assignment Details</h2>
           <button 
