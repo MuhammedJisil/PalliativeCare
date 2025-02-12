@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { format, formatDistanceToNow } from 'date-fns';
+import LogoutButton from './LogoutButton';
 
 // Notification Badge Component
 const NotificationBadge = ({ count }) => {
@@ -360,25 +361,27 @@ const AdminDashboard = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-teal-600" />
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Admin Dashboard
-            </h1>
-          </div>
-          
-          {/* Notification Bell */}
-          <button
-            onClick={() => setIsNotificationPanelOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-full relative"
-          >
-            <Bell className="h-6 w-6 text-gray-600" />
-            {totalUnread > 0 && (
-              <NotificationBadge count={totalUnread} />
-            )}
-          </button>
-        </div>
+<div className="flex items-center justify-between mb-8">
+  <div className="flex items-center space-x-2">
+    <Heart className="h-8 w-8 text-teal-600" />
+    <h1 className="text-2xl font-semibold text-gray-800">
+      Admin Dashboard
+    </h1>
+  </div>
+  
+  <div className="flex items-center space-x-4">
+  <LogoutButton userType="admin" />
+    <button
+      onClick={() => setIsNotificationPanelOpen(true)}
+      className="p-2 hover:bg-gray-100 rounded-full relative"
+    >
+      <Bell className="h-6 w-6 text-gray-600" />
+      {totalUnread > 0 && (
+        <NotificationBadge count={totalUnread} />
+      )}
+    </button>
+  </div>
+</div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card, index) => (

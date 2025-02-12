@@ -215,7 +215,12 @@ app.post("/api/vcm-login", async (req, res) => {
     });
   }
 });
-
+// Logout Route
+app.post('/api/logout', (req, res) => {
+  // Since we're using JWT, we don't need to do anything server-side
+  // The client will handle removing the token
+  res.json({ message: 'Logged out successfully' });
+});
 
 
 

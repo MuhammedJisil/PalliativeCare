@@ -22,6 +22,7 @@ import TasksView from './TaskView';
 import ScheduleView from './ScheduleView';
 import TeamView from './TeamView';
 import AssignmentCard from './AssignmentCard'
+import LogoutButton from './LogoutButton';
 
 
 const VCMDashboard = ({ userType = 'volunteer' }) => {
@@ -418,12 +419,15 @@ const toggleDescription = (taskId) => {
   return (
     <div className="p-6">
        {/* Header */}
-       <div className="flex items-center space-x-2 mb-8">
-          <Activity className="h-8 w-8 text-teal-600" />
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Care Management Dashboard
-          </h1>
-        </div>
+       <div className="flex items-center justify-between mb-8">
+  <div className="flex items-center space-x-2">
+    <Activity className="h-8 w-8 text-teal-600" />
+    <h1 className="text-2xl font-semibold text-gray-800">
+      Care Management Dashboard
+    </h1>
+  </div>
+  <LogoutButton userType="vcm" />
+</div>
       {currentView === 'dashboard' ? renderDashboard() : renderDetailView()}
 
       {/* Alert Overlay */}

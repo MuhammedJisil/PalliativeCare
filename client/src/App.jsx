@@ -30,6 +30,7 @@ import EquipmentList from './components/EquipmentList';
 import EquipmentView from './components/EquipmentView';
 import EquipmentDisplay from './components/EquipmentDisplay';
 import PatientStatistics from './components/PatientStatistics';
+import NotFound from './components/NotFound';
 
 
 
@@ -69,7 +70,7 @@ const App = () => {
           <Route path="/admin/equipments/view/:id" element={<EquipmentView />} />
           <Route path="/equipment-display" element={<EquipmentDisplay />} />
           <Route path="admin/statistics" element={<PatientStatistics />} />
-          
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </Router>
