@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog';
+import BASE_URL from '../config';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title }) => {
@@ -105,7 +106,7 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
             return;
         }
 
-        const response = await axios.get(`http://localhost:5000${endpoint}`);
+        const response = await axios.get(`${BASE_URL}${endpoint}`);
         setMembers(response.data);
       } catch (error) {
         console.error('Error fetching members:', error);
@@ -138,7 +139,7 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd }) => {
     e.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/schedules', formData);
+      const response = await axios.post(`${BASE_URL}/api/schedules`, formData);
       onAdd(response.data);
       onClose();
       // Reset form after successful submission
@@ -413,7 +414,7 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
             return;
         }
 
-        const response = await axios.get(`http://localhost:5000${endpoint}`);
+        const response = await axios.get(`${BASE_URL}${endpoint}`);
         setMembers(response.data);
       } catch (error) {
         console.error('Error fetching members:', error);
@@ -446,7 +447,7 @@ const UpdateScheduleModal = ({ schedule, isOpen, onClose, onUpdate }) => {
     e.preventDefault();
     
     try {
-      const response = await axios.put(`http://localhost:5000/api/schedules/${schedule.id}`, formData);
+      const response = await axios.put(`${BASE_URL}/api/schedules/${schedule.id}`, formData);
       onUpdate(response.data);
       onClose();
     } catch (error) {
@@ -672,7 +673,7 @@ const ScheduleList = () => {
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/schedules');
+        const response = await axios.get(`${BASE_URL}/api/schedules`);
         setSchedules(response.data);
       } catch (error) {
         console.error('Error fetching schedules:', error);
@@ -804,7 +805,7 @@ const FilterHeader = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/schedules/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/schedules/${deleteId}`);
       setSchedules(schedules.filter((schedule) => schedule.id !== deleteId));
       setSuccess('Schedule deleted successfully!');
     } catch (error) {

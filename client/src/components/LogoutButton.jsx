@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import BASE_URL from '../config';
 
 const LogoutButton = ({ userType }) => {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ const LogoutButton = ({ userType }) => {
   const handleLogout = async () => {
     try {
       // Call logout endpoint
-      await fetch('http://localhost:5000/api/logout', {
+      await fetch(`${BASE_URL}/api/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

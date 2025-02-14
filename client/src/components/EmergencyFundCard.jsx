@@ -11,6 +11,7 @@ import {
   Heart,
   HandCoins
 } from 'lucide-react';
+import BASE_URL from '../config';
 
 const EmergencyFundCard = () => {
    const [patient, setPatient] = useState(null);
@@ -40,19 +41,20 @@ const EmergencyFundCard = () => {
      const fetchLatestPatient = async () => {
        try {
          setLoading(true);
-         const response = await axios.get('http://localhost:5000/api/emergency-fund');
+         const response = await axios.get(`${BASE_URL}/api/emergency-fund`);
          
          if (Array.isArray(response.data) && response.data.length > 0) {
            const patientData = response.data[0];
            
            // Ensure full URLs or add base URL
            if (patientData.photo_url && !patientData.photo_url.startsWith('http')) {
-             patientData.photo_url = `http://localhost:5000/${patientData.photo_url}`;
-           }
-           
-           if (patientData.qr_code_url && !patientData.qr_code_url.startsWith('http')) {
-             patientData.qr_code_url = `http://localhost:5000/${patientData.qr_code_url}`;
-           }
+            patientData.photo_url = `${BASE_URL}${patientData.photo_url.startsWith('/') ? '' : '/'}${patientData.photo_url}`;
+          }
+          
+          if (patientData.qr_code_url && !patientData.qr_code_url.startsWith('http')) {
+            patientData.qr_code_url = `${BASE_URL}${patientData.qr_code_url.startsWith('/') ? '' : '/'}${patientData.qr_code_url}`;
+          }
+          
            
            setPatient(patientData);
          }

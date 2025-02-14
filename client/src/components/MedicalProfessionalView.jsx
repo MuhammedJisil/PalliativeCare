@@ -5,6 +5,7 @@ import { User, Mail, Phone, MapPin, X, Calendar, Star, Clock, Award, FileText, A
 import PhoneNumberInput from './PhoneNumberInput';
 import LicenseNumberInput from './LicenceNumberInput';
 import ErrorNotification from './ErrorNotification';
+import BASE_URL from '../config';
 
 // update medical professional component
 const UpdateMedicalProfessionalModal = ({ 
@@ -66,7 +67,7 @@ const UpdateMedicalProfessionalModal = ({
        return; // Stop submission
      }
       try {
-        const response = await axios.put(`http://localhost:5000/api/medical-professionals/${professionalId}`, formData);
+        const response = await axios.put(`${BASE_URL}/api/medical-professionals/${professionalId}`, formData);
         onProfessionalUpdated(response.data);
         onClose();
       } catch (error) {
@@ -258,7 +259,7 @@ const MedicalProfessionalView = () => {
   const fetchProfessional = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/medical-professionals/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/medical-professionals/${id}`);
       setProfessional(response.data);
     } catch (error) {
       console.error('Error fetching medical professional details:', error);

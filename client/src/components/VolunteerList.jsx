@@ -24,6 +24,7 @@ import ScrollToBottomButton from './ScrollToBottomButton';
 import ErrorNotification from './ErrorNotification';
 import ConfirmDialog from './ConfrmDialog';
 import PhoneNumberInput from './PhoneNumberInput';
+import BASE_URL from '../config';
 
 // AddVolunteerModal Component
 const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
@@ -56,7 +57,7 @@ const AddVolunteerModal = ({ isOpen, onClose, onVolunteerAdded }) => {
     }
  
     try {
-      const url = 'http://localhost:5000/api/volunteers';
+      const url = `${BASE_URL}/api/volunteers`;
       const response = await axios.post(url, {
          ...formData,
          userType: 'volunteer'
@@ -282,7 +283,7 @@ const VolunteerList = () => {
   const fetchVolunteers = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/volunteers');
+      const response = await axios.get(`${BASE_URL}/api/volunteers`);
       setVolunteers(response.data);
     } catch (error) {
       console.error('Error fetching volunteers:', error);
@@ -294,7 +295,7 @@ const VolunteerList = () => {
   const handleView = async (id) => {
     try {
       // Mark the volunteer as viewed
-      await axios.put(`http://localhost:5000/api/volunteers/${id}/view`);
+      await axios.put(`${BASE_URL}/api/volunteers/${id}/view`);
       // Update the local state to remove the NEW tag
       setVolunteers(volunteers.map(volunteer => 
         volunteer.id === id ? { ...volunteer, is_new: false } : volunteer
@@ -313,7 +314,7 @@ const VolunteerList = () => {
    
    const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/volunteers/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/volunteers/${deleteId}`);
       setVolunteers(volunteers.filter((volunteer) => volunteer.id !== deleteId));
       setSuccess('volunteer deleted successfully!');
     } catch (error) {

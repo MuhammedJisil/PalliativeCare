@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { HealthStatusModal, MedicalHistoryModal } from './DetailModal';
+import BASE_URL from '../config';
 
 const ViewPatient = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const ViewPatient = () => {
   useEffect(() => {
     const fetchPatient = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/patients/${id}`);
+        const response = await axios.get(`${BASE_URL}/api/patients/${id}`);
         setPatient(response.data);
       } catch (error) {
         console.error('Error fetching patient:', error);

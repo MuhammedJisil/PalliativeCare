@@ -23,6 +23,7 @@ import ScheduleView from './ScheduleView';
 import TeamView from './TeamView';
 import AssignmentCard from './AssignmentCard'
 import LogoutButton from './LogoutButton';
+import BASE_URL from '../config';
 
 
 const VCMDashboard = ({ userType = 'volunteer' }) => {
@@ -57,8 +58,8 @@ const fetchAssignmentDetails = async (assignment) => {
     
     // Then fetch the data
     const [patientRes, helperRes] = await Promise.all([
-      fetch(`http://localhost:5000/api/patients/${assignment.patient_id}`),
-      fetch(`http://localhost:5000/api/helpers/${assignment.helper_type}s/${assignment.helper_id}`)
+      fetch(`${BASE_URL}/api/patients/${assignment.patient_id}`),
+      fetch(`${BASE_URL}/api/helpers/${assignment.helper_type}s/${assignment.helper_id}`)
     ]);
 
     if (!patientRes.ok || !helperRes.ok) {
@@ -95,7 +96,7 @@ const fetchAssignmentDetails = async (assignment) => {
 
   const fetchDashboardData = async (type) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/dashboard/${type}`);
+      const response = await fetch(`${BASE_URL}/api/dashboard/${type}`);
       const data = await response.json();
       setDashboardData(data);
     } catch (error) {
@@ -195,7 +196,7 @@ const fetchAssignmentDetails = async (assignment) => {
   const fetchDetailData = async (view) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/${view}/${activeTab}`);
+      const response = await fetch(`${BASE_URL}/api/${view}/${activeTab}`);
       const data = await response.json();
       setDetailData(Array.isArray(data) ? data : []);
       setCurrentView(view);
@@ -213,7 +214,7 @@ const fetchAssignmentDetails = async (assignment) => {
   const toggleTaskStatus = async (taskId) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/status`, {
+      const response = await fetch(`${BASE_URL}/api/tasks/${taskId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

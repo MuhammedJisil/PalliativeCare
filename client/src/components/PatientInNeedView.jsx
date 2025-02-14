@@ -17,6 +17,7 @@ import {
   Stethoscope,
   LifeBuoy
 } from 'lucide-react';
+import BASE_URL from '../config';
 
 
 
@@ -76,7 +77,7 @@ const UpdatePatientModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = `http://localhost:5000/api/patients-in-need/${patientId}`;
+      const url = `${BASE_URL}/api/patients-in-need/${patientId}`;
       const response = await axios.put(url, formData);
       
       onPatientUpdated(response.data.patient);
@@ -356,7 +357,7 @@ const PatientInNeedView = () => {
   const fetchPatient = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/patients-in-need/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/patients-in-need/${id}`);
       setPatient(response.data);
     } catch (error) {
       console.error('Error fetching patient details:', error);

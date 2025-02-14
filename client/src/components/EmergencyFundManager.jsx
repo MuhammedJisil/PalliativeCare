@@ -12,6 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import ConfirmDialog from './ConfrmDialog'
+import BASE_URL from '../config';
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -78,7 +79,7 @@ const EmergencyFundManager = () => {
     const fetchPatients = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get("http://localhost:5000/api/emergency-fund");
+            const response = await axios.get(`${BASE_URL}/api/emergency-fund`);
             setPatients(response.data);
         } catch (error) {
             console.error("Error fetching patients:", error);
@@ -150,7 +151,7 @@ const submitForm = async () => {
 
         if (isEditing) {
             await axios.put(
-                `http://localhost:5000/api/emergency-fund/${formData.id}`,
+                `${BASE_URL}/api/emergency-fund/${formData.id}`,
                 data,
                 {
                     headers: {
@@ -161,7 +162,7 @@ const submitForm = async () => {
             setSuccess("Patient updated successfully");
         } else {
             await axios.post(
-                "http://localhost:5000/api/emergency-fund",
+                `${BASE_URL}/api/emergency-fund`,
                 data,
                 {
                     headers: {
@@ -219,7 +220,7 @@ const handleEdit = (patient) => {
     
       const confirmDelete = async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/emergency-fund/${deleteId}`);
+          await axios.delete(`${BASE_URL}/api/emergency-fund/${deleteId}`);
           setPatients(patients.filter((patient) => patient.id !== deleteId));
           setSuccess('Patient deleted successfully!');
         } catch (error) {

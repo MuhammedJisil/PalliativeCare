@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog';
+import BASE_URL from '../config';
 
 
 
@@ -37,7 +38,7 @@ const PatientsInNeed = () => {
   const fetchPatients = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/patients-in-need');
+      const response = await axios.get(`${BASE_URL}/api/patients-in-need`);
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -48,7 +49,7 @@ const PatientsInNeed = () => {
 
   const fetchActivePatients = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/active-patients');
+      const response = await axios.get(`${BASE_URL}/api/active-patients`);
       // Ensure all IDs are numbers
       const activeIds = new Set(response.data.map(patient => parseInt(patient.original_id)));
       setActivePatients(activeIds);
@@ -60,7 +61,7 @@ const PatientsInNeed = () => {
   const handleView = async (id) => {
     try {
       // Mark the patient as viewed
-      await axios.put(`http://localhost:5000/api/patients-in-need/${id}/view`);
+      await axios.put(`${BASE_URL}/api/patients-in-need/${id}/view`);
       // Update the local state to remove the NEW tag
       setPatients(patients.map(patient => 
         patient.id === id ? { ...patient, is_new: false } : patient
@@ -79,7 +80,7 @@ const PatientsInNeed = () => {
   const confirmDelete = async () => {
     try {
       // Only delete from patients_register table
-      await axios.delete(`http://localhost:5000/api/patients-register/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/patients-register/${deleteId}`);
       setPatients(patients.filter((patient) => patient.id !== deleteId));
       setSuccess('Patient deleted successfully!');
     } catch (error) {
@@ -105,7 +106,7 @@ const PatientsInNeed = () => {
   
       if (!isActive) {
         // Add to patients table
-        const response = await axios.post('http://localhost:5000/api/patients-to-add', {
+        const response = await axios.post(`${BASE_URL}/api/patients-to-add`, {
           original_id: patientId,
           first_name: patient.patient_name,
           phone_number: patient.contact_phone_number,
@@ -120,7 +121,7 @@ const PatientsInNeed = () => {
         setSuccess('Patient added to active patients!');
       } else {
         // Remove from patients table
-        const response = await axios.delete(`http://localhost:5000/api/patients/remove/${patientId}`);
+        const response = await axios.delete(`${BASE_URL}/api/patients/remove/${patientId}`);
         
         if (response.status === 200) {
           setActivePatients(prev => {

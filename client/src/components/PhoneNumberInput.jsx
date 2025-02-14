@@ -30,18 +30,17 @@ const PhoneNumberInput = ({ formData, handleChange }) => {
     const value = e.target.value.replace(/\D/g, '');
     
     if (value.length <= 10) {
+      // Create a synthetic event object that matches what handleChange expects
       handleChange({
-        ...e,
         target: {
           name: 'phone_number',
           value: value
         }
       });
-
-      // Validate on each change
       validatePhoneNumber(value);
     }
   };
+
 
   const handleBlur = (e) => {
     const value = e.target.value;
@@ -61,7 +60,7 @@ const PhoneNumberInput = ({ formData, handleChange }) => {
         inputMode="numeric"
         type="tel"
         name="phone_number"
-        value={formData.phone_number}
+        value={formData.phone_number || ''} 
         onChange={handlePhoneChange}
         onBlur={handleBlur}
         required

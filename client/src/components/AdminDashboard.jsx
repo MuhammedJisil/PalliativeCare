@@ -21,6 +21,7 @@ import {
 import axios from 'axios';
 import { format, formatDistanceToNow } from 'date-fns';
 import LogoutButton from './LogoutButton';
+import BASE_URL from '../config';
 
 // Notification Badge Component
 const NotificationBadge = ({ count }) => {
@@ -150,7 +151,7 @@ const AdminDashboard = () => {
   // Fetch notification counts
   const fetchNotificationCounts = async () => {
     try {
-      const response = await axios.get('/api/notifications/counts');
+      const response = await axios.get(`${BASE_URL}/api/notifications/counts`);
       setNotificationCounts(response.data);
       const total = Object.values(response.data).reduce((a, b) => a + b, 0);
       setTotalUnread(total);
@@ -170,7 +171,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get('/api/notifications/recent');
+        const response = await axios.get(`${BASE_URL}/api/notifications/recent`);
         setNotifications(response.data);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -184,7 +185,7 @@ const AdminDashboard = () => {
 
   const handleDeleteNotification = async (id) => {
     try {
-      await axios.delete(`/api/notifications/${id}`);
+      await axios.delete(`${BASE_URL}/api/notifications/${id}`);
       
       // Update local state
       setNotifications(prev => prev.filter(n => n.id !== id));
@@ -207,7 +208,7 @@ const AdminDashboard = () => {
   // Handle marking individual notification as read
   const handleMarkRead = async (id) => {
     try {
-      await axios.post(`/api/notifications/${id}/mark-read`);
+      await axios.post(`${BASE_URL}/api/notifications/${id}/mark-read`);
       
       // Update local notifications state
       const updatedNotifications = notifications.map(notif =>
@@ -236,7 +237,7 @@ const AdminDashboard = () => {
   const handleCardClick = async (path, entityType) => {
     if (entityType && notificationCounts[entityType] > 0) {
       try {
-        await axios.post('/api/notifications/mark-read', {
+        await axios.post(`${BASE_URL}/api/notifications/mark-read`, {
           entity_type: entityType
         });
         

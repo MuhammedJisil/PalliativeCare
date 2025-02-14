@@ -3,6 +3,7 @@ import {
   Users, Calendar, Phone, MapPin, FileText, 
   Clock, X, HeartPulse, ClipboardList, CheckCircle, AlertCircle, MapPinned, IdCard, Activity
 } from 'lucide-react';
+import BASE_URL from '../config';
 
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
@@ -144,7 +145,7 @@ const AssignmentDetails = ({
         return;
       }
       
-      const response = await fetch(`http://localhost:5000/api/health-status/${safeAssignment.patient_id}`, {
+      const response = await fetch(`${BASE_URL}/api/health-status/${safeAssignment.patient_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -182,7 +183,7 @@ const AssignmentDetails = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/medical-history/${safeAssignment.patient_id}`, {
+      const response = await fetch(`${BASE_URL}/api/medical-history/${safeAssignment.patient_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMedicalHistory)
@@ -215,7 +216,7 @@ const AssignmentDetails = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/patients/${safeAssignment.patient_id}/notes`, {
+      const response = await fetch(`${BASE_URL}/api/patients/${safeAssignment.patient_id}/notes`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ additional_notes: additionalNotes })

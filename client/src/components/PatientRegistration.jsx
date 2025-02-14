@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Heart, User, Mail, Phone, MapPin, Home, AlertCircle, CheckCircle, Stethoscope, Activity, ClipboardList } from 'lucide-react';
-import PhoneNumberInput from './PhoneNumberInput';
+import BASE_URL from '../config';
 
 const PatientRegistration = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [phoneError, setPhoneError] = useState('');
   const [formData, setFormData] = useState({
     patient_name: '',
     contact_name: '',
@@ -30,6 +31,40 @@ const PatientRegistration = () => {
     { value: 'others', label: 'Others' }
   ];
 
+  const validatePhoneNumber = (value) => {
+    // Remove non-digit characters
+    const cleanedValue = value.replace(/\D/g, '');
+    
+    // Check length and numeric content
+    if (cleanedValue.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return false;
+    }
+    
+    // Optional: Additional validation (e.g., area code restrictions)
+    const areaCode = cleanedValue.substring(0, 3);
+    const invalidAreaCodes = ['000', '911'];
+    if (invalidAreaCodes.includes(areaCode)) {
+      setPhoneError('Invalid area code');
+      return false;
+    }
+    
+    setPhoneError('');
+    return true;
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length <= 10) {
+      setFormData(prev => ({
+        ...prev,
+        contact_phone_number: value
+      }));
+    }
+    validatePhoneNumber(value);
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -41,10 +76,10 @@ const PatientRegistration = () => {
     e.preventDefault();
     if (formData.contact_phone_number.length !== 10) {
       setError('Phone number must be exactly 10 digits');
-      return; // Stop submission
+      return;
     }
     try {
-      const response = await axios.post('http://localhost:5000/api/patients-in-need', formData);
+      const response = await axios.post(`${BASE_URL}/api/patients-in-need`, formData);
       
       setSuccess('Patient registered successfully!');
       setTimeout(() => {
@@ -133,10 +168,32 @@ const PatientRegistration = () => {
                 />
               </div>
 
-              <PhoneNumberInput 
-    formData={formData} 
-    handleChange={handleChange} 
-  />
+              <div>
+                <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
+                  <Phone className="h-5 w-5 text-teal-600" />
+                  <span>Phone Number</span>
+                </label>
+                <input
+                  placeholder="Enter 10-digit phone number"
+                  maxLength="10"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  type="tel"
+                  name="contact_phone_number"
+                  value={formData.contact_phone_number}
+                  onChange={handlePhoneChange}
+                  onBlur={(e) => validatePhoneNumber(e.target.value)}
+                  required
+                  className={`w-full p-3 border ${
+                    phoneError
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-200 focus:ring-teal-500'
+                  } rounded-lg focus:ring-2 focus:border-transparent`}
+                />
+                {phoneError && (
+                  <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+                )}
+              </div>
 
               <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">

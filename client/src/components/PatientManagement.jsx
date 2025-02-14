@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog'
+import BASE_URL from '../config';
 
 const supportTypes = [
   { value: '', label: 'All Support Types' },
@@ -67,7 +68,7 @@ const PatientManagement = () => {
   const performSearch = async () => {
     setIsSearching(true);
     try {
-      const response = await axios.get(`http://localhost:5000/patients?search=${encodeURIComponent(searchQuery)}`);
+      const response = await axios.get(`${BASE_URL}/patients?search=${encodeURIComponent(searchQuery)}`);
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error during search:', error);
@@ -79,7 +80,7 @@ const PatientManagement = () => {
   const fetchPatients = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/patients');
+      const response = await axios.get(`${BASE_URL}/api/patients`);
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -105,7 +106,7 @@ const handleDelete = async (id) => {
  
  const confirmDelete = async () => {
   try {
-    await axios.delete(`http://localhost:5000/api/patients/${deleteId}`);
+    await axios.delete(`${BASE_URL}/api/patients/${deleteId}`);
     setPatients(patients.filter((patient) => patient.id !== deleteId));
     setSuccess('patient deleted successfully!');
   } catch (error) {

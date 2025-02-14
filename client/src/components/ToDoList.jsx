@@ -6,10 +6,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog'
 import TaskModal from './TaskModel';
+import BASE_URL from '../config';
 
 const taskService = {
   async getTasks() {
-    const response = await fetch('http://localhost:5000/api/tasks');
+    const response = await fetch(`${BASE_URL}/api/tasks`);
     if (!response.ok) throw new Error('Failed to fetch tasks');
     return response.json();
   },
@@ -23,13 +24,13 @@ const taskService = {
     const endpoint = roleEndpoints[role];
     if (!endpoint) return [];
     
-    const response = await fetch(`http://localhost:5000${endpoint}`);
+    const response = await fetch(`${BASE_URL}${endpoint}`);
     if (!response.ok) throw new Error(`Failed to fetch ${role}s`);
     return response.json();
   },
 
   async createTask(taskData) {
-    const response = await fetch('http://localhost:5000/api/tasks', {
+    const response = await fetch(`${BASE_URL}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(taskData)
@@ -39,7 +40,7 @@ const taskService = {
   },
 
   async updateTask(id, taskData) {
-    const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+    const response = await fetch(`${BASE_URL}/api/tasks/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(taskData)
@@ -49,7 +50,7 @@ const taskService = {
   },
 
   async deleteTask(id) {
-    const response = await fetch(`http://localhost:5000/api/tasks/${id}`, { method: 'DELETE' });
+    const response = await fetch(`${BASE_URL}/api/tasks/${id}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to delete task');
     return response.json();
   },
@@ -57,7 +58,7 @@ const taskService = {
 async toggleTaskStatus(id) {
   try {
     console.log(`Attempting to toggle status for task ${id}`);
-    const response = await fetch(`http://localhost:5000/api/tasks/${id}/status`, { 
+    const response = await fetch(`${BASE_URL}/api/tasks/${id}/status`, { 
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'

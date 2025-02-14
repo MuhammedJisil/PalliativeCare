@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart, User, Mail, Phone, MapPin, AlertCircle, Calendar, Book, Award, FileText, CheckCircle, Stethoscope } from 'lucide-react';
 import PhoneNumberInput from "./PhoneNumberInput";
 import LicenseNumberInput from './LicenceNumberInput';
+import BASE_URL from '../config';
 
 
 const VCMregistration = () => {
@@ -67,7 +68,7 @@ const VCMregistration = () => {
     }
   
     try {
-      const url = 'http://localhost:5000/api/register';
+      const url = `${BASE_URL}/api/register`;
       await axios.post(url, { ...formData, userType: role });
       
       setSuccess('Registration Successful');

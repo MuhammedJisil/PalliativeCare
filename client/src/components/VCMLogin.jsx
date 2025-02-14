@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-
 import { User, Lock,Eye, EyeOff } from 'lucide-react';
+import BASE_URL from '../config';
 
 const VCMLogin = () => {
   const [username, setUsername] = useState('');
@@ -35,7 +35,7 @@ const VCMLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/vcm-login', {
+      const response = await fetch(`${BASE_URL}/api/vcm-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

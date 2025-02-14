@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { format, parseISO } from 'date-fns';
+import BASE_URL from '../config';
 
 const formatDate = (dateString) => {
   try {
@@ -39,7 +40,7 @@ const PatientStatistics = () => {
   const fetchStatistics = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/statistics");
+      const response = await axios.get(`${BASE_URL}/api/statistics`);
       
       // Transform date fields to formatted version
       const transformedData = Object.entries(response.data).reduce((acc, [key, value]) => {
@@ -73,7 +74,7 @@ const PatientStatistics = () => {
         return acc;
       }, {});
 
-      await axios.put("http://localhost:5000/api/statistics", submitData);
+      await axios.put(`${BASE_URL}/api/statistics`, submitData);
       setSuccess("Statistics updated successfully!")
       setData(formData);
       setEditing(false);

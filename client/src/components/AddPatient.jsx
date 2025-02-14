@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, User, MapPin, Stethoscope, UserCheck, LayoutList, ArrowLeft, CheckCircle, AlertCircle, StickyNote } from 'lucide-react';
+import BASE_URL from '../config';
 
 const AddPatient = () => {
   const [success, setSuccess] = useState(null);
@@ -101,7 +102,7 @@ const AddPatient = () => {
         patientData.additional_notes = formData.additionalNotes || null;
       }
 
-      await axios.post('http://localhost:5000/api/patients', patientData);
+      await axios.post(`${BASE_URL}/api/patients`, patientData);
       setSuccess('Patient added successfully!');
       setTimeout(() => {
         navigate('/admin/patient-management');

@@ -7,6 +7,7 @@ import ScrollToBottomButton from './ScrollToBottomButton';
 import ErrorNotification from './ErrorNotification';
 import PhoneNumberInput from './PhoneNumberInput';
 import LicenseNumberInput from './LicenceNumberInput';
+import BASE_URL from '../config';
 
 const AddMedicalProfessionalModal = ({ isOpen, onClose, onProfessionalAdded }) => {
     const [formData, setFormData] = useState({
@@ -48,7 +49,7 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    const response = await axios.post('http://localhost:5000/api/medical-professionals', {
+    const response = await axios.post(`${BASE_URL}/api/medical-professionals`, {
       ...formData,
       userType: 'medical_professional'
     });
@@ -285,7 +286,7 @@ const MedicalProfessionalsList = () => {
     const fetchProfessionals = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/medical-professionals');
+        const response = await axios.get(`${BASE_URL}/api/medical-professionals`);
         setProfessionals(response.data);
       } catch (error) {
         console.error('Error fetching professionals:', error);
@@ -297,7 +298,7 @@ const MedicalProfessionalsList = () => {
     const handleView = async (id) => {
       try {
         // Mark the professional as viewed
-        await axios.put(`http://localhost:5000/api/medical-professionals/${id}/view`);
+        await axios.put(`${BASE_URL}/api/medical-professionals/${id}/view`);
         // Update the local state to remove the NEW tag
         setProfessionals(professionals.map(professional => 
           professional.id === id ? { ...professional, is_new: false } : professional
@@ -316,7 +317,7 @@ const MedicalProfessionalsList = () => {
   
     const confirmDelete = async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/medical-professionals/${deleteId}`);
+        await axios.delete(`${BASE_URL}/api/medical-professionals/${deleteId}`);
         setProfessionals(professionals.filter((prof) => prof.id !== deleteId));
         setSuccess('Professional deleted successfully!');
       } catch (error) {

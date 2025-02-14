@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BadgeCheck, Box, Loader, ImageIcon } from 'lucide-react';
+import BASE_URL from '../config';
 
 const EquipmentCard = ({ item }) => {
   const [imageError, setImageError] = useState(false);
@@ -7,7 +8,7 @@ const EquipmentCard = ({ item }) => {
   const getImageUrl = (url) => {
     if (!url) return null;
     // Ensure URL does not have double slashes
-    return `http://localhost:5000${url.startsWith('/') ? url : `/${url}`}`;
+    return `${BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
   };
   
   return (
@@ -70,7 +71,7 @@ const EquipmentDisplay = () => {
   
   const fetchEquipment = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/equipment/available');
+      const response = await fetch(`${BASE_URL}/api/equipment/available`);
       if (!response.ok) {
         throw new Error('Failed to fetch equipment');
       }

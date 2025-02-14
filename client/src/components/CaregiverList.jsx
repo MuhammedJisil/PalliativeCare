@@ -23,6 +23,7 @@ import ScrollToBottomButton from './ScrollToBottomButton';
 import ErrorNotification from './ErrorNotification';
 import ConfirmDialog from './ConfrmDialog';
 import PhoneNumberInput from './PhoneNumberInput';
+import BASE_URL from '../config';
 
 // AddCaregiverModal Component
 const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
@@ -56,7 +57,7 @@ const AddCaregiverModal = ({ isOpen, onClose, onCaregiverAdded }) => {
     }
  
     try {
-      const url = 'http://localhost:5000/api/caregivers';
+      const url = `${BASE_URL}/api/caregivers`;
       const response = await axios.post(url, formData);
  
       // Clear form after successful submission
@@ -295,7 +296,7 @@ const CaregiverList = () => {
   const fetchCaregivers = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/caregivers');
+      const response = await axios.get(`${BASE_URL}/api/caregivers`);
       setCaregivers(response.data);
     } catch (error) {
       console.error('Error fetching caregivers:', error);
@@ -307,7 +308,7 @@ const CaregiverList = () => {
   const handleView = async (id) => {
     try {
       // Mark the caregiver as viewed
-      await axios.put(`http://localhost:5000/api/caregivers/${id}/view`);
+      await axios.put(`${BASE_URL}/api/caregivers/${id}/view`);
       // Update the local state to remove the NEW tag
       setCaregivers(caregivers.map(caregiver => 
         caregiver.id === id ? { ...caregiver, is_new: false } : caregiver
@@ -326,7 +327,7 @@ const CaregiverList = () => {
   
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/caregivers/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/caregivers/${deleteId}`);
       setCaregivers(caregivers.filter((caregiver) => caregiver.id !== deleteId));
       setSuccess('caregiver deleted successfully!');
     } catch (error) {

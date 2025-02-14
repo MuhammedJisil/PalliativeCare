@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import PhoneNumberInput from './PhoneNumberInput';
 import ErrorNotification from './ErrorNotification';
+import BASE_URL from '../config';
 
 const UpdateCaregiverModal = ({ 
   isOpen, 
@@ -73,7 +74,7 @@ const UpdateCaregiverModal = ({
       return; // Stop submission
     }
     try {
-      const url = `http://localhost:5000/api/caregivers/${caregiverId}`;
+      const url = `${BASE_URL}/api/caregivers/${caregiverId}`;
       const response = await axios.put(url, formData);
       
       // Notify parent component and close modal
@@ -287,7 +288,7 @@ const CaregiverView = () => {
   const fetchCaregiver = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/caregivers/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/caregivers/${id}`);
       setCaregiver(response.data);
     } catch (error) {
       console.error('Error fetching caregiver details:', error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UserPlus, Save, ArrowLeft, MapPin,  User, Stethoscope, UserCheck, CheckCircle, StickyNote, AlertCircle } from 'lucide-react';
+import BASE_URL from '../config';
 
 const UpdatePatient = () => {
   const { id } = useParams();
@@ -31,14 +32,6 @@ const UpdatePatient = () => {
     placeLink: '',        
     additionalNotes: ''  // Add new additional notes field
   });
-
-const handlePlaceChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
 
    // When component mounts or place data is loaded
@@ -70,7 +63,7 @@ const handlePlaceChange = (e) => {
   useEffect(() => {
     const fetchPatient = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/patients/${id}`);
+        const response = await axios.get(`${BASE_URL}/api/patients/${id}`);
         const data = response.data;
 
         // Split place data if it contains a separator
@@ -121,7 +114,7 @@ const handlePlaceChange = (e) => {
       return; // Stop submission
     }
     try {
-      await axios.put(`http://localhost:5000/api/patients/${id}/personal`, {
+      await axios.put(`${BASE_URL}/api/patients/${id}/personal`, {
         first_name: formData.firstName,
         dob: formData.dob || null,
         age: formData.age || null,
@@ -147,7 +140,7 @@ const handlePlaceChange = (e) => {
   const handleUpdateNotes = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/patients/${id}/notes`, {
+      await axios.put(`${BASE_URL}/api/patients/${id}/notes`, {
         additional_notes: formData.additionalNotes || null
       });
       setSuccess('Additional notes updated successfully!');
@@ -165,7 +158,7 @@ const handlePlaceChange = (e) => {
   const handleUpdateMedical = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/patients/${id}/medical`, {
+      await axios.put(`${BASE_URL}/api/patients/${id}/medical`, {
         initial_treatment_date: formData.initialTreatmentDate || null,
         doctor: formData.doctor || null,
         caregiver: formData.caregiver || null,
@@ -194,7 +187,7 @@ const handlePlaceChange = (e) => {
       return; // Stop submission
     }
     try {
-      await axios.put(`http://localhost:5000/api/patients/${id}/proxy`, {
+      await axios.put(`${BASE_URL}/api/patients/${id}/proxy`, {
         medical_proxy: {
           name: formData.proxyName || null,
           relation: formData.relation || null,
@@ -215,7 +208,7 @@ const handlePlaceChange = (e) => {
   const handleUpdateHistory = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/patients/${id}/history`, {
+      await axios.put(`${BASE_URL}/api/patients/${id}/history`, {
         medical_history: formData.history
       });
       setSuccess('Medical history updated successfully!');

@@ -17,6 +17,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import ConfirmDialog from './ConfrmDialog';
 import AddEditEquipmentModal from './AddEditEquipmentModal';
+import BASE_URL from '../config';
 
 const EquipmentList = () => {
   const [equipment, setEquipment] = useState([]);
@@ -48,7 +49,7 @@ const EquipmentList = () => {
   const fetchEquipment = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/equipment');
+      const response = await axios.get(`${BASE_URL}/api/equipment`);
       setEquipment(response.data);
     } catch (error) {
       console.error('Error fetching equipment:', error);
@@ -77,7 +78,7 @@ const EquipmentList = () => {
     try {
       if (editingEquipment) {
         const response = await axios.put(
-          `http://localhost:5000/api/equipment/${editingEquipment.id}`, 
+          `${BASE_URL}/api/equipment/${editingEquipment.id}`, 
           formDataToSend,
           {
             headers: {
@@ -91,7 +92,7 @@ const EquipmentList = () => {
         setSuccess('Equipment updated successfully!');
       } else {
         const response = await axios.post(
-          'http://localhost:5000/api/equipment', 
+          `${BASE_URL}/api/equipment`, 
           formDataToSend,
           {
             headers: {
@@ -117,7 +118,7 @@ const EquipmentList = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/equipment/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/equipment/${deleteId}`);
       setEquipment(equipment.filter(item => item.id !== deleteId));
       setSuccess('Equipment deleted successfully!');
     } catch (error) {

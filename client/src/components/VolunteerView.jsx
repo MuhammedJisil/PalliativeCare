@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import PhoneNumberInput from './PhoneNumberInput';
 import ErrorNotification from './ErrorNotification';
+import BASE_URL from '../config';
 
 // Update Volunteer Modal Component
 const UpdateVolunteerModal = ({ 
@@ -72,7 +73,7 @@ const UpdateVolunteerModal = ({
       return; // Stop submission
     }
     try {
-      const url = `http://localhost:5000/api/volunteers/${volunteerId}`;
+      const url = `${BASE_URL}/api/volunteers/${volunteerId}`;
       const response = await axios.put(url, formData);
       
       // Notify parent component and close modal
@@ -271,7 +272,7 @@ const VolunteerView = () => {
   const fetchVolunteer = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/volunteers/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/volunteers/${id}`);
       setVolunteer(response.data);
     } catch (error) {
       console.error('Error fetching volunteer details:', error);

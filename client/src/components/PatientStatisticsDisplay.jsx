@@ -14,6 +14,7 @@ import {
   Scaling,
   Drill
 } from 'lucide-react';
+import BASE_URL from '../config';
 
 const PatientStatisticsDisplay = () => {
   const [statistics, setStatistics] = useState(null);
@@ -23,7 +24,7 @@ const PatientStatisticsDisplay = () => {
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
-        const response = await axios.get('/api/statistics');
+        const response = await axios.get(`${BASE_URL}/api/statistics`);
         setStatistics(response.data);
       } catch (error) {
         console.error('Error fetching patient statistics:', error);

@@ -24,6 +24,7 @@ import {
 import ConfirmDialog from './ConfrmDialog';
 import { useNavigate, Link } from 'react-router-dom';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import BASE_URL from '../config';
 
 const PatientAssignment = () => {
   // ... (keep existing state variables)
@@ -83,11 +84,11 @@ const PatientAssignment = () => {
   const fetchData = async () => {
     try {
       const [patientsRes, volunteersRes, caregiversRes, medicalProfessionalsRes, assignmentsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/patients'),
-        axios.get('http://localhost:5000/api/volunteers'),
-        axios.get('http://localhost:5000/api/caregivers'),
-        axios.get('http://localhost:5000/api/medical-professionals'),
-        axios.get('http://localhost:5000/api/assignments')
+        axios.get(`${BASE_URL}/api/patients`),
+        axios.get(`${BASE_URL}/api/volunteers`),
+        axios.get(`${BASE_URL}/api/caregivers`),
+        axios.get(`${BASE_URL}/api/medical-professionals`),
+        axios.get(`${BASE_URL}/api/assignments`)
       ]);
 
       setPatients(patientsRes.data);
@@ -204,7 +205,7 @@ const PatientAssignment = () => {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/assignments', {
+      await axios.post(`${BASE_URL}/api/assignments`, {
         patientId: selectedPatient,
         helperId: selectedHelper,
         helperType: helperType
@@ -236,7 +237,7 @@ const PatientAssignment = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/assignments/${deleteId}`);
+      await axios.delete(`${BASE_URL}/api/assignments/${deleteId}`);
       setAssignments(assignments.filter((assignment) => assignment._id !== deleteId));
       setSuccess('Assignment deleted successfully!');
     } catch (error) {

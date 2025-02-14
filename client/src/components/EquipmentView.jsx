@@ -12,6 +12,7 @@ import {
   FileText,
   Activity
 } from 'lucide-react';
+import BASE_URL from '../config';
 
 const EquipmentView = () => {
   const [equipment, setEquipment] = useState(null);
@@ -27,7 +28,7 @@ const EquipmentView = () => {
   }, [id]);
   const fetchEquipmentDetails = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/inventory/equipment/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/inventory/equipment/${id}`);
       console.log('Raw equipment data:', response.data);
   
       const equipmentData = response.data;
@@ -37,7 +38,7 @@ const EquipmentView = () => {
         const cleanPath = equipmentData.image_url.startsWith('/') 
           ? equipmentData.image_url.substring(1) 
           : equipmentData.image_url;
-        equipmentData.image_url = `http://localhost:5000/${cleanPath}`;
+        equipmentData.image_url = `${BASE_URL}/${cleanPath}`;
       }
   
       console.log('Processed equipment data:', equipmentData);
