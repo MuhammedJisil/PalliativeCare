@@ -16,9 +16,57 @@ const AddEditEquipmentModal = ({
   editingEquipment, 
   formData, 
   setFormData, 
-  handleSubmit 
+  handleSubmit,
+  BASE_URL 
 }) => {
   if (!isModalOpen) return null;
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    
+    // If URL is already an absolute URL (Cloudinary or any external image), return it as is
+    if (url.startsWith('http')) {
+      return url;
+    }
+    
+    // Otherwise, ensure it has BASE_URL
+    return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        image: file,
+        existing_image: null // Clear the existing image when new file is selected
+      }));
+    }
+  };
+
+  // Get the appropriate image source for preview
+  const getPreviewSrc = () => {
+    if (formData.image) {
+      return URL.createObjectURL(formData.image);
+    }
+    if (formData.existing_image) {
+      return getImageUrl(formData.existing_image);
+    }
+    if (editingEquipment?.image_url) {
+      return getImageUrl(editingEquipment.image_url);
+    }
+    return null;
+  };
+
+  // Update form with existing data when editing
+  React.useEffect(() => {
+    if (editingEquipment) {
+      setFormData(prev => ({
+        ...prev,
+        existing_image: editingEquipment.image_url
+      }));
+    }
+  }, [editingEquipment]);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -146,19 +194,58 @@ const AddEditEquipmentModal = ({
                 />
               </div>
 
-              <div>
+              {/* Image input with preview */}
+             {/* Image input with preview */}
+             <div>
                 <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
                   <ImageIcon className="h-5 w-5 text-teal-600" />
                   <span>Image</span>
                 </label>
+                
+                {/* Image Preview */}
+                {getPreviewSrc() && (
+                  <div className="mb-4">
+                    <div className="relative w-40 h-40 group">
+                      <img
+                        src={getPreviewSrc()}
+                        alt="Equipment Preview"
+                        className="w-40 h-40 object-cover rounded-lg border border-gray-200"
+                      />
+                      {/* Optional: Add remove image button */}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          image: null,
+                          existing_image: null
+                        }))}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <input
                   type="file"
                   name="image"
                   accept="image/*"
-                  onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  onChange={handleImageChange}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-medium
+                    file:bg-teal-50 file:text-teal-700
+                    hover:file:bg-teal-100"
                 />
+                <p className="mt-2 text-sm text-gray-500">
+                  {formData.image ? 'New image selected' : 
+                   formData.existing_image ? 'Using existing image' : 
+                   'No image selected'}
+                </p>
               </div>
+
 
               {/* Modal Footer */}
               <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">

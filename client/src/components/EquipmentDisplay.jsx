@@ -7,9 +7,16 @@ const EquipmentCard = ({ item }) => {
 
   const getImageUrl = (url) => {
     if (!url) return null;
-    // Ensure URL does not have double slashes
-    return `${BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+    
+    // If URL is already an absolute URL (Cloudinary or any external image), return it as is
+    if (url.startsWith('http')) {
+      return url;
+    }
+  
+    // Otherwise, ensure it has BASE_URL
+    return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
+  
   
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">

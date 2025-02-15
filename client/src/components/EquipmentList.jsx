@@ -59,6 +59,7 @@ const EquipmentList = () => {
     }
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formDataToSend = new FormData();
@@ -70,9 +71,11 @@ const EquipmentList = () => {
       }
     });
     
-    // Only append image if a new one is selected
-    if (formData.image) {
+    // Handle image
+    if (formData.image instanceof File) {
       formDataToSend.append('image', formData.image);
+    } else if (formData.image_url) {
+      formDataToSend.append('existing_image', formData.image_url);
     }
 
     try {
@@ -108,7 +111,6 @@ const EquipmentList = () => {
       setError(error.response?.data?.error || 'An error occurred');
     }
   };
- 
 
   
   const handleDelete = (id) => {

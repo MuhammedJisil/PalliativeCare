@@ -34,12 +34,10 @@ const EquipmentView = () => {
       const equipmentData = response.data;
   
       // Convert relative `image_url` to absolute URL if necessary
-      if (equipmentData.image_url) {
-        const cleanPath = equipmentData.image_url.startsWith('/') 
-          ? equipmentData.image_url.substring(1) 
-          : equipmentData.image_url;
-        equipmentData.image_url = `${BASE_URL}/${cleanPath}`;
+      if (!equipmentData.image_url.startsWith('http')) {
+        equipmentData.image_url = `${BASE_URL}/${equipmentData.image_url}`;
       }
+      
   
       console.log('Processed equipment data:', equipmentData);
       setEquipment(equipmentData);
